@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_gradient"
+    android:orientation="vertical"
+    android:paddingLeft="30dp"
+    android:paddingTop="26dp"
+    android:paddingRight="30dp"
+    android:paddingBottom="18dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/brand_first"
+            android:textColor="@color/accent"
+            android:textSize="31sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="7dp"
+            android:letterSpacing="0.14"
+            android:text="@string/brand_second"
+            android:textColor="@color/text"
+            android:textSize="31sp"
+            android:textStyle="bold" />
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1" />
+
+        <TextView
+            android:id="@+id/status"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/text_dim"
+            android:textSize="13sp" />
+    </LinearLayout>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:text="@string/choose_site_hint"
+        android:textColor="@color/text_dim"
+        android:textSize="14sp" />
+
+    <GridView
+        android:id="@+id/site_grid"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="22dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:drawSelectorOnTop="true"
+        android:focusable="true"
+        android:horizontalSpacing="14dp"
+        android:listSelector="@drawable/card_selector"
+        android:numColumns="2"
+        android:stretchMode="columnWidth"
+        android:verticalSpacing="14dp" />
+
+</LinearLayout>

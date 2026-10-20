@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "updated": "2026-10-20",
+  "sites": [
+    {
+      "name": "HD Film Cehennemi",
+      "url": "https://www.hdfilmcehennemi.nl/"
+    },
+    {
+      "name": "Film Makinesi",
+      "url": "https://filmmakinesi.to/"
+    },
+    {
+      "name": "Film Dozu",
+      "url": "https://filmdozu.website/"
+    },
+    {
+      "name": "HD Film Izle",
+      "url": "https://www.hdfilmizle.to/"
+    },
+    {
+      "name": "U Film Izle",
+      "url": "https://ufilmizle.com/"
+    }
+  ]
+}

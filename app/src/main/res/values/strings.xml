@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">TV Film</string>
+    <string name="brand_first">TV</string>
+    <string name="brand_second">FİLM</string>
+    <string name="choose_site">Bir site secin</string>
+    <string name="choose_site_hint">Bir site seç · kumanda: yön tuşları + OK</string>
+    <string name="custom_url">Adres gir</string>
+    <string name="custom_url_sub">Başka bir site adresi aç</string>
+    <string name="refresh_list">Listeyi güncelle</string>
+    <string name="refresh_list_sub">GitHub listesini şimdi çek</string>
+    <string name="status_loading">Liste güncelleniyor…</string>
+    <string name="status_ok">Liste güncel</string>
+    <string name="status_offline">Liste güncellenemedi</string>
+    <string name="list_updated">Site listesi güncellendi</string>
+    <string name="go">Git</string>
+    <string name="back">GERİ</string>
+    <string name="reload">YENİLE</string>
+    <string name="home">ANA SAYFA</string>
+    <string name="play">OYNAT</string>
+    <string name="fullscreen">TAM EKRAN</string>
+    <string name="options">SEÇENEKLER</string>
+    <string name="sites">SİTELER</string>
+    <string name="url_hint">Adres</string>
+    <string name="player_options">Oynatıcı seçenekleri</string>
+    <string name="no_options">Bu sayfada oynatıcı seçeneği bulunamadı</string>
+    <string name="cinema_hint">Tam ekrandan çıkmak için GERİ tuşuna basın</string>
+    <string name="menu">Menü</string>
+</resources>
