@@ -9,12 +9,19 @@ data class Site(
 )
 
 object Sites {
-    /** Cevrimdisi ilk acilista kullanilan varsayilan liste (guncel liste GitHub'dan gelir). */
+    /** Cevrimdisi ilk acilista kullanilan varsayilan liste (guncel liste GitHub'daki sites.json'dan gelir). */
     val DEFAULT = listOf(
         Site("HD Film Cehennemi", "https://www.hdfilmcehennemi.nl/"),
         Site("Film Makinesi", "https://filmmakinesi.to/"),
         Site("Film Dozu", "https://filmdozu.website/"),
         Site("HD Film Izle", "https://www.hdfilmizle.to/"),
-        Site("U Film Izle", "https://ufilmizle.com/")
+        Site("U Film Izle", "https://ufilmizle.com/"),
+        Site("JetFilmizle", "https://jetfilmizle.sbs/"),
+        Site("SineMerkez", "https://sinemerkez.com/"),
+        Site("İzle Son HD Film", "https://izlesonhdfilm.com/"),
+        Site("Film İzle Ya", "https://filmizleya.com/"),
+        Site("HDFilmizlesende", "https://hdfilmizlesende.com/"),
+        Site("HDFilmZevki", "https://hdfilmzevki.co/"),
+        Site("FilmIzzle", "https://filmizzle.com/")
     )
 }

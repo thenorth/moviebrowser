@@ -21,7 +21,8 @@ object AdBlock {
         "richaudience.com", "rubiconproject.com", "servedbyadbutler.com", "sharethrough.com",
         "smartadserver.com", "taboola.com", "teads.tv", "trafficjunky.net", "underclick.net",
         "valueimpression.com", "yieldmo.com", "zedo.com", "onclickads.net", "onclckds.com",
-        "clickadu", "clickbank", "adbreak", "adcash", "dapulse.com", "sa_lunamedia", "supersonicads"
+        "clickadu", "clickbank", "adbreak", "adcash", "dapulse.com", "sa_lunamedia", "supersonicads",
+        "adspredictiv.com", "adspredictiv", "predictiv", "jump/next.php", "whitebit"
     )
 
     private val PATTERNS = listOf(

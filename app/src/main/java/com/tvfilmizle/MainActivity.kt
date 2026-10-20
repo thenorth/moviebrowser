@@ -26,8 +26,14 @@ class MainActivity : Activity() {
     private lateinit var rowActions: LinearLayout
     private lateinit var heroTitle: TextView
     private lateinit var heroSub: TextView
+    private lateinit var heroInitial: TextView
     private lateinit var clock: TextView
     private lateinit var status: TextView
+    private lateinit var statusDot: View
+
+    private var refreshing = false
+    private var refreshGlyph: TextView? = null
+    private var spin: android.animation.ObjectAnimator? = null
 
     private val handler = Handler(Looper.getMainLooper())
     private val tick = object : Runnable {
@@ -46,8 +52,10 @@ class MainActivity : Activity() {
         rowActions = findViewById(R.id.row_actions)
         heroTitle = findViewById(R.id.hero_title)
         heroSub = findViewById(R.id.hero_sub)
+        heroInitial = findViewById(R.id.hero_initial)
         clock = findViewById(R.id.clock)
         status = findViewById(R.id.status)
+        statusDot = findViewById(R.id.status_dot)
 
         fill(SiteRepository.cached(this))
         refreshList(false)
@@ -56,6 +64,9 @@ class MainActivity : Activity() {
     override fun onResume() {
         super.onResume()
         handler.post(tick)
+        // Uygulama one geldiginde liste 5 dakikadan eskiyse otomatik guncelle.
+        val age = System.currentTimeMillis() - SiteRepository.lastUpdate(this)
+        if (!refreshing && age > 5 * 60 * 1000L) refreshList(false)
     }
 
     override fun onPause() {
@@ -69,7 +80,9 @@ class MainActivity : Activity() {
 
         rowActions.removeAllViews()
         rowActions.addView(actionCard("+", getString(R.string.custom_url), getString(R.string.custom_url_sub), SiteKind.CUSTOM))
-        rowActions.addView(actionCard("↻", getString(R.string.refresh_list), getString(R.string.refresh_list_sub), SiteKind.REFRESH))
+        val refreshCard = actionCard("↻", getString(R.string.refresh_list), getString(R.string.refresh_list_sub), SiteKind.REFRESH)
+        rowActions.addView(refreshCard)
+        refreshGlyph = refreshCard.findViewById(R.id.action_glyph)
 
         hero(
             sites.firstOrNull()?.name ?: (getString(R.string.brand_first) + " " + getString(R.string.brand_second)),
@@ -86,6 +99,7 @@ class MainActivity : Activity() {
         card.findViewById<TextView>(R.id.site_url).text = site.url
         card.setOnFocusChangeListener { _, hasFocus -> if (hasFocus) hero(site.name, site.url) }
         card.setOnClickListener { open(site.url) }
+        touchClick(card)
         return card
     }
 
@@ -102,12 +116,39 @@ class MainActivity : Activity() {
                 else -> Unit
             }
         }
+        touchClick(card)
         return card
+    }
+
+    /**
+     * focusableInTouchMode kartlarda varsayilan davranis ilk dokunusu sadece odaga harcar.
+     * Burada dokunus biz isliyoruz: bas -> odak + basili gorunum, birak -> tikla.
+     */
+    private fun touchClick(view: View) {
+        view.setOnTouchListener { v, event ->
+            when (event.action) {
+                android.view.MotionEvent.ACTION_DOWN -> {
+                    v.requestFocus()
+                    v.isPressed = true
+                }
+                android.view.MotionEvent.ACTION_UP -> {
+                    v.isPressed = false
+                    v.performClick()
+                }
+                android.view.MotionEvent.ACTION_CANCEL -> v.isPressed = false
+            }
+            true
+        }
     }
 
     private fun hero(title: String, sub: String) {
         heroTitle.text = title
         heroSub.text = sub
+        heroInitial.text = title.take(1).uppercase()
+    }
+
+    private fun dot(color: String) {
+        statusDot.backgroundTintList = android.content.res.ColorStateList.valueOf(Color.parseColor(color))
     }
 
     /** Site adindan turetilen renkli kart arka plani. */
@@ -121,23 +162,50 @@ class MainActivity : Activity() {
     }
 
     private fun refreshList(manual: Boolean) {
+        if (refreshing) return
+        refreshing = true
         status.text = getString(R.string.status_loading)
+        dot("#8B98A6")
+        startSpin()
+        val started = System.currentTimeMillis()
         SiteRepository.refresh(this) { sites, changed ->
-            if (sites == null) {
-                status.text = getString(R.string.status_offline)
-                if (manual) Toast.makeText(this, R.string.status_offline, Toast.LENGTH_SHORT).show()
-            } else {
-                fill(sites)
-                status.text = sites.size.toString() + " " + getString(R.string.status_ok) + " · " + timeText()
-                if (changed || manual) Toast.makeText(this, R.string.list_updated, Toast.LENGTH_SHORT).show()
-            }
+            // Animasyon en az 700 ms gorunsun (arama cok hizli bitiyor).
+            val rest = 700L - (System.currentTimeMillis() - started)
+            handler.postDelayed({ finishRefresh(sites, changed, manual) }, if (rest > 0) rest else 0)
         }
     }
 
-    private fun timeText(): String {
-        val t = SiteRepository.lastUpdate(this)
-        if (t <= 0L) return ""
-        return SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(t))
+    private fun finishRefresh(sites: List<Site>?, changed: Boolean, manual: Boolean) {
+        refreshing = false
+        stopSpin()
+        if (sites == null) {
+            status.text = getString(R.string.status_offline)
+            dot("#FF6B6B")
+            if (manual) Toast.makeText(this, R.string.status_offline, Toast.LENGTH_SHORT).show()
+        } else {
+            fill(sites)
+            val msg = getString(R.string.status_updated, sites.size)
+            status.text = msg
+            dot("#59D986")
+            if (changed || manual) Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun startSpin() {
+        val glyph = refreshGlyph ?: return
+        spin?.cancel()
+        spin = android.animation.ObjectAnimator.ofFloat(glyph, View.ROTATION, 0f, 360f).apply {
+            duration = 850
+            repeatCount = android.animation.ObjectAnimator.INFINITE
+            interpolator = android.view.animation.LinearInterpolator()
+            start()
+        }
+    }
+
+    private fun stopSpin() {
+        spin?.cancel()
+        spin = null
+        refreshGlyph?.rotation = 0f
     }
 
     private fun open(url: String) {

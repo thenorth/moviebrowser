@@ -11,7 +11,8 @@ bir sonraki açılışında (veya "Listeyi güncelle" kartına basınca) anında
   Sayfanın en altında DOWN → alt araç çubuğu. `MENU` tuşu tüm eylemleri listeler.
 - **Reklam engelleme**: istek seviyesinde reklam/pop ağları + sayfa içi reklam kutuları.
 - **Oynatıcı seçenekleri**: sayfadaki kalite/sunucu/dil seçenekleri, iframe oynatıcılar ve video kaynakları tek listede.
-- **Tam ekran**: araç çubuğu + sistem çubukları gizlenir (GERİ ile çıkış).
+- **Tam ekran**: oynatıcı (video ya da oynatıcı iframe'i) tüm ekrana yayılır; reklam katmanları elenir.
+  Oynatıcı yoksa uyarı verir. GERİ ile çıkış.
 - **Yeni pencere**: oynatıcı yeni sekme açarsa aynı ekranda gösterilir.
 - Medya tuşları: oynat / duraklat / ileri / geri.
 
@@ -33,6 +34,22 @@ GitHub üzerinden dosyayı düzenleyip commit edin — uygulama bir sonraki aç�
 Uygulama içinden zorlamak için ana ekrandaki **Listeyi güncelle** kartına basın.
 
 Liste adresi: `https://raw.githubusercontent.com/thenorth/moviebrowser/main/sites.json`
+
+### Otomatik keşif
+
+`tools/discover.js` verilen Türkçe arama kalıplarıyla (Türkçe Dublaj / Altyazılı / Full HD film izle …)
+arama yapar, başlık ve içerik kontrolünden geçen siteleri doğrular ve `sites.json`'a ekler:
+
+```bash
+node tools/discover.js --dry   # sadece rapor
+node tools/discover.js         # listeye ekle
+```
+
+`.github/workflows/update-sites.yml` bu betiği **her pazartesi** çalıştırıp değişikliği commit eder;
+uygulama da açılışta yeni listeyi otomatik çeker.
+
+Elenenler: rehber/veritabanı siteleri (film izletmeyen), ücretli platformlar (NOW, TV+, Exxen…),
+arama motorları, forumlar ve erişilemeyen alan adları.
 
 ## Derleme
 
@@ -64,3 +81,7 @@ veya APK'yı USB ile TV'ye kopyalayıp dosya yöneticisinden kurun.
 
 > Not: Proje yolu Türkçe karakter içeriyorsa Windows'ta AGP uyarı verir; `gradle.properties`
 > içindeki `android.overridePathCheck=true` bunu susturur. Birim testleri ASCII yolda çalışır.
+
+## Devir notu
+
+Yapılanlar, açık işler ve sonraki oturum hatırlatmaları: [`HANDOFF.md`](HANDOFF.md)

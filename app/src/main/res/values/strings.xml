@@ -3,16 +3,25 @@
     <string name="app_name">TV Film</string>
     <string name="brand_first">TV</string>
     <string name="brand_second">FİLM</string>
-    <string name="hero_hint">Bir site seç, filmi tek tuşla aç. Reklamlar engellenir.</string>
-    <string name="hero_keys">YÖN TUŞLARI: GEZİN  ·  OK: AÇ</string>
+    <string name="play_symbol">▶</string>
+    <string name="hero_chip">REKLAMSIZ</string>
+    <string name="hero_hint">Bir site seç, filmi tek tuşla aç.</string>
+    <string name="hero_open">▶  AÇ</string>
+    <string name="hero_note">Tek tuşla oynat</string>
     <string name="row_sites">SİTELER</string>
     <string name="row_actions">HIZLI İŞLEMLER</string>
+    <string name="key_ok">OK</string>
+    <string name="key_ok_action">Aç</string>
+    <string name="key_menu">MENÜ</string>
+    <string name="key_menu_action">Seçenekler</string>
+    <string name="key_back">GERİ</string>
+    <string name="key_back_action">Çık</string>
     <string name="custom_url">Adres gir</string>
     <string name="custom_url_sub">Başka bir site adresi aç</string>
     <string name="refresh_list">Listeyi güncelle</string>
     <string name="refresh_list_sub">GitHub listesini şimdi çek</string>
     <string name="status_loading">Liste güncelleniyor…</string>
-    <string name="status_ok">site</string>
+    <string name="status_updated">Liste güncellendi · %1$d site</string>
     <string name="status_offline">Liste güncellenemedi</string>
     <string name="list_updated">Site listesi güncellendi</string>
     <string name="go">Git</string>
@@ -27,5 +36,7 @@
     <string name="player_options">Oynatıcı seçenekleri</string>
     <string name="no_options">Bu sayfada oynatıcı seçeneği bulunamadı</string>
     <string name="cinema_hint">Tam ekrandan çıkmak için GERİ tuşuna basın</string>
+    <string name="no_player">Oynatıcı bulunamadı — filmi başlatıp tekrar deneyin</string>
+    <string name="starting">Oynatıcı açılıyor…</string>
     <string name="menu">Menü</string>
 </resources>

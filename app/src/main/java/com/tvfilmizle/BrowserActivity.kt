@@ -29,6 +29,7 @@ import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.Toast
 import org.json.JSONArray
+import org.json.JSONObject
 import org.json.JSONTokener
 import java.io.ByteArrayInputStream
 
@@ -53,7 +54,7 @@ class BrowserActivity : Activity() {
     private var customView: View? = null
     private var customCallback: WebChromeClient.CustomViewCallback? = null
     private var homeUrl = ""
-    private var cinema = false
+    private var fsActive = false
 
     /** Sayfa dibinde DOWN: odagi alt arac cubuguna tasir (kumanda ile menuye erisim). */
     private val bridge = object {
@@ -100,10 +101,8 @@ class BrowserActivity : Activity() {
         findViewById<View>(R.id.btn_back).setOnClickListener { if (!goBackInWeb()) finish() }
         findViewById<View>(R.id.btn_reload).setOnClickListener { active?.reload() }
         findViewById<View>(R.id.btn_home).setOnClickListener { active?.loadUrl(homeUrl) }
-        findViewById<View>(R.id.btn_full).setOnClickListener { toggleCinema() }
-        findViewById<View>(R.id.btn_play).setOnClickListener {
-            active?.evaluateJavascript(PlayerOptions.MEDIA_TOGGLE, null)
-        }
+        findViewById<View>(R.id.btn_full).setOnClickListener { toggleFullscreen() }
+        findViewById<View>(R.id.btn_play).setOnClickListener { togglePlay() }
         findViewById<View>(R.id.btn_options).setOnClickListener { showPlayerOptions() }
         findViewById<View>(R.id.btn_sites).setOnClickListener { showSites() }
         findViewById<View>(R.id.btn_go).setOnClickListener { loadTyped(urlBar.text.toString()) }
@@ -164,6 +163,8 @@ class BrowserActivity : Activity() {
         }
 
         override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
+            val url = request.url.toString()
+            if (AdBlock.isBlocked(url)) return true
             val scheme = request.url.scheme?.lowercase()
             return !(scheme == "http" || scheme == "https" || scheme == "about" || scheme == "data")
         }
@@ -173,13 +174,22 @@ class BrowserActivity : Activity() {
                 removeChild(view)
                 return
             }
-            if (view === active) urlBar.setText(url)
+            if (view === active) {
+                urlBar.setText(url)
+                fsActive = false
+                toolbar.visibility = View.VISIBLE
+            }
         }
 
         override fun onPageFinished(view: WebView, url: String) {
             view.evaluateJavascript(AdBlock.COSMETIC_JS, null)
             view.evaluateJavascript(PlayerOptions.FOCUS_JS, null)
             view.evaluateJavascript(Nav.JS, null)
+            view.evaluateJavascript(Fullscreen.SCAN_JS, null)
+            view.evaluateJavascript(Player.ANALYZE_JS, null)
+            // Oynatıcı sayfaya geç eklenebiliyor; bir kez daha tara.
+            view.postDelayed({ view.evaluateJavascript(Fullscreen.SCAN_JS, null) }, 3000)
+            view.postDelayed({ view.evaluateJavascript(Player.ANALYZE_JS, null) }, 3000)
             if (view === active && !urlBar.hasFocus()) view.requestFocus()
         }
     }
@@ -223,13 +233,25 @@ class BrowserActivity : Activity() {
 
     // ------------------------------------------------------------ tam ekran
 
-    /** Araç çubuğunu ve sistem çubuklarını gizler; iframe oynatıcıda da çalışır. */
-    private fun toggleCinema() {
-        cinema = !cinema
-        toolbar.visibility = if (cinema) View.GONE else View.VISIBLE
-        // Oynatici kisayolu ile gercek tam ekran isterse (video ust belgede ise)
-        active?.evaluateJavascript(PlayerOptions.MEDIA_FULLSCREEN, null)
-        if (cinema) Toast.makeText(this, R.string.cinema_hint, Toast.LENGTH_SHORT).show()
+    /** Oynatıcıyı (video ya da en büyük iframe) tespit edip tüm ekrana yayar. */
+    private fun toggleFullscreen() {
+        val w = active ?: web
+        if (fsActive) {
+            w.evaluateJavascript(Fullscreen.EXIT_JS, null)
+            fsActive = false
+            toolbar.visibility = View.VISIBLE
+            return
+        }
+        w.evaluateJavascript(Fullscreen.ENTER_JS) { result ->
+            val state = result?.trim()?.trim('"') ?: "none"
+            if (state == "none") {
+                Toast.makeText(this, R.string.no_player, Toast.LENGTH_SHORT).show()
+            } else {
+                fsActive = true
+                toolbar.visibility = View.GONE
+                Toast.makeText(this, R.string.cinema_hint, Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
     private fun showFullscreen(view: View?, callback: WebChromeClient.CustomViewCallback?) {
@@ -252,7 +274,7 @@ class BrowserActivity : Activity() {
         customCallback = null
         fsContainer.visibility = View.GONE
         web.visibility = View.VISIBLE
-        toolbar.visibility = if (cinema) View.GONE else View.VISIBLE
+        toolbar.visibility = if (fsActive) View.GONE else View.VISIBLE
     }
 
     private fun hideSystemBars() {
@@ -352,6 +374,39 @@ class BrowserActivity : Activity() {
     }
 
     /** MENU tusu: kumandanin ulasamadigi eylemler tek listede. */
+    /** Oynat/duraklat: video varsa dogrudan, iframe ise merkezine dokunus. */
+    private fun togglePlay() {
+        val w = active ?: web
+        w.evaluateJavascript(Player.TOGGLE_JS) { result ->
+            val value = try { JSONTokener(result ?: "null").nextValue() } catch (e: Exception) { null }
+            if (value !is String) return@evaluateJavascript
+            when {
+                value == "video" -> Unit
+                value == "started" -> Toast.makeText(this, R.string.starting, Toast.LENGTH_SHORT).show()
+                value == "none" -> Toast.makeText(this, R.string.no_player, Toast.LENGTH_SHORT).show()
+                value.startsWith("{") -> try {
+                    val o = JSONObject(value)
+                    tapWeb(o.optDouble("nx", 0.5).toFloat(), o.optDouble("ny", 0.45).toFloat())
+                } catch (e: Exception) {
+                }
+            }
+        }
+    }
+
+    private fun tapWeb(nx: Float, ny: Float) {
+        val w = active ?: web
+        if (w.width <= 0 || w.height <= 0) return
+        val x = nx.coerceIn(0.05f, 0.95f) * w.width
+        val y = ny.coerceIn(0.05f, 0.95f) * w.height
+        val now = android.os.SystemClock.uptimeMillis()
+        val down = android.view.MotionEvent.obtain(now, now, android.view.MotionEvent.ACTION_DOWN, x, y, 0)
+        w.dispatchTouchEvent(down)
+        down.recycle()
+        val up = android.view.MotionEvent.obtain(now, now + 60, android.view.MotionEvent.ACTION_UP, x, y, 0)
+        w.dispatchTouchEvent(up)
+        up.recycle()
+    }
+
     private fun showMenu() {
         val items = arrayOf(
             getString(R.string.back), getString(R.string.reload), getString(R.string.home),
@@ -367,8 +422,8 @@ class BrowserActivity : Activity() {
                     2 -> active?.loadUrl(homeUrl)
                     3 -> showSites()
                     4 -> showPlayerOptions()
-                    5 -> active?.evaluateJavascript(PlayerOptions.MEDIA_TOGGLE, null)
-                    6 -> toggleCinema()
+                    5 -> togglePlay()
+                    6 -> toggleFullscreen()
                     7 -> {
                         urlBar.requestFocus()
                         urlBar.selectAll()
@@ -403,8 +458,8 @@ class BrowserActivity : Activity() {
     }
 
     override fun onBackPressed() {
-        if (cinema) {
-            toggleCinema()
+        if (fsActive) {
+            toggleFullscreen()
             return
         }
         if (!goBackInWeb()) super.onBackPressed()
@@ -418,13 +473,13 @@ class BrowserActivity : Activity() {
         val w = active ?: web
         when (keyCode) {
             KeyEvent.KEYCODE_MEDIA_PLAY -> {
-                w.evaluateJavascript(PlayerOptions.MEDIA_PLAY, null); return true
+                togglePlay(); return true
             }
             KeyEvent.KEYCODE_MEDIA_PAUSE -> {
                 w.evaluateJavascript(PlayerOptions.MEDIA_PAUSE, null); return true
             }
             KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE -> {
-                w.evaluateJavascript(PlayerOptions.MEDIA_TOGGLE, null); return true
+                togglePlay(); return true
             }
             KeyEvent.KEYCODE_MEDIA_FAST_FORWARD -> {
                 w.evaluateJavascript(PlayerOptions.MEDIA_FF, null); return true

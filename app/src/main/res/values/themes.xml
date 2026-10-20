@@ -15,6 +15,28 @@
         <item name="android:textColorSecondary">@color/text_dim</item>
     </style>
 
+    <style name="KeyCap">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginStart">18dp</item>
+        <item name="android:background">@drawable/key_bg</item>
+        <item name="android:paddingLeft">8dp</item>
+        <item name="android:paddingTop">2dp</item>
+        <item name="android:paddingRight">8dp</item>
+        <item name="android:paddingBottom">2dp</item>
+        <item name="android:textColor">@color/text</item>
+        <item name="android:textSize">10sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="KeyLabel">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginStart">6dp</item>
+        <item name="android:textColor">@color/text_dim</item>
+        <item name="android:textSize">11sp</item>
+    </style>
+
     <style name="ToolButton">
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">38dp</item>
