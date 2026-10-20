@@ -12,6 +12,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.WindowInsets
 import android.view.WindowInsetsController
+import android.view.WindowManager
 import android.view.inputmethod.EditorInfo
 import android.webkit.CookieManager
 import android.webkit.JavascriptInterface
@@ -91,6 +92,8 @@ class BrowserActivity : Activity() {
         web.loadUrl(homeUrl)
 
         bindButtons()
+        // Immersive yerine basit fullscreen: diyaloglarin pencere odagi bozulmaz.
+        window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
     }
 
     private fun bindButtons() {
@@ -224,7 +227,6 @@ class BrowserActivity : Activity() {
     private fun toggleCinema() {
         cinema = !cinema
         toolbar.visibility = if (cinema) View.GONE else View.VISIBLE
-        if (cinema) hideSystemBars() else showSystemBars()
         // Oynatici kisayolu ile gercek tam ekran isterse (video ust belgede ise)
         active?.evaluateJavascript(PlayerOptions.MEDIA_FULLSCREEN, null)
         if (cinema) Toast.makeText(this, R.string.cinema_hint, Toast.LENGTH_SHORT).show()
@@ -251,7 +253,6 @@ class BrowserActivity : Activity() {
         fsContainer.visibility = View.GONE
         web.visibility = View.VISIBLE
         toolbar.visibility = if (cinema) View.GONE else View.VISIBLE
-        showSystemBars()
     }
 
     private fun hideSystemBars() {

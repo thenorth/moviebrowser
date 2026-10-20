@@ -15,8 +15,8 @@ object Nav {
   var cur = null;
 
   var st = document.createElement('style');
-  st.textContent = '.tv-focus{outline:3px solid #ff9800!important;outline-offset:2px!important;' +
-    'box-shadow:0 0 0 5px rgba(255,152,0,.28)!important;border-radius:4px!important;}';
+  st.textContent = '.tv-focus{outline:3px solid #ff9800!important;outline-offset:-3px!important;' +
+    'box-shadow:inset 0 0 0 6px rgba(255,152,0,.22)!important;filter:brightness(1.18)!important;}';
   (document.head || document.documentElement).appendChild(st);
 
   function shown(el){
@@ -41,6 +41,10 @@ object Nav {
   function pick(dir){
     var els = items();
     if (!els.length) return null;
+    if (!cur) {
+      var ae = document.activeElement;
+      if (ae && ae !== document.body && els.indexOf(ae) >= 0) cur = ae;
+    }
     if (!cur || els.indexOf(cur) < 0) return els[0];
     var base = cur.getBoundingClientRect();
     var fc = mid(base);
