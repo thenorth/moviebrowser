@@ -125,6 +125,9 @@ class MainActivity : Activity() {
 
     private fun fill(sites: List<Site>) {        entries.clear()
         entries.addAll(sites)
+        entries.add(Site(getString(R.string.search_title), getString(R.string.search_sub), SiteKind.SEARCH))
+        entries.add(Site(getString(R.string.watchlist), getString(R.string.watchlist_sub), SiteKind.WATCHLIST))
+        entries.add(Site(getString(R.string.status_title), getString(R.string.status_sub), SiteKind.STATUS))
         entries.add(Site(getString(R.string.custom_url), getString(R.string.custom_url_sub), SiteKind.CUSTOM))
         entries.add(Site(getString(R.string.refresh_list), getString(R.string.refresh_list_sub), SiteKind.REFRESH))
         entries.add(Site(getString(R.string.settings), getString(R.string.vpn_title), SiteKind.SETTINGS))
@@ -137,8 +140,38 @@ class MainActivity : Activity() {
             SiteKind.CUSTOM -> askUrl()
             SiteKind.REFRESH -> refreshList(true)
             SiteKind.SETTINGS -> startActivity(Intent(this, SettingsActivity::class.java))
-            SiteKind.SITE -> open(site.url)
+            SiteKind.SEARCH -> askSearch()
+            SiteKind.WATCHLIST -> startActivity(Intent(this, WatchlistActivity::class.java))
+            SiteKind.STATUS -> startActivity(Intent(this, StatusActivity::class.java))
+            SiteKind.SITE -> startActivity(
+                Intent(this, SiteFilmsActivity::class.java)
+                    .putExtra(SiteFilmsActivity.EXTRA_URL, site.url)
+                    .putExtra(SiteFilmsActivity.EXTRA_NAME, site.name)
+            )
         }
+    }
+
+    /** Google'da film arar (sonuc tarayicida acilir). */
+    private fun askSearch() {
+        val input = EditText(this).apply {
+            setSingleLine()
+            hint = getString(R.string.search_hint)
+            setPadding(48, 36, 48, 36)
+        }
+        val dialog = AlertDialog.Builder(this)
+            .setTitle(R.string.search_title)
+            .setView(input)
+            .setPositiveButton(R.string.search_action) { _, _ ->
+                val q = input.text.toString().trim()
+                if (q.isNotEmpty()) {
+                    open("https://www.google.com/search?q=" + android.net.Uri.encode(q + " film izle"))
+                }
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .create()
+        dialog.setOnShowListener { input.requestFocus() }
+        dialog.show()
+        dialog.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE)
     }
 
     private fun refreshList(manual: Boolean) {
@@ -290,8 +323,12 @@ private class SiteAdapter(private val ctx: Context, private val items: List<Site
                 SiteKind.CUSTOM -> "+"
                 SiteKind.REFRESH -> "↻"
                 SiteKind.SETTINGS -> "⚙"
+                SiteKind.SEARCH -> "ARA"
+                SiteKind.WATCHLIST -> "★"
+                SiteKind.STATUS -> "✓"
                 else -> ""
             }
+            badge.textSize = 18f
             badge.setTextColor(Color.parseColor("#FF9F1A"))
         }
         view.findViewById<TextView>(R.id.site_name).text = site.name

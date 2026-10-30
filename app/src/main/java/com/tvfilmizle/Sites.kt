@@ -1,6 +1,6 @@
 package com.tvfilmizle
 
-enum class SiteKind { SITE, CUSTOM, REFRESH, SETTINGS }
+enum class SiteKind { SITE, CUSTOM, REFRESH, SETTINGS, SEARCH, WATCHLIST, STATUS }
 
 data class Site(
     val name: String,

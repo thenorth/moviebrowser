@@ -55,6 +55,24 @@
             android:exported="false"
             android:screenOrientation="landscape" />
 
+        <activity
+            android:name=".SiteFilmsActivity"
+            android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|screenSize|smallestScreenSize|uiMode"
+            android:exported="false"
+            android:screenOrientation="landscape" />
+
+        <activity
+            android:name=".WatchlistActivity"
+            android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|screenSize|smallestScreenSize|uiMode"
+            android:exported="false"
+            android:screenOrientation="landscape" />
+
+        <activity
+            android:name=".StatusActivity"
+            android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|screenSize|smallestScreenSize|uiMode"
+            android:exported="false"
+            android:screenOrientation="landscape" />
+
         <!-- WireGuard kutuphanesinin VPN servisi (targetSdk 34 icin exported zorunlu) -->
         <service
             android:name="com.wireguard.android.backend.GoBackend$VpnService"

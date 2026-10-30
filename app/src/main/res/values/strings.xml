@@ -76,4 +76,26 @@
     <string name="update_msg">Yeni sürüm %1$s hazır (kurulu: %2$s). Şimdi indirilsin mi?</string>
     <string name="update_yes">İndir</string>
     <string name="update_later">Sonra</string>
+    <string name="films_loading">Filmler yükleniyor…</string>
+    <string name="films_empty">Filmler alınamadı, site tarayıcıda açılıyor…</string>
+    <string name="open_site">SİTEYİ AÇ</string>
+    <string name="watchlist">Listem</string>
+    <string name="watchlist_sub">Kaydedilen filmler</string>
+    <string name="watch_empty">Listen boş.\nTarayıcıda MENÜ → Listeme ekle.</string>
+    <string name="remove">SİL</string>
+    <string name="add_watch">Listeme ekle</string>
+    <string name="added_watch">Listeme eklendi</string>
+    <string name="in_watch">Zaten listende</string>
+    <string name="search_title">Film ara</string>
+    <string name="search_hint">Film adı yaz</string>
+    <string name="search_action">Ara</string>
+    <string name="search_sub">Google\'da film ara</string>
+    <string name="status_title">Site durumu</string>
+    <string name="status_sub">Erişilebilirlik testi</string>
+    <string name="status_test">TEST ET</string>
+    <string name="status_ok">Erişilebilir</string>
+    <string name="status_blocked">Ulaşılamıyor</string>
+    <string name="status_protected">Korumalı</string>
+    <string name="status_error">Hata</string>
+    <string name="status_unknown">Test edilmedi</string>
 </resources>

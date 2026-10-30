@@ -544,7 +544,19 @@ class BrowserActivity : Activity() {
     }
 
     /** MENU tusu: kumandanin ulasamadigi eylemler tek listede. */
-    /** Oynat/duraklat: video varsa dogrudan, iframe ise merkezine dokunus. */
+    /** Sayfayi listeye ekler (baslik + url + site). */
+    private fun addToWatchlist() {
+        val w = active ?: web
+        val url = w.url ?: return
+        if (Watchlist.has(this, url)) {
+            Toast.makeText(this, R.string.in_watch, Toast.LENGTH_SHORT).show()
+            return
+        }
+        val title = w.title?.takeIf { it.isNotBlank() } ?: url
+        Watchlist.add(this, Watchlist.Item(title, url, Scraper.hostOf(url)))
+        Toast.makeText(this, R.string.added_watch, Toast.LENGTH_SHORT).show()
+    }
+
     private fun togglePlay() {
         val w = active ?: web
         w.evaluateJavascript(Player.TOGGLE_JS) { result ->
@@ -581,7 +593,7 @@ class BrowserActivity : Activity() {
         val items = arrayOf(
             getString(R.string.back), getString(R.string.reload), getString(R.string.home),
             getString(R.string.sites), getString(R.string.options), getString(R.string.play),
-            getString(R.string.fullscreen), getString(R.string.custom_url)
+            getString(R.string.fullscreen), getString(R.string.custom_url), getString(R.string.add_watch)
         )
         AlertDialog.Builder(this)
             .setTitle(R.string.menu)
@@ -598,6 +610,7 @@ class BrowserActivity : Activity() {
                         urlBar.requestFocus()
                         urlBar.selectAll()
                     }
+                    8 -> addToWatchlist()
                 }
             }
             .setNegativeButton(android.R.string.cancel, null)

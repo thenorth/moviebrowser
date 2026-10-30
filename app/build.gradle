@@ -11,14 +11,14 @@ android {
         applicationId "com.tvfilmizle"
         minSdk 21
         targetSdk 34
-        versionCode 29
-        versionName "2.9"
+        versionCode 30
+        versionName "3.0"
     }
 
     buildTypes {
         release {
             minifyEnabled false
-            // sideload edilebilir olmasÃƒÆ’Ã¢â‚¬ÂÃƒâ€šÃ‚Â± iÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§in release da debug imzasÃƒÆ’Ã¢â‚¬ÂÃƒâ€šÃ‚Â± ile paketlenir
+            // sideload edilebilir olmasÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â± iÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â§in release da debug imzasÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â± ile paketlenir
             signingConfig signingConfigs.debug
         }
     }
@@ -34,6 +34,7 @@ android {
 dependencies {
     implementation 'org.jetbrains.kotlin:kotlin-stdlib:1.9.24'
     implementation 'com.wireguard.android:tunnel:1.0.20210211'
+    implementation 'org.jsoup:jsoup:1.17.2'
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.4'
     testImplementation 'junit:junit:4.13.2'
 }
