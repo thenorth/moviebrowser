@@ -16,6 +16,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
 import android.view.animation.LinearInterpolator
+import android.widget.AdapterView
 import android.widget.BaseAdapter
 import android.widget.EditText
 import android.widget.GridView
@@ -62,6 +63,16 @@ class MainActivity : Activity() {
         grid.setOnItemClickListener { _, _, position, _ ->
             entries.getOrNull(position)?.let { activate(it) }
         }
+        grid.setOnItemSelectedListener(object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                for (i in 0 until grid.childCount) {
+                    val child = grid.getChildAt(i)
+                    setFocused(child, child === view)
+                }
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>?) = Unit
+        })
 
         fill(SiteRepository.cached(this))
         refreshList(false)
@@ -79,8 +90,7 @@ class MainActivity : Activity() {
         handler.removeCallbacks(tick)
     }
 
-    private fun fill(sites: List<Site>) {
-        entries.clear()
+    private fun fill(sites: List<Site>) {        entries.clear()
         entries.addAll(sites)
         entries.add(Site(getString(R.string.custom_url), getString(R.string.custom_url_sub), SiteKind.CUSTOM))
         entries.add(Site(getString(R.string.refresh_list), getString(R.string.refresh_list_sub), SiteKind.REFRESH))
@@ -127,6 +137,19 @@ class MainActivity : Activity() {
 
     private fun dot(color: String) {
         statusDot.backgroundTintList = android.content.res.ColorStateList.valueOf(Color.parseColor(color))
+    }
+
+    /** Odaktaki poster: %6 buyume + golge + halka. */
+    private fun setFocused(v: View, on: Boolean) {
+        v.foreground = if (on) resources.getDrawable(R.drawable.poster_ring, theme) else null
+        v.animate().cancel()
+        val s = if (on) 1.06f else 1f
+        v.animate()
+            .scaleX(s)
+            .scaleY(s)
+            .translationZ(if (on) 14f * resources.displayMetrics.density else 0f)
+            .setDuration(150)
+            .start()
     }
 
     private fun refreshBadge(): TextView? {
@@ -188,6 +211,10 @@ private class SiteAdapter(private val ctx: Context, private val items: List<Site
     override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
         val view = convertView ?: inflater.inflate(R.layout.item_poster, parent, false)
         val site = items[position]
+        view.foreground = null
+        view.scaleX = 1f
+        view.scaleY = 1f
+        view.translationZ = 0f
         view.background = art(ctx, site)
         val badge = view.findViewById<TextView>(R.id.site_badge)
         badge.text = when (site.kind) {
