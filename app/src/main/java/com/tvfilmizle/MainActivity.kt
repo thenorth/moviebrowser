@@ -50,6 +50,14 @@ class MainActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Baska uygulamadan gelen link: dogrudan tarayicida ac.
+        if (intent?.action == Intent.ACTION_VIEW && intent.data != null) {
+            open(intent.data.toString())
+            finish()
+            return
+        }
+
         setContentView(R.layout.activity_main)
         window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
 
