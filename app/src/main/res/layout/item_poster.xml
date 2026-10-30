@@ -4,34 +4,32 @@
     android:layout_height="250dp"
     android:background="@drawable/card_bg">
 
-    <TextView
-        android:id="@+id/site_flag"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="top|start"
-        android:layout_marginStart="10dp"
-        android:layout_marginTop="10dp"
-        android:background="@drawable/flag_bg"
-        android:paddingLeft="7dp"
-        android:paddingTop="2dp"
-        android:paddingRight="7dp"
-        android:paddingBottom="2dp"
-        android:text="@string/blocked_flag"
-        android:textColor="#FF9B9B"
-        android:textSize="9sp"
-        android:textStyle="bold"
-        android:visibility="gone" />
-
-    <TextView
-        android:id="@+id/site_badge"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+    <!-- Logo kutusu: gercek favicon (yoksa harf) -->
+    <FrameLayout
+        android:layout_width="78dp"
+        android:layout_height="78dp"
         android:layout_gravity="center"
-        android:layout_marginBottom="24dp"
-        android:alpha="0.22"
-        android:textColor="#FFFFFF"
-        android:textSize="62sp"
-        android:textStyle="bold" />
+        android:layout_marginBottom="34dp"
+        android:background="@drawable/logo_tile">
+
+        <TextView
+            android:id="@+id/site_badge"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:textColor="#E6FFFFFF"
+            android:textSize="30sp"
+            android:textStyle="bold" />
+
+        <ImageView
+            android:id="@+id/site_logo"
+            android:layout_width="52dp"
+            android:layout_height="52dp"
+            android:layout_gravity="center"
+            android:contentDescription="@null"
+            android:scaleType="fitCenter"
+            android:visibility="gone" />
+    </FrameLayout>
 
     <View
         android:layout_width="match_parent"
@@ -68,5 +66,23 @@
             android:textColor="#99FFFFFF"
             android:textSize="9sp" />
     </LinearLayout>
+
+    <TextView
+        android:id="@+id/site_flag"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|start"
+        android:layout_marginStart="10dp"
+        android:layout_marginTop="10dp"
+        android:background="@drawable/flag_bg"
+        android:paddingLeft="7dp"
+        android:paddingTop="2dp"
+        android:paddingRight="7dp"
+        android:paddingBottom="2dp"
+        android:text="@string/blocked_flag"
+        android:textColor="#FF9B9B"
+        android:textSize="9sp"
+        android:textStyle="bold"
+        android:visibility="gone" />
 
 </FrameLayout>

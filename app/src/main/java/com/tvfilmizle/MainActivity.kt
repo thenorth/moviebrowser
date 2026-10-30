@@ -20,6 +20,7 @@ import android.widget.AdapterView
 import android.widget.BaseAdapter
 import android.widget.EditText
 import android.widget.GridView
+import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import java.text.SimpleDateFormat
@@ -254,14 +255,45 @@ private class SiteAdapter(private val ctx: Context, private val items: List<Site
         val blocked = site.kind == SiteKind.SITE && SiteHealth.isBlocked(ctx, host)
         view.findViewById<TextView>(R.id.site_flag).visibility = if (blocked) View.VISIBLE else View.GONE
         val badge = view.findViewById<TextView>(R.id.site_badge)
-        badge.text = when (site.kind) {
-            SiteKind.CUSTOM -> "+"
-            SiteKind.REFRESH -> "↻"
-            SiteKind.SETTINGS -> "⚙"
-            SiteKind.SITE -> site.name.take(1).uppercase()
+        val logo = view.findViewById<ImageView>(R.id.site_logo)
+        if (site.kind == SiteKind.SITE) {
+            badge.text = site.name.take(1).uppercase()
+            badge.setTextColor(Color.WHITE)
+            badge.alpha = 1f
+            val known = host?.let { Favicons.cached(it) }
+            if (known != null) {
+                logo.tag = host
+                logo.setImageBitmap(known)
+                logo.visibility = View.VISIBLE
+                badge.visibility = View.GONE
+            } else {
+                logo.setImageDrawable(null)
+                logo.visibility = View.GONE
+                badge.visibility = View.VISIBLE
+                if (host != null && logo.tag != host) {
+                    logo.tag = host
+                    Favicons.load(ctx, host) { bmp ->
+                        if (bmp != null && logo.tag == host) {
+                            logo.setImageBitmap(bmp)
+                            logo.visibility = View.VISIBLE
+                            badge.visibility = View.GONE
+                        }
+                    }
+                }
+            }
+        } else {
+            logo.setImageDrawable(null)
+            logo.visibility = View.GONE
+            badge.visibility = View.VISIBLE
+            badge.alpha = 1f
+            badge.text = when (site.kind) {
+                SiteKind.CUSTOM -> "+"
+                SiteKind.REFRESH -> "↻"
+                SiteKind.SETTINGS -> "⚙"
+                else -> ""
+            }
+            badge.setTextColor(Color.parseColor("#FF9F1A"))
         }
-        badge.alpha = if (site.kind == SiteKind.SITE) 0.22f else 1f
-        badge.setTextColor(if (site.kind == SiteKind.SITE) Color.WHITE else Color.parseColor("#FF9F1A"))
         view.findViewById<TextView>(R.id.site_name).text = site.name
         view.findViewById<TextView>(R.id.site_url).text = site.url
         return view
