@@ -1,41 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="196dp"
-    android:layout_height="110dp"
-    android:layout_marginEnd="14dp"
-    android:background="@drawable/card_bg"
-    android:clickable="true"
-    android:focusable="true"
-    android:focusableInTouchMode="true"
-    android:foreground="@drawable/card_ring"
-    android:stateListAnimator="@animator/card_focus">
-
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="72dp"
-        android:layout_gravity="bottom"
-        android:background="@drawable/card_scrim" />
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="58dp"
+    android:background="@drawable/row_bg"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingLeft="12dp"
+    android:paddingRight="12dp">
 
     <TextView
-        android:id="@+id/site_initial"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="top|end"
-        android:layout_marginTop="4dp"
-        android:layout_marginEnd="12dp"
-        android:alpha="0.16"
-        android:textColor="#FFFFFF"
-        android:textSize="46sp"
+        android:id="@+id/site_badge"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:background="@drawable/badge_square"
+        android:gravity="center"
+        android:textColor="@color/accent"
+        android:textSize="14sp"
         android:textStyle="bold" />
 
     <LinearLayout
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_gravity="bottom"
-        android:orientation="vertical"
-        android:paddingLeft="13dp"
-        android:paddingRight="13dp"
-        android:paddingBottom="11dp">
+        android:layout_marginStart="12dp"
+        android:layout_weight="1"
+        android:orientation="vertical">
 
         <TextView
             android:id="@+id/site_name"
@@ -51,11 +39,10 @@
             android:id="@+id/site_url"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="1dp"
             android:ellipsize="end"
             android:singleLine="true"
-            android:textColor="#8CFFFFFF"
-            android:textSize="9sp" />
+            android:textColor="@color/text_dim"
+            android:textSize="10sp" />
     </LinearLayout>
 
-</FrameLayout>
+</LinearLayout>

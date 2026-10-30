@@ -1,39 +1,46 @@
 package com.tvfilmizle
 
+import android.animation.ObjectAnimator
 import android.app.Activity
 import android.app.AlertDialog
+import android.content.Context
 import android.content.Intent
 import android.graphics.Color
-import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.view.WindowManager
+import android.view.animation.LinearInterpolator
+import android.widget.AdapterView
+import android.widget.BaseAdapter
 import android.widget.EditText
-import android.widget.LinearLayout
+import android.widget.ListView
 import android.widget.TextView
 import android.widget.Toast
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import kotlin.math.abs
 
-/** Android TV ana ekrani: hero + yatay kart siralari. */
+/**
+ * Ana ekran: solda dikey site listesi, sagda secili sitenin onizlemesi (TV ana ekran mantigi).
+ */
 class MainActivity : Activity() {
 
-    private lateinit var rowSites: LinearLayout
-    private lateinit var rowActions: LinearLayout
+    private val entries = ArrayList<Site>()
+    private lateinit var list: ListView
     private lateinit var heroTitle: TextView
     private lateinit var heroSub: TextView
     private lateinit var heroInitial: TextView
     private lateinit var clock: TextView
     private lateinit var status: TextView
     private lateinit var statusDot: View
+    private lateinit var adapter: SiteAdapter
 
     private var refreshing = false
-    private var refreshGlyph: TextView? = null
-    private var spin: android.animation.ObjectAnimator? = null
+    private var spin: ObjectAnimator? = null
 
     private val handler = Handler(Looper.getMainLooper())
     private val tick = object : Runnable {
@@ -48,14 +55,26 @@ class MainActivity : Activity() {
         setContentView(R.layout.activity_main)
         window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
 
-        rowSites = findViewById(R.id.row_sites)
-        rowActions = findViewById(R.id.row_actions)
+        list = findViewById(R.id.site_list)
         heroTitle = findViewById(R.id.hero_title)
         heroSub = findViewById(R.id.hero_sub)
         heroInitial = findViewById(R.id.hero_initial)
         clock = findViewById(R.id.clock)
         status = findViewById(R.id.status)
         statusDot = findViewById(R.id.status_dot)
+
+        adapter = SiteAdapter(this, entries)
+        list.adapter = adapter
+        list.setOnItemSelectedListener(object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                entries.getOrNull(position)?.let { preview(it) }
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>?) = Unit
+        })
+        list.setOnItemClickListener { _, _, position, _ ->
+            entries.getOrNull(position)?.let { activate(it) }
+        }
 
         fill(SiteRepository.cached(this))
         refreshList(false)
@@ -75,89 +94,32 @@ class MainActivity : Activity() {
     }
 
     private fun fill(sites: List<Site>) {
-        rowSites.removeAllViews()
-        for (site in sites) rowSites.addView(siteCard(site))
-
-        rowActions.removeAllViews()
-        rowActions.addView(actionCard("+", getString(R.string.custom_url), getString(R.string.custom_url_sub), SiteKind.CUSTOM))
-        val refreshCard = actionCard("↻", getString(R.string.refresh_list), getString(R.string.refresh_list_sub), SiteKind.REFRESH)
-        rowActions.addView(refreshCard)
-        refreshGlyph = refreshCard.findViewById(R.id.action_glyph)
-
-        hero(
-            sites.firstOrNull()?.name ?: (getString(R.string.brand_first) + " " + getString(R.string.brand_second)),
-            sites.firstOrNull()?.url ?: getString(R.string.hero_hint)
-        )
-        rowSites.post { rowSites.getChildAt(0)?.requestFocus() }
+        entries.clear()
+        entries.addAll(sites)
+        entries.add(Site(getString(R.string.custom_url), getString(R.string.custom_url_sub), SiteKind.CUSTOM))
+        entries.add(Site(getString(R.string.refresh_list), getString(R.string.refresh_list_sub), SiteKind.REFRESH))
+        adapter.notifyDataSetChanged()
+        list.setSelection(0)
+        entries.firstOrNull()?.let { preview(it) }
     }
 
-    private fun siteCard(site: Site): View {
-        val card = layoutInflater.inflate(R.layout.item_site, rowSites, false)
-        card.background = gradient(site.name)
-        card.findViewById<TextView>(R.id.site_initial).text = site.name.take(1).uppercase()
-        card.findViewById<TextView>(R.id.site_name).text = site.name
-        card.findViewById<TextView>(R.id.site_url).text = site.url
-        card.setOnFocusChangeListener { _, hasFocus -> if (hasFocus) hero(site.name, site.url) }
-        card.setOnClickListener { open(site.url) }
-        touchClick(card)
-        return card
+    private fun preview(site: Site) {
+        heroTitle.text = site.name
+        heroSub.text = site.url
+        heroInitial.text = badge(site)
     }
 
-    private fun actionCard(glyph: String, title: String, sub: String, kind: SiteKind): View {
-        val card = layoutInflater.inflate(R.layout.item_action, rowActions, false)
-        card.findViewById<TextView>(R.id.action_glyph).text = glyph
-        card.findViewById<TextView>(R.id.action_title).text = title
-        card.findViewById<TextView>(R.id.action_sub).text = sub
-        card.setOnFocusChangeListener { _, hasFocus -> if (hasFocus) hero(title, sub) }
-        card.setOnClickListener {
-            when (kind) {
-                SiteKind.CUSTOM -> askUrl()
-                SiteKind.REFRESH -> refreshList(true)
-                else -> Unit
-            }
-        }
-        touchClick(card)
-        return card
+    private fun badge(site: Site): String = when (site.kind) {
+        SiteKind.CUSTOM -> "+"
+        SiteKind.REFRESH -> "↻"
+        SiteKind.SITE -> site.name.take(1).uppercase()
     }
 
-    /**
-     * focusableInTouchMode kartlarda varsayilan davranis ilk dokunusu sadece odaga harcar.
-     * Burada dokunus biz isliyoruz: bas -> odak + basili gorunum, birak -> tikla.
-     */
-    private fun touchClick(view: View) {
-        view.setOnTouchListener { v, event ->
-            when (event.action) {
-                android.view.MotionEvent.ACTION_DOWN -> {
-                    v.requestFocus()
-                    v.isPressed = true
-                }
-                android.view.MotionEvent.ACTION_UP -> {
-                    v.isPressed = false
-                    v.performClick()
-                }
-                android.view.MotionEvent.ACTION_CANCEL -> v.isPressed = false
-            }
-            true
-        }
-    }
-
-    private fun hero(title: String, sub: String) {
-        heroTitle.text = title
-        heroSub.text = sub
-        heroInitial.text = title.take(1).uppercase()
-    }
-
-    private fun dot(color: String) {
-        statusDot.backgroundTintList = android.content.res.ColorStateList.valueOf(Color.parseColor(color))
-    }
-
-    /** Site adindan turetilen renkli kart arka plani. */
-    private fun gradient(name: String): GradientDrawable {
-        val hue = (abs(name.hashCode()) % 360).toFloat()
-        val top = Color.HSVToColor(floatArrayOf(hue, 0.42f, 0.52f))
-        val bottom = Color.HSVToColor(floatArrayOf(hue, 0.55f, 0.20f))
-        return GradientDrawable(GradientDrawable.Orientation.TL_BR, intArrayOf(top, bottom)).apply {
-            cornerRadius = 16 * resources.displayMetrics.density
+    private fun activate(site: Site) {
+        when (site.kind) {
+            SiteKind.CUSTOM -> askUrl()
+            SiteKind.REFRESH -> refreshList(true)
+            SiteKind.SITE -> open(site.url)
         }
     }
 
@@ -191,13 +153,24 @@ class MainActivity : Activity() {
         }
     }
 
+    private fun dot(color: String) {
+        statusDot.backgroundTintList = android.content.res.ColorStateList.valueOf(Color.parseColor(color))
+    }
+
+    private fun refreshBadge(): TextView? {
+        val pos = entries.indexOfFirst { it.kind == SiteKind.REFRESH }
+        if (pos < 0) return null
+        val child = list.getChildAt(pos - list.firstVisiblePosition) ?: return null
+        return child.findViewById(R.id.site_badge)
+    }
+
     private fun startSpin() {
-        val glyph = refreshGlyph ?: return
+        val glyph = refreshBadge() ?: return
         spin?.cancel()
-        spin = android.animation.ObjectAnimator.ofFloat(glyph, View.ROTATION, 0f, 360f).apply {
+        spin = ObjectAnimator.ofFloat(glyph, View.ROTATION, 0f, 360f).apply {
             duration = 850
-            repeatCount = android.animation.ObjectAnimator.INFINITE
-            interpolator = android.view.animation.LinearInterpolator()
+            repeatCount = ObjectAnimator.INFINITE
+            interpolator = LinearInterpolator()
             start()
         }
     }
@@ -205,7 +178,7 @@ class MainActivity : Activity() {
     private fun stopSpin() {
         spin?.cancel()
         spin = null
-        refreshGlyph?.rotation = 0f
+        refreshBadge()?.rotation = 0f
     }
 
     private fun open(url: String) {
@@ -230,5 +203,26 @@ class MainActivity : Activity() {
         dialog.setOnShowListener { input.requestFocus() }
         dialog.show()
         dialog.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE)
+    }
+}
+
+private class SiteAdapter(ctx: Context, private val items: List<Site>) : BaseAdapter() {
+    private val inflater = LayoutInflater.from(ctx)
+
+    override fun getCount() = items.size
+    override fun getItem(position: Int) = items[position]
+    override fun getItemId(position: Int) = position.toLong()
+
+    override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
+        val view = convertView ?: inflater.inflate(R.layout.item_site, parent, false)
+        val site = items[position]
+        view.findViewById<TextView>(R.id.site_badge).text = when (site.kind) {
+            SiteKind.CUSTOM -> "+"
+            SiteKind.REFRESH -> "↻"
+            SiteKind.SITE -> site.name.take(1).uppercase()
+        }
+        view.findViewById<TextView>(R.id.site_name).text = site.name
+        view.findViewById<TextView>(R.id.site_url).text = site.url
+        return view
     }
 }
