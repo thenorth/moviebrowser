@@ -199,9 +199,16 @@ class BrowserActivity : Activity() {
 
         override fun onReceivedError(view: WebView, request: WebResourceRequest, error: WebResourceError) {
             if (!request.isForMainFrame) return
+            val code = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) error.errorCode else 0
             val reason = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) error.description.toString() else ""
-            android.util.Log.w("TVFilm", "yukleme hatasi: " + request.url + " -> " + reason)
-            Toast.makeText(this@BrowserActivity, getString(R.string.load_error, reason), Toast.LENGTH_LONG).show()
+            android.util.Log.w("TVFilm", "yukleme hatasi: " + request.url + " -> " + code + " " + reason)
+            val msg = when (code) {
+                ERROR_HOST_LOOKUP -> getString(R.string.err_dns)
+                ERROR_CONNECT, ERROR_TIMEOUT, ERROR_FAILED_SSL_HANDSHAKE ->
+                    getString(R.string.err_network)
+                else -> getString(R.string.load_error, reason)
+            }
+            Toast.makeText(this@BrowserActivity, msg, Toast.LENGTH_LONG).show()
             urlBar.setText(request.url.toString())
         }
 
