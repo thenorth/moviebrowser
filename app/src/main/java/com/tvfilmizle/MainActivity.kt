@@ -6,6 +6,8 @@ import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
+import android.graphics.drawable.Drawable
+import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -14,23 +16,21 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
 import android.view.animation.LinearInterpolator
-import android.widget.AdapterView
 import android.widget.BaseAdapter
 import android.widget.EditText
-import android.widget.ListView
+import android.widget.GridView
 import android.widget.TextView
 import android.widget.Toast
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlin.math.abs
 
-/**
- * Ana ekran: solda dikey site listesi, sagda secili sitenin onizlemesi (TV ana ekran mantigi).
- */
+/** Ana ekran: tam ekran poster izgarasi (film afisi gorunumu). */
 class MainActivity : Activity() {
 
     private val entries = ArrayList<Site>()
-    private lateinit var list: ListView
+    private lateinit var grid: GridView
     private lateinit var clock: TextView
     private lateinit var status: TextView
     private lateinit var statusDot: View
@@ -52,14 +52,14 @@ class MainActivity : Activity() {
         setContentView(R.layout.activity_main)
         window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
 
-        list = findViewById(R.id.site_list)
+        grid = findViewById(R.id.site_grid)
         clock = findViewById(R.id.clock)
         status = findViewById(R.id.status)
         statusDot = findViewById(R.id.status_dot)
 
         adapter = SiteAdapter(this, entries)
-        list.adapter = adapter
-        list.setOnItemClickListener { _, _, position, _ ->
+        grid.adapter = adapter
+        grid.setOnItemClickListener { _, _, position, _ ->
             entries.getOrNull(position)?.let { activate(it) }
         }
 
@@ -70,7 +70,6 @@ class MainActivity : Activity() {
     override fun onResume() {
         super.onResume()
         handler.post(tick)
-        // Uygulama one geldiginde liste 5 dakikadan eskiyse otomatik guncelle.
         val age = System.currentTimeMillis() - SiteRepository.lastUpdate(this)
         if (!refreshing && age > 5 * 60 * 1000L) refreshList(false)
     }
@@ -86,7 +85,7 @@ class MainActivity : Activity() {
         entries.add(Site(getString(R.string.custom_url), getString(R.string.custom_url_sub), SiteKind.CUSTOM))
         entries.add(Site(getString(R.string.refresh_list), getString(R.string.refresh_list_sub), SiteKind.REFRESH))
         adapter.notifyDataSetChanged()
-        list.setSelection(0)
+        grid.setSelection(0)
     }
 
     private fun activate(site: Site) {
@@ -105,7 +104,6 @@ class MainActivity : Activity() {
         startSpin()
         val started = System.currentTimeMillis()
         SiteRepository.refresh(this) { sites, changed ->
-            // Animasyon en az 700 ms gorunsun (arama cok hizli bitiyor).
             val rest = 700L - (System.currentTimeMillis() - started)
             handler.postDelayed({ finishRefresh(sites, changed, manual) }, if (rest > 0) rest else 0)
         }
@@ -134,7 +132,7 @@ class MainActivity : Activity() {
     private fun refreshBadge(): TextView? {
         val pos = entries.indexOfFirst { it.kind == SiteKind.REFRESH }
         if (pos < 0) return null
-        val child = list.getChildAt(pos - list.firstVisiblePosition) ?: return null
+        val child = grid.getChildAt(pos - grid.firstVisiblePosition) ?: return null
         return child.findViewById(R.id.site_badge)
     }
 
@@ -180,7 +178,7 @@ class MainActivity : Activity() {
     }
 }
 
-private class SiteAdapter(ctx: Context, private val items: List<Site>) : BaseAdapter() {
+private class SiteAdapter(private val ctx: Context, private val items: List<Site>) : BaseAdapter() {
     private val inflater = LayoutInflater.from(ctx)
 
     override fun getCount() = items.size
@@ -188,15 +186,38 @@ private class SiteAdapter(ctx: Context, private val items: List<Site>) : BaseAda
     override fun getItemId(position: Int) = position.toLong()
 
     override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
-        val view = convertView ?: inflater.inflate(R.layout.item_site, parent, false)
+        val view = convertView ?: inflater.inflate(R.layout.item_poster, parent, false)
         val site = items[position]
-        view.findViewById<TextView>(R.id.site_badge).text = when (site.kind) {
+        view.background = art(ctx, site)
+        val badge = view.findViewById<TextView>(R.id.site_badge)
+        badge.text = when (site.kind) {
             SiteKind.CUSTOM -> "+"
             SiteKind.REFRESH -> "↻"
             SiteKind.SITE -> site.name.take(1).uppercase()
         }
+        badge.alpha = if (site.kind == SiteKind.SITE) 0.22f else 1f
+        badge.setTextColor(if (site.kind == SiteKind.SITE) Color.WHITE else Color.parseColor("#FF9F1A"))
         view.findViewById<TextView>(R.id.site_name).text = site.name
         view.findViewById<TextView>(R.id.site_url).text = site.url
         return view
+    }
+
+    /** Site adindan turetilen afis renkleri; islem kartlari koyu yuzey. */
+    private fun art(ctx: Context, site: Site): Drawable {
+        val d = ctx.resources.displayMetrics.density
+        return if (site.kind == SiteKind.SITE) {
+            val hue = (abs(site.name.hashCode()) % 360).toFloat()
+            val top = Color.HSVToColor(floatArrayOf(hue, 0.40f, 0.44f))
+            val bottom = Color.HSVToColor(floatArrayOf(hue, 0.62f, 0.15f))
+            GradientDrawable(GradientDrawable.Orientation.TL_BR, intArrayOf(top, bottom)).apply {
+                cornerRadius = 12 * d
+            }
+        } else {
+            GradientDrawable().apply {
+                setColor(Color.parseColor("#141A22"))
+                cornerRadius = 12 * d
+                setStroke((1 * d).toInt(), Color.parseColor("#33FFFFFF"))
+            }
+        }
     }
 }
