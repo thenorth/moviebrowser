@@ -3,6 +3,7 @@ package com.tvfilmizle
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
@@ -14,6 +15,13 @@ import java.net.URL
 object SiteRepository {
 
     const val URL = "https://raw.githubusercontent.com/thenorth/moviebrowser/main/sites.json"
+
+    /** Bazi ISS'ler raw.githubusercontent.com'u engelliyor; sirayla yedek kaynaklar denenir. */
+    private val SOURCES = listOf(
+        URL,
+        "https://cdn.jsdelivr.net/gh/thenorth/moviebrowser@main/sites.json",
+        "https://raw.githack.com/thenorth/moviebrowser/main/sites.json"
+    )
 
     private const val PREFS = "tvfilm_sites"
     private const val K_JSON = "json"
@@ -30,17 +38,25 @@ object SiteRepository {
         val app = ctx.applicationContext
         Thread {
             var text: String? = null
-            try {
-                val c = URL(URL).openConnection() as HttpURLConnection
-                c.connectTimeout = 8000
-                c.readTimeout = 8000
-                c.setRequestProperty("Cache-Control", "no-cache")
-                if (c.responseCode in 200..299) {
-                    text = c.inputStream.bufferedReader().use { it.readText() }
+            for (source in SOURCES) {
+                try {
+                    val c = URL(source).openConnection() as HttpURLConnection
+                    c.connectTimeout = 8000
+                    c.readTimeout = 8000
+                    c.setRequestProperty("Cache-Control", "no-cache")
+                    if (c.responseCode in 200..299) {
+                        val body = c.inputStream.bufferedReader().use { it.readText() }
+                        if (parse(body) != null) {
+                            text = body
+                            c.disconnect()
+                            break
+                        }
+                    }
+                    c.disconnect()
+                    Log.d("TVFilm", "liste kaynagi yetersiz: " + source)
+                } catch (e: Exception) {
+                    Log.d("TVFilm", "liste kaynagi hatasi: " + source + " -> " + e.message)
                 }
-                c.disconnect()
-            } catch (e: Exception) {
-                text = null
             }
             val parsed = parse(text)
             val changed = parsed != null && parsed != cached(app)

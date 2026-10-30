@@ -35,6 +35,13 @@ Uygulama içinden zorlamak için ana ekrandaki **Listeyi güncelle** kartına ba
 
 Liste adresi: `https://raw.githubusercontent.com/thenorth/moviebrowser/main/sites.json`
 
+Uygulama sırayla üç kaynağı dener (bazı ISS'ler `raw.githubusercontent.com`'u engelliyor):
+1. `raw.githubusercontent.com`
+2. `cdn.jsdelivr.net/gh/thenorth/moviebrowser@main/sites.json`
+3. `raw.githack.com/thenorth/moviebrowser/main/sites.json`
+
+Üçü de başarısız olursa son bilinen liste kullanılır; üst sağda kırmızı nokta + "Liste güncellenemedi" görünür.
+
 ### Otomatik keşif
 
 `tools/discover.js` verilen Türkçe arama kalıplarıyla (Türkçe Dublaj / Altyazılı / Full HD film izle …)
