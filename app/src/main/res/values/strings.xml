@@ -51,6 +51,7 @@
     <string name="vpn_note">WARP ücretsizdir, hesap gerektirmez. Bağlantı kurulamazsa TV\'ye Cloudflare WARP uygulamasını kurabilirsiniz.</string>
     <string name="ua_title">Masaüstü görünüm</string>
     <string name="ua_desc">Kapalıysa tarayıcı kendi kimliğini kullanır; bazı sitelerde doğrulama takılmalarını çözebilir.</string>
+    <string name="version_fmt">TV Film · Sürüm %1$s</string>
     <string name="vpn_on">Bağlı — trafik VPN üzerinden gidiyor</string>
     <string name="vpn_off">Kapalı</string>
     <string name="vpn_connecting">Bağlanıyor…</string>

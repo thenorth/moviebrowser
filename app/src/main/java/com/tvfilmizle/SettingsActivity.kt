@@ -38,6 +38,13 @@ class SettingsActivity : Activity() {
         val ua = findViewById<Switch>(R.id.ua_switch)
         ua.isChecked = Prefs.desktopUa(this)
         ua.setOnCheckedChangeListener { _, isChecked -> Prefs.setDesktopUa(this, isChecked) }
+
+        val version = try {
+            packageManager.getPackageInfo(packageName, 0).versionName ?: ""
+        } catch (e: Exception) {
+            ""
+        }
+        findViewById<TextView>(R.id.version).text = getString(R.string.version_fmt, version)
     }
 
     private fun enableVpn() {
