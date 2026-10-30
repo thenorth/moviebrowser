@@ -1,4 +1,4 @@
-plugins {
+﻿plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
 }
@@ -11,14 +11,14 @@ android {
         applicationId "com.tvfilmizle"
         minSdk 21
         targetSdk 34
-        versionCode 24
-        versionName "2.4"
+        versionCode 25
+        versionName "2.5"
     }
 
     buildTypes {
         release {
             minifyEnabled false
-            // sideload edilebilir olması için release da debug imzası ile paketlenir
+            // sideload edilebilir olmasÄ± iÃ§in release da debug imzasÄ± ile paketlenir
             signingConfig signingConfigs.debug
         }
     }
