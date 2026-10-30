@@ -74,3 +74,7 @@ BlueStacks ADB: `127.0.0.1:5555` (gerekirse `adb connect 127.0.0.1:5555`).
 - [ ] `v1.1` release oluştur ve APK'yı ekle
 - [ ] Cross-origin oynatıcı için tuş yönlendirme (space / ok) dene
 - [ ] Keşif betiğini bir kez GitHub Actions üzerinde elle çalıştırıp doğrula
+
+## Not (30.10.2026)
+- GitHub kimlik secimi: depoda iki kayit vardi (thenorth + eski x-access-token). Eski kayit silindi, remote adresine thenorth sabitlendi; push/fetch artik soru sormuyor.
+
