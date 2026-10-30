@@ -36,13 +36,21 @@
     <string name="player_options">Oynatıcı seçenekleri</string>
     <string name="no_options">Bu sayfada oynatıcı seçeneği bulunamadı</string>
     <string name="cinema_hint">Tam ekrandan çıkmak için GERİ tuşuna basın</string>
-    <string name="no_player">Oynatıcı bulunamadı — filmi başlatıp tekrar deneyin</string>
     <string name="starting">Oynatıcı açılıyor…</string>
+    <string name="no_player">Oynatıcı bulunamadı — filmi başlatıp tekrar deneyin</string>
     <string name="reloading">Sayfa yeniden yükleniyor…</string>
-    <string name="load_error">Sayfa yüklenemedi (%1$s). YENİLE ile tekrar deneyin.</string>
-    <string name="err_dns">Site adresi bulunamadı (DNS). Başka bir site deneyin.</string>
-    <string name="blocked_flag">AĞDA ENGEL</string>
-    <string name="err_network">Siteye ulaşılamadı — ağınızda engellenmiş olabilir. VPN deneyin veya başka site seçin.</string>
     <string name="page_too_heavy">Bu sayfa cihazda açılamıyor (bellek yetersiz). Başka bir site deneyin.</string>
     <string name="menu">Menü</string>
+    <string name="load_error">Sayfa yüklenemedi (%1$s). YENİLE ile tekrar deneyin.</string>
+    <string name="err_dns">Site adresi bulunamadı (DNS). Başka bir site deneyin.</string>
+    <string name="err_network">Siteye ulaşılamadı — ağınızda engellenmiş olabilir. VPN deneyin veya başka site seçin.</string>
+    <string name="blocked_flag">AĞDA ENGEL</string>
+    <string name="settings">Ayarlar</string>
+    <string name="vpn_title">VPN (Cloudflare WARP)</string>
+    <string name="vpn_desc">Siteler açılmıyorsa VPN kullanın. Açıkken uygulamanın tüm trafiği WARP üzerinden gider.</string>
+    <string name="vpn_note">WARP ücretsizdir, hesap gerektirmez. Bağlantı kurulamazsa TV\'ye Cloudflare WARP uygulamasını kurabilirsiniz.</string>
+    <string name="vpn_on">Bağlı — trafik VPN üzerinden gidiyor</string>
+    <string name="vpn_off">Kapalı</string>
+    <string name="vpn_connecting">Bağlanıyor…</string>
+    <string name="vpn_failed">Bağlanamadı (%1$s). Tekrar deneyin.</string>
 </resources>

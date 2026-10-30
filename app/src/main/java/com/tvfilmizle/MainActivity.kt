@@ -94,6 +94,7 @@ class MainActivity : Activity() {
         entries.addAll(sites)
         entries.add(Site(getString(R.string.custom_url), getString(R.string.custom_url_sub), SiteKind.CUSTOM))
         entries.add(Site(getString(R.string.refresh_list), getString(R.string.refresh_list_sub), SiteKind.REFRESH))
+        entries.add(Site(getString(R.string.settings), getString(R.string.vpn_title), SiteKind.SETTINGS))
         adapter.notifyDataSetChanged()
         grid.setSelection(0)
     }
@@ -102,6 +103,7 @@ class MainActivity : Activity() {
         when (site.kind) {
             SiteKind.CUSTOM -> askUrl()
             SiteKind.REFRESH -> refreshList(true)
+            SiteKind.SETTINGS -> startActivity(Intent(this, SettingsActivity::class.java))
             SiteKind.SITE -> open(site.url)
         }
     }
@@ -223,6 +225,7 @@ private class SiteAdapter(private val ctx: Context, private val items: List<Site
         badge.text = when (site.kind) {
             SiteKind.CUSTOM -> "+"
             SiteKind.REFRESH -> "↻"
+            SiteKind.SETTINGS -> "⚙"
             SiteKind.SITE -> site.name.take(1).uppercase()
         }
         badge.alpha = if (site.kind == SiteKind.SITE) 0.22f else 1f

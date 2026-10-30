@@ -18,12 +18,13 @@ android {
     buildTypes {
         release {
             minifyEnabled false
-            // sideload edilebilir olması icin release da debug imzasi ile paketlenir
+            // sideload edilebilir olması için release da debug imzası ile paketlenir
             signingConfig signingConfigs.debug
         }
     }
 
     compileOptions {
+        coreLibraryDesugaringEnabled true
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
@@ -32,5 +33,7 @@ android {
 
 dependencies {
     implementation 'org.jetbrains.kotlin:kotlin-stdlib:1.9.24'
+    implementation 'com.wireguard.android:tunnel:1.0.20210211'
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.4'
     testImplementation 'junit:junit:4.13.2'
 }
