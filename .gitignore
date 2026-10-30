@@ -6,3 +6,5 @@ local.properties
 *.hprof
 
 *.apk
+
+MovieBrowser-*.apk

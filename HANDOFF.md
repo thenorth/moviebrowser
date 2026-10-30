@@ -1,9 +1,9 @@
-# Devir Notu — TV Film (son güncelleme: 21.10.2026)
+# Devir Notu — Movie Browser (son güncelleme: 30.10.2026)
 
 Bu dosya bir sonraki oturum için hatırlatma listesidir.
 
 ## Durum
-- APK: `TvFilm-1.0.apk` (debug imzalı, sideload)
+- APK: `MovieBrowser-2.4.apk` (debug imzalı, sideload)
 - Repo: `github.com/thenorth/moviebrowser` (public — uygulama listeyi buradan çeker)
 - Uygulama açılışta `sites.json`'ı indirir, 5 dk'dan eskiyse öne gelince yeniler, çevrimdışıysa son/ varsayılan listeyi kullanır.
 - **Liste v3 (14 site)** — GitHub Action 26.10.2026'da çalışıp 2 site ekledi (film-izle.com.tr, filmcenneti.org).

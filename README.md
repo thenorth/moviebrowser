@@ -1,4 +1,4 @@
-# TV Film — Android TV film tarayıcısı
+# Movie Browser — Android TV film tarayıcısı
 
 Android TV (ve telefon/emülatör) için WebView tabanlı tarayıcı. Açılışta site listesini
 bu repodaki **`sites.json`** dosyasından çeker; listede yaptığınız değişiklik uygulamanın
