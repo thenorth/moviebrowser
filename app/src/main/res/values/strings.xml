@@ -16,6 +16,8 @@
     <string name="key_menu_action">Seçenekler</string>
     <string name="key_back">GERİ</string>
     <string name="key_back_action">Çık</string>
+    <string name="key_hold">OK (BASILI)</string>
+    <string name="key_hold_action">Listeme ekle</string>
     <string name="custom_url">Adres gir</string>
     <string name="custom_url_sub">Başka bir site adresi aç</string>
     <string name="refresh_list">Listeyi güncelle</string>

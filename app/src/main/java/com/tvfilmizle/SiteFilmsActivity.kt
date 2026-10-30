@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
+import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -13,6 +14,7 @@ import android.widget.BaseAdapter
 import android.widget.GridView
 import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
 
 /** Bir sitenin filmlerini uygulama icinde gosterir; secilen film tarayicida acilir. */
 class SiteFilmsActivity : Activity() {
@@ -28,6 +30,50 @@ class SiteFilmsActivity : Activity() {
     private lateinit var adapter: FilmAdapter
     private var siteUrl = ""
     private var siteName = ""
+    private var longPressDone = false
+    private var longPressRunnable: Runnable? = null
+
+    /** OK'a basili tut (>=450 ms) = secili filmi listeye ekle; kisa OK = ac. */
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        val isOk = event.keyCode == KeyEvent.KEYCODE_DPAD_CENTER || event.keyCode == KeyEvent.KEYCODE_ENTER
+        if (!isOk) return super.dispatchKeyEvent(event)
+
+        if (event.action == KeyEvent.ACTION_DOWN) {
+            if (longPressRunnable == null && !longPressDone) {
+                val r = Runnable {
+                    longPressDone = true
+                    addSelectedToWatchlist()
+                }
+                longPressRunnable = r
+                grid.postDelayed(r, 450)
+            }
+            return super.dispatchKeyEvent(event)
+        }
+
+        if (event.action == KeyEvent.ACTION_UP) {
+            longPressRunnable?.let { grid.removeCallbacks(it) }
+            longPressRunnable = null
+            if (longPressDone) {
+                longPressDone = false
+                return true
+            }
+        }
+        return super.dispatchKeyEvent(event)
+    }
+
+    private fun addSelectedToWatchlist() {
+        val film = films.getOrNull(grid.selectedItemPosition) ?: return
+        android.util.Log.d("TVFilm", "watchlist ekle: " + film.title)
+        if (Watchlist.has(this, film.url)) {
+            Toast.makeText(this, R.string.in_watch, Toast.LENGTH_SHORT).show()
+            return
+        }
+        Watchlist.add(
+            this,
+            Watchlist.Item(film.title, film.url, Scraper.hostOf(film.url).ifEmpty { siteName })
+        )
+        Toast.makeText(this, R.string.added_watch, Toast.LENGTH_SHORT).show()
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
