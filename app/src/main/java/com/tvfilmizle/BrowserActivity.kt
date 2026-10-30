@@ -146,7 +146,7 @@ class BrowserActivity : Activity() {
         s.builtInZoomControls = true
         s.displayZoomControls = false
         s.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
-        s.userAgentString = UA
+        s.userAgentString = if (Prefs.desktopUa(this)) UA else s.userAgentString
         s.cacheMode = WebSettings.LOAD_DEFAULT
         s.setGeolocationEnabled(false)
         w.setBackgroundColor(Color.BLACK)

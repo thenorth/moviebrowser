@@ -127,16 +127,15 @@ object Warp {
         val iface = Interface.Builder()
             .parsePrivateKey(kp.privateKey.toBase64())
             .addAddress(InetNetwork.parse(addresses.getString("v4") + "/32"))
-            .addAddress(InetNetwork.parse(addresses.getString("v6") + "/128"))
             .addDnsServer(InetAddress.getByName("1.1.1.1"))
-            .addDnsServer(InetAddress.getByName("1.0.0.1"))
             .setMtu(1280)
             .build()
 
+        // Bilerek IPv6 yonlendirilmiyor: TV'lerde kirik IPv6, sayfalarin asili kalmasina yol acar.
         val peer = Peer.Builder()
             .parsePublicKey(peerJson.getString("public_key"))
             .parseEndpoint(endpointIp + ":" + port)
-            .parseAllowedIPs("0.0.0.0/0, ::/0")
+            .parseAllowedIPs("0.0.0.0/0")
             .parsePersistentKeepalive("25")
             .build()
 

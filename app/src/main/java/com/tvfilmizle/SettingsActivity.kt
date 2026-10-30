@@ -34,6 +34,10 @@ class SettingsActivity : Activity() {
             if (updating) return@setOnCheckedChangeListener
             if (isChecked) enableVpn() else disableVpn()
         }
+
+        val ua = findViewById<Switch>(R.id.ua_switch)
+        ua.isChecked = Prefs.desktopUa(this)
+        ua.setOnCheckedChangeListener { _, isChecked -> Prefs.setDesktopUa(this, isChecked) }
     }
 
     private fun enableVpn() {
