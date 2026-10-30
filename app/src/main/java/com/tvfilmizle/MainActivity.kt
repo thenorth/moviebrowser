@@ -84,10 +84,34 @@ class MainActivity : Activity() {
 
         fill(SiteRepository.cached(this))
         refreshList(false)
+        checkForUpdate()
+    }
+
+    /** GitHub'daki son release ile kurulu surumu karsilastirir. */
+    private fun checkForUpdate() {
+        Updater.check(this) { tag, apk, page ->
+            if (tag == null) return@check
+            val installed = Updater.installedVersion(this)
+            if (!Updater.isNewer(tag, installed)) return@check
+            if (Prefs.lastNotifiedVersion(this) == tag) return@check
+            runOnUiThread {
+                Prefs.setLastNotifiedVersion(this, tag)
+                AlertDialog.Builder(this)
+                    .setTitle(R.string.update_title)
+                    .setMessage(getString(R.string.update_msg, tag, installed))
+                    .setPositiveButton(R.string.update_yes) { _, _ ->
+                        val url = if (!apk.isNullOrEmpty()) apk else page
+                        if (!url.isNullOrEmpty()) open(url)
+                    }
+                    .setNegativeButton(R.string.update_later, null)
+                    .show()
+            }
+        }
     }
 
     override fun onResume() {
         super.onResume()
+        SleepTimer.attach(this)
         handler.post(tick)
         val age = System.currentTimeMillis() - SiteRepository.lastUpdate(this)
         if (!refreshing && age > 5 * 60 * 1000L) refreshList(false)

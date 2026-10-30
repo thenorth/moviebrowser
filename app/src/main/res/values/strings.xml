@@ -56,4 +56,23 @@
     <string name="vpn_off">Kapalı</string>
     <string name="vpn_connecting">Bağlanıyor…</string>
     <string name="vpn_failed">Bağlanamadı (%1$s). Tekrar deneyin.</string>
+    <string name="load_error_title">Sayfa açılamadı</string>
+    <string name="vpn_enable">VPN\'i aç</string>
+    <string name="downloading">İndiriliyor…</string>
+    <string name="download_failed">İndirme başlatılamadı</string>
+    <string name="sleep_title">Uyku zamanlayıcısı</string>
+    <string name="sleep_desc">Süre bitince uygulama kapanır</string>
+    <string name="sleep_off">Kapalı</string>
+    <string name="sleep_on_fmt">Açık · %1$d dk</string>
+    <string name="sleep_done">Uyku zamanlayıcısı doldu, uygulama kapanıyor</string>
+    <string name="clear_title">Verileri temizle</string>
+    <string name="clear_desc">Çerez, önbellek ve site verilerini sil</string>
+    <string name="clear_confirm">Çerezler, önbellek ve site verileri silinsin mi?</string>
+    <string name="clear_done">Temizlendi</string>
+    <string name="auto_fs_title">Video başlayınca tam ekran</string>
+    <string name="auto_fs_desc">Oynatma başladığında oynatıcı tüm ekrana yayılır</string>
+    <string name="update_title">Yeni sürüm</string>
+    <string name="update_msg">Yeni sürüm %1$s hazır (kurulu: %2$s). Şimdi indirilsin mi?</string>
+    <string name="update_yes">İndir</string>
+    <string name="update_later">Sonra</string>
 </resources>

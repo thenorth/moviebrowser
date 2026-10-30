@@ -1,14 +1,19 @@
 package com.tvfilmizle
 
 import android.app.Activity
+import android.app.AlertDialog
 import android.content.Intent
 import android.net.VpnService
 import android.os.Bundle
 import android.view.WindowManager
+import android.webkit.CookieManager
+import android.webkit.WebStorage
+import android.webkit.WebView
 import android.widget.Switch
 import android.widget.TextView
+import android.widget.Toast
 
-/** Ayarlar: VPN (WARP) ac/kapa. */
+/** Ayarlar: VPN (WARP), masaüstü görünüm, otomatik tam ekran, uyku zamanlayıcısı, veri temizleme. */
 class SettingsActivity : Activity() {
 
     private companion object {
@@ -39,12 +44,57 @@ class SettingsActivity : Activity() {
         ua.isChecked = Prefs.desktopUa(this)
         ua.setOnCheckedChangeListener { _, isChecked -> Prefs.setDesktopUa(this, isChecked) }
 
+        val fs = findViewById<Switch>(R.id.fs_switch)
+        fs.isChecked = Prefs.autoFullscreen(this)
+        fs.setOnCheckedChangeListener { _, isChecked -> Prefs.setAutoFullscreen(this, isChecked) }
+
+        val sleepValue = findViewById<TextView>(R.id.sleep_value)
+        sleepValue.text = SleepTimer.remainingText(this)
+        findViewById<android.view.View>(R.id.sleep_row).setOnClickListener { pickSleep(sleepValue) }
+        findViewById<android.view.View>(R.id.clear_row).setOnClickListener { confirmClear() }
+
         val version = try {
             packageManager.getPackageInfo(packageName, 0).versionName ?: ""
         } catch (e: Exception) {
             ""
         }
         findViewById<TextView>(R.id.version).text = getString(R.string.version_fmt, version)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        SleepTimer.attach(this)
+    }
+
+    private fun pickSleep(value: TextView) {
+        val labels = arrayOf(getString(R.string.sleep_off), "30 dk", "60 dk", "90 dk")
+        val minutes = intArrayOf(0, 30, 60, 90)
+        AlertDialog.Builder(this)
+            .setTitle(R.string.sleep_title)
+            .setItems(labels) { _, which ->
+                SleepTimer.set(this, minutes[which])
+                value.text = SleepTimer.remainingText(this)
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
+    }
+
+    private fun confirmClear() {
+        AlertDialog.Builder(this)
+            .setMessage(R.string.clear_confirm)
+            .setPositiveButton(R.string.clear_title) { _, _ ->
+                CookieManager.getInstance().removeAllCookies(null)
+                CookieManager.getInstance().flush()
+                WebStorage.getInstance().deleteAllData()
+                WebView(this).apply {
+                    clearCache(true)
+                    clearFormData()
+                    destroy()
+                }
+                Toast.makeText(this, R.string.clear_done, Toast.LENGTH_SHORT).show()
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
     }
 
     private fun enableVpn() {

@@ -3,9 +3,15 @@ package com.tvfilmizle
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.AlertDialog
+import android.app.DownloadManager
+import android.content.Context
+import android.content.Intent
 import android.graphics.Color
+import android.net.Uri
+import android.net.VpnService
 import android.os.Build
 import android.os.Bundle
+import android.os.Environment
 import android.os.Message
 import android.view.KeyEvent
 import android.view.View
@@ -18,6 +24,7 @@ import android.webkit.CookieManager
 import android.webkit.JavascriptInterface
 import android.webkit.PermissionRequest
 import android.webkit.RenderProcessGoneDetail
+import android.webkit.URLUtil
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
@@ -42,6 +49,10 @@ class BrowserActivity : Activity() {
         const val EXTRA_URL = "url"
         private const val UA =
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+        private const val REQ_VPN = 7
+        private val CHALLENGE = Regex(
+            "(?i)just a moment|bir dakika|attention required|verify you are human|checking your browser"
+        )
     }
 
     private lateinit var container: FrameLayout
@@ -60,6 +71,9 @@ class BrowserActivity : Activity() {
     private var crashUrl = ""
     private var crashCount = 0
     private var erroredHost: String? = null
+    private var defaultUa = ""
+    private var uaRetried = false
+    private var pendingReloadUrl: String? = null
 
     /** Sayfa dibinde DOWN: odagi alt arac cubuguna tasir (kumanda ile menuye erisim). */
     private val bridge = object {
@@ -68,6 +82,13 @@ class BrowserActivity : Activity() {
             runOnUiThread {
                 toolbar.visibility = View.VISIBLE
                 toolbar.getChildAt(0)?.requestFocus()
+            }
+        }
+
+        @JavascriptInterface
+        fun playerStarted() {
+            runOnUiThread {
+                if (Prefs.autoFullscreen(this@BrowserActivity) && !fsActive) enterFullscreen()
             }
         }
     }
@@ -98,6 +119,8 @@ class BrowserActivity : Activity() {
         web.loadUrl(homeUrl)
 
         bindButtons()
+        // Video izlerken ekran kapanmasin.
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         // Immersive yerine basit fullscreen: diyaloglarin pencere odagi bozulmaz.
         window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
     }
@@ -147,6 +170,7 @@ class BrowserActivity : Activity() {
         s.displayZoomControls = false
         s.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
         s.userAgentString = if (Prefs.desktopUa(this)) UA else s.userAgentString
+        if (defaultUa.isEmpty()) defaultUa = s.userAgentString
         s.cacheMode = WebSettings.LOAD_DEFAULT
         s.setGeolocationEnabled(false)
         w.setBackgroundColor(Color.BLACK)
@@ -156,6 +180,20 @@ class BrowserActivity : Activity() {
         w.webViewClient = client
         w.webChromeClient = chrome
         w.setOnFocusChangeListener { _, hasFocus -> if (hasFocus) active = w }
+        w.setDownloadListener { url, _, contentDisposition, mimeType, _ ->
+            try {
+                val name = URLUtil.guessFileName(url, contentDisposition, mimeType)
+                val req = DownloadManager.Request(Uri.parse(url))
+                req.setMimeType(mimeType)
+                req.setTitle(name)
+                req.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+                req.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, name)
+                (getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager).enqueue(req)
+                Toast.makeText(this, R.string.downloading, Toast.LENGTH_SHORT).show()
+            } catch (e: Exception) {
+                Toast.makeText(this, R.string.download_failed, Toast.LENGTH_SHORT).show()
+            }
+        }
         return w
     }
 
@@ -182,6 +220,7 @@ class BrowserActivity : Activity() {
             if (view === active) {
                 urlBar.setText(url)
                 fsActive = false
+                uaRetried = false
                 toolbar.visibility = View.VISIBLE
             }
         }
@@ -199,6 +238,17 @@ class BrowserActivity : Activity() {
             view.postDelayed({ view.evaluateJavascript(Fullscreen.SCAN_JS, null) }, 3000)
             view.postDelayed({ view.evaluateJavascript(Player.ANALYZE_JS, null) }, 3000)
             if (view === active && !urlBar.hasFocus()) view.requestFocus()
+
+            // Bot dogrulamasi takildiysa bir kez varsayilan kimlikle dene.
+            if (Prefs.desktopUa(this@BrowserActivity) && !uaRetried) {
+                view.evaluateJavascript("document.title") { title ->
+                    if (title != null && CHALLENGE.containsMatchIn(title)) {
+                        uaRetried = true
+                        if (defaultUa.isNotEmpty()) view.settings.userAgentString = defaultUa
+                        view.reload()
+                    }
+                }
+            }
         }
 
         override fun onReceivedError(view: WebView, request: WebResourceRequest, error: WebResourceError) {
@@ -214,7 +264,7 @@ class BrowserActivity : Activity() {
             }
             erroredHost = request.url.host
             SiteHealth.fail(this@BrowserActivity, request.url.host)
-            Toast.makeText(this@BrowserActivity, msg, Toast.LENGTH_LONG).show()
+            showLoadErrorDialog(request.url.toString(), msg)
             urlBar.setText(request.url.toString())
         }
 
@@ -299,6 +349,59 @@ class BrowserActivity : Activity() {
     }
 
     // ------------------------------------------------------------ tam ekran
+
+    private fun enterFullscreen() {
+        if (fsActive) return
+        val w = active ?: web
+        w.evaluateJavascript(Fullscreen.ENTER_JS) { result ->
+            val state = result?.trim()?.trim('"') ?: "none"
+            if (state != "none") {
+                fsActive = true
+                toolbar.visibility = View.GONE
+            }
+        }
+    }
+
+    /** Yukleme hatasi: sebep + tek tusla VPN. */
+    private fun showLoadErrorDialog(url: String, message: String) {
+        if (isFinishing) return
+        AlertDialog.Builder(this)
+            .setTitle(R.string.load_error_title)
+            .setMessage(message)
+            .setPositiveButton(R.string.vpn_enable) { _, _ -> enableVpnThenReload(url) }
+            .setNeutralButton(R.string.reload) { _, _ -> (active ?: web).reload() }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
+    }
+
+    private fun enableVpnThenReload(url: String) {
+        pendingReloadUrl = url
+        val prep = VpnService.prepare(this)
+        if (prep != null) {
+            startActivityForResult(prep, REQ_VPN)
+            return
+        }
+        connectVpnThenReload()
+    }
+
+    private fun connectVpnThenReload() {
+        Toast.makeText(this, R.string.vpn_connecting, Toast.LENGTH_SHORT).show()
+        Warp.connect(this) { ok, error ->
+            runOnUiThread {
+                if (ok) {
+                    Toast.makeText(this, R.string.vpn_on, Toast.LENGTH_SHORT).show()
+                    pendingReloadUrl?.let { (active ?: web).loadUrl(it) }
+                } else {
+                    Toast.makeText(this, getString(R.string.vpn_failed, error), Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == REQ_VPN && resultCode == RESULT_OK) connectVpnThenReload()
+    }
 
     /** Oynatıcıyı (video ya da en büyük iframe) tespit edip tüm ekrana yayar. */
     private fun toggleFullscreen() {
@@ -569,6 +672,7 @@ class BrowserActivity : Activity() {
 
     override fun onResume() {
         super.onResume()
+        SleepTimer.attach(this)
         web.onResume()
         children.forEach { it.onResume() }
     }

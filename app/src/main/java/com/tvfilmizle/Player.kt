@@ -77,13 +77,40 @@ object Player {
 })()
 """
 
-    /** Sayfa acilinca oynatıcıyi isaretler (arac cubugu icin hazir bilgi). */
+    /**
+     * Sayfa acilinca oynatıcıyi isaretler ve video oynamaya baslayinca kopruye haber verir
+     * (otomatik tam ekran icin).
+     */
     const val ANALYZE_JS = """
 (function(){
+  function notify(){
+    try {
+      var b = window.tvBridge || (window.parent && window.parent.tvBridge);
+      if (b && b.playerStarted) b.playerStarted();
+    } catch (e) {}
+  }
+
+  function hook(doc){
+    try {
+      var vs = doc.querySelectorAll('video');
+      for (var i = 0; i < vs.length; i++) {
+        var v = vs[i];
+        if (v.getAttribute('data-tvhooked')) continue;
+        v.setAttribute('data-tvhooked', '1');
+        v.addEventListener('playing', notify);
+      }
+    } catch (e) {}
+  }
+
+  hook(document);
+  for (var f = 0; f < window.frames.length; f++) {
+    try { hook(window.frames[f].document); } catch (e) {}
+  }
+
   window.__tvPlayerKind = 'none';
   var vids = document.querySelectorAll('video');
-  for (var i = 0; i < vids.length; i++) {
-    var r = vids[i].getBoundingClientRect();
+  for (var i2 = 0; i2 < vids.length; i2++) {
+    var r = vids[i2].getBoundingClientRect();
     if (r.width > 120 && r.height > 80) { window.__tvPlayerKind = 'video'; return; }
   }
   var ifr = document.querySelectorAll('iframe');
