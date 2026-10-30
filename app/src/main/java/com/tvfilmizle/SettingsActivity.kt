@@ -32,6 +32,8 @@ class SettingsActivity : Activity() {
         toggle = findViewById(R.id.vpn_switch)
         status = findViewById(R.id.vpn_status)
 
+        findViewById<android.view.View>(R.id.btn_back).setOnClickListener { finish() }
+
         toggle.isChecked = Warp.connected
         renderStatus(if (Warp.connected) getString(R.string.vpn_on) else getString(R.string.vpn_off))
 
