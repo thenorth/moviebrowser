@@ -11,14 +11,14 @@ android {
         applicationId "com.tvfilmizle"
         minSdk 21
         targetSdk 34
-        versionCode 27
-        versionName "2.7"
+        versionCode 28
+        versionName "2.8"
     }
 
     buildTypes {
         release {
             minifyEnabled false
-            // sideload edilebilir olmasÃ„Â± iÃƒÂ§in release da debug imzasÃ„Â± ile paketlenir
+            // sideload edilebilir olmasÃƒâ€Ã‚Â± iÃƒÆ’Ã‚Â§in release da debug imzasÃƒâ€Ã‚Â± ile paketlenir
             signingConfig signingConfigs.debug
         }
     }

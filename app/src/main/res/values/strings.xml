@@ -43,7 +43,7 @@
     <string name="menu">Menü</string>
     <string name="load_error">Sayfa yüklenemedi (%1$s). YENİLE ile tekrar deneyin.</string>
     <string name="err_dns">Site adresi bulunamadı (DNS). Başka bir site deneyin.</string>
-    <string name="err_network">Siteye ulaşılamadı — ağınızda engellenmiş olabilir. VPN deneyin veya başka site seçin.</string>
+    <string name="err_network">Siteye ulaşılamadı. Ağınızda engellenmiş olabilir.\n\nSiteler açılmıyorsa VPN kullanın.</string>
     <string name="blocked_flag">AĞDA ENGEL</string>
     <string name="settings">Ayarlar</string>
     <string name="back_button">‹  GERİ</string>
