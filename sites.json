@@ -1,6 +1,6 @@
 {
-  "version": 3,
-  "updated": "2026-10-26",
+  "version": 4,
+  "updated": "2026-10-30",
   "sites": [
     {
       "name": "HD Film Cehennemi",
@@ -24,7 +24,7 @@
     },
     {
       "name": "JetFilmizle",
-      "url": "https://jetfilmizle.sbs/"
+      "url": "https://jetfilmizle.wiki/"
     },
     {
       "name": "SineMerkez",
@@ -33,10 +33,6 @@
     {
       "name": "İzle Son HD Film",
       "url": "https://izlesonhdfilm.com/"
-    },
-    {
-      "name": "Film İzle Ya",
-      "url": "https://filmizleya.com/"
     },
     {
       "name": "HDFilmizlesende",

@@ -38,5 +38,8 @@
     <string name="cinema_hint">Tam ekrandan çıkmak için GERİ tuşuna basın</string>
     <string name="no_player">Oynatıcı bulunamadı — filmi başlatıp tekrar deneyin</string>
     <string name="starting">Oynatıcı açılıyor…</string>
+    <string name="reloading">Sayfa yeniden yükleniyor…</string>
+    <string name="load_error">Sayfa yüklenemedi (%1$s). YENİLE ile tekrar deneyin.</string>
+    <string name="page_too_heavy">Bu sayfa cihazda açılamıyor (bellek yetersiz). Başka bir site deneyin.</string>
     <string name="menu">Menü</string>
 </resources>

@@ -45,6 +45,11 @@ Bu dosya bir sonraki oturum için hatırlatma listesidir.
 4. **Adblock** liste tabanlı; yeni ağlar eklenmeli (`AdBlock.kt`).
 5. **discover.js** arama motoru IP engeline takılabilir (DDG → Bing → DDG Lite fallback); sonuç yoksa liste değişmez.
 6. **Yol**: proje klasörü Türkçe karakter içeriyor; birim testleri ASCII yolda çalışıyor (`android.overridePathCheck=true`).
+7. **Açılmayan siteler (30.10.2026 ölçümü)** — hepsi Cloudflare arkasında, DNS'leri sağlam:
+   - `hdfilmizle.to`, `filmdozu.website`, `film-izle.com.tr`, `filmcenneti.org`: TLS el sıkışması sıfırlanıyor (`net_error -101`) → site/Cloudflare bu IP aralığını engelliyor. VPN/farklı ağ ile denenmeli; uygulamadan çözülemez.
+   - `filmizleya.com`: "Account Suspended" → listeden çıkarıldı.
+   - `jetfilmizle.sbs`: `jetfilmizle.wiki`'ye yönleniyor → URL güncellendi.
+   - Ağır sayfalarda WebView renderer çöküyordu → `largeHeap` + `onRenderProcessGone` ile otomatik kurtarma eklendi, yükleme hatası artık toast + log olarak görünüyor.
 
 ## Komutlar
 ```bash

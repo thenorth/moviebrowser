@@ -17,7 +17,9 @@ import android.view.inputmethod.EditorInfo
 import android.webkit.CookieManager
 import android.webkit.JavascriptInterface
 import android.webkit.PermissionRequest
+import android.webkit.RenderProcessGoneDetail
 import android.webkit.WebChromeClient
+import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import android.webkit.WebSettings
@@ -55,6 +57,8 @@ class BrowserActivity : Activity() {
     private var customCallback: WebChromeClient.CustomViewCallback? = null
     private var homeUrl = ""
     private var fsActive = false
+    private var crashUrl = ""
+    private var crashCount = 0
 
     /** Sayfa dibinde DOWN: odagi alt arac cubuguna tasir (kumanda ile menuye erisim). */
     private val bridge = object {
@@ -191,6 +195,56 @@ class BrowserActivity : Activity() {
             view.postDelayed({ view.evaluateJavascript(Fullscreen.SCAN_JS, null) }, 3000)
             view.postDelayed({ view.evaluateJavascript(Player.ANALYZE_JS, null) }, 3000)
             if (view === active && !urlBar.hasFocus()) view.requestFocus()
+        }
+
+        override fun onReceivedError(view: WebView, request: WebResourceRequest, error: WebResourceError) {
+            if (!request.isForMainFrame) return
+            val reason = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) error.description.toString() else ""
+            android.util.Log.w("TVFilm", "yukleme hatasi: " + request.url + " -> " + reason)
+            Toast.makeText(this@BrowserActivity, getString(R.string.load_error, reason), Toast.LENGTH_LONG).show()
+            urlBar.setText(request.url.toString())
+        }
+
+        /** Renderer bellek yetersizliginden coktugunde uygulama kapanmasin; sayfayi yeniden kur. */        override fun onRenderProcessGone(view: WebView, detail: RenderProcessGoneDetail): Boolean {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return false
+            val url = view.url ?: homeUrl
+            if (url == crashUrl) crashCount++ else {
+                crashUrl = url
+                crashCount = 1
+            }
+            if (crashCount > 2) {
+                Toast.makeText(this@BrowserActivity, R.string.page_too_heavy, Toast.LENGTH_LONG).show()
+                (view.parent as? ViewGroup)?.removeView(view)
+                view.destroy()
+                if (view === web) {
+                    web = newWebView()
+                    container.addView(
+                        web,
+                        FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+                    )
+                    active = web
+                }
+                return true
+            }
+
+            Toast.makeText(this@BrowserActivity, R.string.reloading, Toast.LENGTH_SHORT).show()
+            if (view === web) {
+                (view.parent as? ViewGroup)?.removeView(view)
+                view.destroy()
+                val fresh = newWebView()
+                web = fresh
+                container.addView(
+                    fresh,
+                    FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+                )
+                active = fresh
+                fresh.loadUrl(url)
+            } else {
+                removeChild(view)
+                active = web
+                web.loadUrl(url)
+            }
+            return true
         }
     }
 
