@@ -6,6 +6,7 @@ Bu dosya bir sonraki oturum için hatırlatma listesidir.
 - APK: `TvFilm-1.0.apk` (debug imzalı, sideload)
 - Repo: `github.com/thenorth/moviebrowser` (public — uygulama listeyi buradan çeker)
 - Uygulama açılışta `sites.json`'ı indirir, 5 dk'dan eskiyse öne gelince yeniler, çevrimdışıysa son/ varsayılan listeyi kullanır.
+- **Liste v3 (14 site)** — GitHub Action 26.10.2026'da çalışıp 2 site ekledi (film-izle.com.tr, filmcenneti.org).
 
 ## Yapılanlar (özet)
 1. **Android TV WebView tarayıcı**: site listesi, reklam engelleme, oynatıcı seçenekleri, tam ekran, kumanda ile sayfa içi gezinme.
@@ -51,7 +52,17 @@ gradlew assembleDebug                 # APK
 node tools/discover.js --dry          # keşif raporu
 node tools/discover.js                # listeye ekle
 ```
-BlueStacks ADB: `127.0.0.1:5555` · Yerel toolchain: `C:\Users\TheNorth\AppData\Local\Temp\opencode\tools`
+
+**Araç zinciri (kalıcı):**
+```powershell
+$env:JAVA_HOME="C:\Users\TheNorth\android-toolchain\jdk"
+$env:ANDROID_HOME="C:\Users\TheNorth\android-toolchain\sdk"
+$env:Path="$env:JAVA_HOME\bin;$env:Path"
+.\gradlew.bat assembleDebug
+```
+(Önceki oturumdaki `%TEMP%\opencode\tools` kopyası silindi; yukarıdaki kalıcı klasörü kullan.)
+
+BlueStacks ADB: `127.0.0.1:5555` (gerekirse `adb connect 127.0.0.1:5555`).
 
 ## Hatırlat (sonraki oturum)
 - [ ] Gerçek TV'de uçtan uca test (film seç → oynat → tam ekran → GERİ)

@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="300dp"
-    android:layout_height="169dp"
-    android:layout_marginEnd="18dp"
+    android:layout_width="196dp"
+    android:layout_height="110dp"
+    android:layout_marginEnd="14dp"
     android:background="@drawable/card_bg"
     android:clickable="true"
     android:focusable="true"
@@ -12,7 +12,7 @@
 
     <View
         android:layout_width="match_parent"
-        android:layout_height="112dp"
+        android:layout_height="72dp"
         android:layout_gravity="bottom"
         android:background="@drawable/card_scrim" />
 
@@ -21,11 +21,11 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="top|end"
-        android:layout_marginTop="10dp"
-        android:layout_marginEnd="16dp"
+        android:layout_marginTop="4dp"
+        android:layout_marginEnd="12dp"
         android:alpha="0.16"
         android:textColor="#FFFFFF"
-        android:textSize="62sp"
+        android:textSize="46sp"
         android:textStyle="bold" />
 
     <LinearLayout
@@ -33,9 +33,9 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
         android:orientation="vertical"
-        android:paddingLeft="16dp"
-        android:paddingRight="16dp"
-        android:paddingBottom="14dp">
+        android:paddingLeft="13dp"
+        android:paddingRight="13dp"
+        android:paddingBottom="11dp">
 
         <TextView
             android:id="@+id/site_name"
@@ -44,18 +44,18 @@
             android:ellipsize="end"
             android:singleLine="true"
             android:textColor="@color/text"
-            android:textSize="19sp"
+            android:textSize="15sp"
             android:textStyle="bold" />
 
         <TextView
             android:id="@+id/site_url"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="3dp"
+            android:layout_marginTop="1dp"
             android:ellipsize="end"
             android:singleLine="true"
-            android:textColor="#99FFFFFF"
-            android:textSize="11sp" />
+            android:textColor="#8CFFFFFF"
+            android:textSize="9sp" />
     </LinearLayout>
 
 </FrameLayout>

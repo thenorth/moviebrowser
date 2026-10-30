@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="240dp"
-    android:layout_height="169dp"
-    android:layout_marginEnd="18dp"
+    android:layout_width="196dp"
+    android:layout_height="110dp"
+    android:layout_marginEnd="14dp"
     android:background="@drawable/action_card_bg"
     android:clickable="true"
     android:focusable="true"
@@ -16,12 +16,12 @@
         android:layout_gravity="center_vertical"
         android:gravity="center_horizontal"
         android:orientation="vertical"
-        android:paddingLeft="16dp"
-        android:paddingRight="16dp">
+        android:paddingLeft="12dp"
+        android:paddingRight="12dp">
 
         <FrameLayout
-            android:layout_width="54dp"
-            android:layout_height="54dp"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
             android:background="@drawable/chip_bg">
 
             <TextView
@@ -30,7 +30,7 @@
                 android:layout_height="match_parent"
                 android:gravity="center"
                 android:textColor="@color/accent"
-                android:textSize="24sp"
+                android:textSize="19sp"
                 android:textStyle="bold" />
         </FrameLayout>
 
@@ -38,20 +38,21 @@
             android:id="@+id/action_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="8dp"
             android:textColor="@color/text"
-            android:textSize="16sp"
+            android:textSize="13sp"
             android:textStyle="bold" />
 
         <TextView
             android:id="@+id/action_sub"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="3dp"
+            android:layout_marginTop="1dp"
+            android:ellipsize="end"
             android:gravity="center_horizontal"
-            android:maxLines="2"
+            android:singleLine="true"
             android:textColor="@color/text_dim"
-            android:textSize="11sp" />
+            android:textSize="9sp" />
     </LinearLayout>
 
 </FrameLayout>

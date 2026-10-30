@@ -22,6 +22,8 @@ object Sites {
         Site("Film İzle Ya", "https://filmizleya.com/"),
         Site("HDFilmizlesende", "https://hdfilmizlesende.com/"),
         Site("HDFilmZevki", "https://hdfilmzevki.co/"),
-        Site("FilmIzzle", "https://filmizzle.com/")
+        Site("FilmIzzle", "https://filmizzle.com/"),
+        Site("HD Film İzle", "https://film-izle.com.tr/"),
+        Site("HD Film ve Dizi İzle", "https://filmcenneti.org/")
     )
 }

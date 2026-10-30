@@ -4,97 +4,98 @@
     android:layout_height="match_parent"
     android:background="@drawable/bg_tv">
 
-    <ScrollView
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:fillViewport="true"
-        android:scrollbars="none">
+        android:clipChildren="false"
+        android:orientation="vertical"
+        android:paddingLeft="48dp"
+        android:paddingTop="28dp"
+        android:paddingRight="48dp"
+        android:paddingBottom="70dp">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:clipChildren="false"
-            android:orientation="vertical"
-            android:paddingLeft="48dp"
-            android:paddingTop="28dp"
-            android:paddingRight="48dp"
-            android:paddingBottom="62dp">
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/brand_first"
+                android:textColor="@color/accent"
+                android:textSize="24sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="7dp"
+                android:letterSpacing="0.16"
+                android:text="@string/brand_second"
+                android:textColor="@color/text"
+                android:textSize="24sp"
+                android:textStyle="bold" />
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="1" />
 
             <LinearLayout
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/brand_first"
-                    android:textColor="@color/accent"
-                    android:textSize="24sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="7dp"
-                    android:letterSpacing="0.16"
-                    android:text="@string/brand_second"
-                    android:textColor="@color/text"
-                    android:textSize="24sp"
-                    android:textStyle="bold" />
-
                 <View
-                    android:layout_width="0dp"
-                    android:layout_height="1dp"
-                    android:layout_weight="1" />
-
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <View
-                        android:id="@+id/status_dot"
-                        android:layout_width="7dp"
-                        android:layout_height="7dp"
-                        android:layout_marginEnd="8dp"
-                        android:background="@drawable/status_dot" />
-
-                    <TextView
-                        android:id="@+id/status"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textColor="@color/text_dim"
-                        android:textSize="12sp" />
-                </LinearLayout>
+                    android:id="@+id/status_dot"
+                    android:layout_width="7dp"
+                    android:layout_height="7dp"
+                    android:layout_marginEnd="8dp"
+                    android:background="@drawable/status_dot" />
 
                 <TextView
-                    android:id="@+id/clock"
+                    android:id="@+id/status"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="22dp"
-                    android:textColor="@color/text"
-                    android:textSize="24sp"
-                    android:textStyle="bold" />
+                    android:textColor="@color/text_dim"
+                    android:textSize="12sp" />
             </LinearLayout>
+
+            <TextView
+                android:id="@+id/clock"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="22dp"
+                android:textColor="@color/text"
+                android:textSize="24sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:clipChildren="false"
+            android:gravity="center_vertical"
+            android:orientation="vertical">
 
             <FrameLayout
                 android:id="@+id/hero"
                 android:layout_width="match_parent"
-                android:layout_height="176dp"
-                android:layout_marginTop="16dp"
+                android:layout_height="164dp"
                 android:background="@drawable/hero_bg"
                 android:paddingLeft="28dp"
-                android:paddingTop="24dp"
+                android:paddingTop="22dp"
                 android:paddingRight="26dp"
-                android:paddingBottom="24dp">
+                android:paddingBottom="22dp">
 
                 <FrameLayout
                     android:id="@+id/hero_icon"
-                    android:layout_width="94dp"
-                    android:layout_height="94dp"
+                    android:layout_width="88dp"
+                    android:layout_height="88dp"
                     android:layout_gravity="end|center_vertical"
                     android:background="@drawable/hero_icon_bg">
 
@@ -104,7 +105,7 @@
                         android:layout_height="match_parent"
                         android:gravity="center"
                         android:textColor="#F2FFFFFF"
-                        android:textSize="42sp"
+                        android:textSize="40sp"
                         android:textStyle="bold" />
                 </FrameLayout>
 
@@ -113,7 +114,7 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_vertical"
                     android:orientation="vertical"
-                    android:paddingEnd="124dp">
+                    android:paddingEnd="118dp">
 
                     <TextView
                         android:id="@+id/hero_chip"
@@ -134,27 +135,27 @@
                         android:id="@+id/hero_title"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="9dp"
+                        android:layout_marginTop="8dp"
                         android:ellipsize="end"
                         android:singleLine="true"
                         android:textColor="@color/text"
-                        android:textSize="31sp"
+                        android:textSize="29sp"
                         android:textStyle="bold" />
 
                     <TextView
                         android:id="@+id/hero_sub"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="3dp"
+                        android:layout_marginTop="2dp"
                         android:ellipsize="end"
                         android:singleLine="true"
                         android:textColor="@color/text_dim"
-                        android:textSize="14sp" />
+                        android:textSize="13sp" />
 
                     <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="14dp"
+                        android:layout_marginTop="12dp"
                         android:gravity="center_vertical"
                         android:orientation="horizontal">
 
@@ -195,7 +196,7 @@
             <HorizontalScrollView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
+                android:layout_marginTop="9dp"
                 android:clipChildren="false"
                 android:clipToPadding="false"
                 android:scrollbars="none">
@@ -221,7 +222,7 @@
             <HorizontalScrollView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
+                android:layout_marginTop="9dp"
                 android:clipChildren="false"
                 android:clipToPadding="false"
                 android:scrollbars="none">
@@ -233,9 +234,8 @@
                     android:clipChildren="false"
                     android:orientation="horizontal" />
             </HorizontalScrollView>
-
         </LinearLayout>
-    </ScrollView>
+    </LinearLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
