@@ -41,6 +41,7 @@
     <string name="reloading">Sayfa yeniden yükleniyor…</string>
     <string name="load_error">Sayfa yüklenemedi (%1$s). YENİLE ile tekrar deneyin.</string>
     <string name="err_dns">Site adresi bulunamadı (DNS). Başka bir site deneyin.</string>
+    <string name="blocked_flag">AĞDA ENGEL</string>
     <string name="err_network">Siteye ulaşılamadı — ağınızda engellenmiş olabilir. VPN deneyin veya başka site seçin.</string>
     <string name="page_too_heavy">Bu sayfa cihazda açılamıyor (bellek yetersiz). Başka bir site deneyin.</string>
     <string name="menu">Menü</string>

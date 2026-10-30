@@ -59,6 +59,7 @@ class BrowserActivity : Activity() {
     private var fsActive = false
     private var crashUrl = ""
     private var crashCount = 0
+    private var erroredHost: String? = null
 
     /** Sayfa dibinde DOWN: odagi alt arac cubuguna tasir (kumanda ile menuye erisim). */
     private val bridge = object {
@@ -186,6 +187,9 @@ class BrowserActivity : Activity() {
         }
 
         override fun onPageFinished(view: WebView, url: String) {
+            val host = try { android.net.Uri.parse(url).host } catch (e: Exception) { null }
+            if (host != null && host != erroredHost) SiteHealth.ok(this@BrowserActivity, host)
+            erroredHost = null
             view.evaluateJavascript(AdBlock.COSMETIC_JS, null)
             view.evaluateJavascript(PlayerOptions.FOCUS_JS, null)
             view.evaluateJavascript(Nav.JS, null)
@@ -208,6 +212,8 @@ class BrowserActivity : Activity() {
                     getString(R.string.err_network)
                 else -> getString(R.string.load_error, reason)
             }
+            erroredHost = request.url.host
+            SiteHealth.fail(this@BrowserActivity, request.url.host)
             Toast.makeText(this@BrowserActivity, msg, Toast.LENGTH_LONG).show()
             urlBar.setText(request.url.toString())
         }

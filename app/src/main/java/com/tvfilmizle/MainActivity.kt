@@ -216,6 +216,9 @@ private class SiteAdapter(private val ctx: Context, private val items: List<Site
         view.scaleY = 1f
         view.translationZ = 0f
         view.background = art(ctx, site)
+        val host = try { android.net.Uri.parse(site.url).host } catch (e: Exception) { null }
+        val blocked = site.kind == SiteKind.SITE && SiteHealth.isBlocked(ctx, host)
+        view.findViewById<TextView>(R.id.site_flag).visibility = if (blocked) View.VISIBLE else View.GONE
         val badge = view.findViewById<TextView>(R.id.site_badge)
         badge.text = when (site.kind) {
             SiteKind.CUSTOM -> "+"
