@@ -52,7 +52,7 @@ node tools/discover.js --dry   # sadece rapor
 node tools/discover.js         # listeye ekle
 ```
 
-`.github/workflows/update-sites.yml` bu betiği **her pazartesi** çalıştırıp değişikliği commit eder;
+`.github/workflows/update-sites.yml` bu betiği **her gün 06:00 UTC** çalıştırıp değişikliği commit eder;
 uygulama da açılışta yeni listeyi otomatik çeker.
 
 Elenenler: rehber/veritabanı siteleri (film izletmeyen), ücretli platformlar (NOW, TV+, Exxen…),

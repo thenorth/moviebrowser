@@ -178,7 +178,7 @@ async function validate(host) {
     if (r.status === 403 || r.status === 503 || r.status === 429) return { ok: true, protected: true, html: "" };
     if (r.status >= 400) continue;
     const html = trLower(r.text);
-    if (/for sale|buy this domain|domain is parked|satılık alan adı/.test(html)) return { ok: false };
+    if (/for sale|buy this domain|domain is parked|satılık alan adı|account suspended/i.test(html)) return { ok: false };
     if (r.text.length < 3000) return { ok: false };
     const hasFilm = html.includes("izle");
     const hasLang = html.includes("dublaj") || html.includes("altyaz");
@@ -186,6 +186,17 @@ async function validate(host) {
     return { ok: false };
   }
   return { ok: false };
+}
+
+/** Mevcut bir site hala yasiyor mu? (sadece kesin ölüm durumunda false) */
+async function stillAlive(url) {
+  const r = await fetchText(url, 12000);
+  if (r.status === 404 || r.status === 410) return false;
+  if (r.status === 0) return true; // gecici ag sorunu: silme
+  if (r.status >= 500) return true;
+  const html = trLower(r.text || "");
+  if (/account suspended|for sale|buy this domain|domain is parked|satılık alan adı/i.test(html)) return false;
+  return true;
 }
 
 function brandFrom(html, host) {
@@ -202,7 +213,18 @@ function brandFrom(html, host) {
 (async () => {
   const dry = process.argv.includes("--dry");
   const current = JSON.parse(fs.readFileSync(SITES_FILE, "utf8"));
-  const existing = new Set(current.sites.map(s => normalizeHost(s.url)).filter(Boolean));
+
+  // 1) Mevcut listedeki olu siteleri ayikla
+  const alive = [];
+  for (const s of current.sites) {
+    const host = normalizeHost(s.url);
+    if (!host) continue;
+    const ok = await stillAlive(s.url);
+    if (ok) alive.push(s);
+    else console.log(`[olu] ${s.url}`);
+  }
+
+  const existing = new Set(alive.map(s => normalizeHost(s.url)).filter(Boolean));
 
   const candidates = new Map(); // host -> {title, url}
   for (const q of QUERIES) {
@@ -230,7 +252,7 @@ function brandFrom(html, host) {
     await new Promise(res => setTimeout(res, 800));
   }
 
-  if (added.length === 0) {
+  if (added.length === 0 && alive.length === current.sites.length) {
     console.log("\nYeni uygun site bulunamadi.");
     return;
   }
@@ -239,10 +261,10 @@ function brandFrom(html, host) {
   const merged = {
     version: (current.version || 1) + 1,
     updated: new Date().toISOString().slice(0, 10),
-    sites: [...current.sites, ...added]
+    sites: [...alive, ...added]
   };
 
-  console.log(`\n[sonuc] ${added.length} site eklendi:`);
+  console.log(`\n[sonuc] ${added.length} site eklendi, ${current.sites.length - alive.length} olu site cikarildi:`);
   added.forEach(s => console.log("  + " + s.name + " - " + s.url));
 
   if (dry) {
