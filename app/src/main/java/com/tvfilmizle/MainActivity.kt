@@ -31,9 +31,6 @@ class MainActivity : Activity() {
 
     private val entries = ArrayList<Site>()
     private lateinit var list: ListView
-    private lateinit var heroTitle: TextView
-    private lateinit var heroSub: TextView
-    private lateinit var heroInitial: TextView
     private lateinit var clock: TextView
     private lateinit var status: TextView
     private lateinit var statusDot: View
@@ -56,22 +53,12 @@ class MainActivity : Activity() {
         window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
 
         list = findViewById(R.id.site_list)
-        heroTitle = findViewById(R.id.hero_title)
-        heroSub = findViewById(R.id.hero_sub)
-        heroInitial = findViewById(R.id.hero_initial)
         clock = findViewById(R.id.clock)
         status = findViewById(R.id.status)
         statusDot = findViewById(R.id.status_dot)
 
         adapter = SiteAdapter(this, entries)
         list.adapter = adapter
-        list.setOnItemSelectedListener(object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                entries.getOrNull(position)?.let { preview(it) }
-            }
-
-            override fun onNothingSelected(parent: AdapterView<*>?) = Unit
-        })
         list.setOnItemClickListener { _, _, position, _ ->
             entries.getOrNull(position)?.let { activate(it) }
         }
@@ -100,19 +87,6 @@ class MainActivity : Activity() {
         entries.add(Site(getString(R.string.refresh_list), getString(R.string.refresh_list_sub), SiteKind.REFRESH))
         adapter.notifyDataSetChanged()
         list.setSelection(0)
-        entries.firstOrNull()?.let { preview(it) }
-    }
-
-    private fun preview(site: Site) {
-        heroTitle.text = site.name
-        heroSub.text = site.url
-        heroInitial.text = badge(site)
-    }
-
-    private fun badge(site: Site): String = when (site.kind) {
-        SiteKind.CUSTOM -> "+"
-        SiteKind.REFRESH -> "↻"
-        SiteKind.SITE -> site.name.take(1).uppercase()
     }
 
     private fun activate(site: Site) {
