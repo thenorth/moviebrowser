@@ -15,14 +15,119 @@
         android:focusable="true"
         android:horizontalSpacing="14dp"
         android:listSelector="@android:color/transparent"
-        android:numColumns="6"
-        android:paddingLeft="38dp"
+        android:numColumns="5"
+        android:paddingLeft="262dp"
         android:paddingTop="86dp"
         android:paddingRight="38dp"
         android:paddingBottom="86dp"
         android:scrollbars="none"
         android:stretchMode="columnWidth"
         android:verticalSpacing="16dp" />
+
+    <!-- Solda sabit menu -->
+    <LinearLayout
+        android:id="@+id/side_bar"
+        android:layout_width="222dp"
+        android:layout_height="match_parent"
+        android:layout_gravity="start"
+        android:layout_marginStart="26dp"
+        android:layout_marginTop="96dp"
+        android:orientation="vertical"
+        android:paddingBottom="86dp">
+
+        <LinearLayout
+            android:id="@+id/side_search"
+            style="@style/SideItem">
+
+            <TextView
+                style="@style/SideGlyph"
+                android:text="ARA"
+                android:textSize="12sp" />
+
+            <TextView
+                style="@style/SideLabel"
+                android:text="@string/search_title" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/side_discover"
+            style="@style/SideItem">
+
+            <TextView
+                style="@style/SideGlyph"
+                android:text="◎" />
+
+            <TextView
+                style="@style/SideLabel"
+                android:text="@string/discover" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/side_watchlist"
+            style="@style/SideItem">
+
+            <TextView
+                style="@style/SideGlyph"
+                android:text="★" />
+
+            <TextView
+                style="@style/SideLabel"
+                android:text="@string/watchlist" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/side_status"
+            style="@style/SideItem">
+
+            <TextView
+                style="@style/SideGlyph"
+                android:text="✓" />
+
+            <TextView
+                style="@style/SideLabel"
+                android:text="@string/status_title" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/side_url"
+            style="@style/SideItem">
+
+            <TextView
+                style="@style/SideGlyph"
+                android:text="+" />
+
+            <TextView
+                style="@style/SideLabel"
+                android:text="@string/custom_url" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/side_refresh"
+            style="@style/SideItem">
+
+            <TextView
+                android:id="@+id/side_refresh_glyph"
+                style="@style/SideGlyph"
+                android:text="↻" />
+
+            <TextView
+                style="@style/SideLabel"
+                android:text="@string/refresh_list" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/side_settings"
+            style="@style/SideItem">
+
+            <TextView
+                style="@style/SideGlyph"
+                android:text="⚙" />
+
+            <TextView
+                style="@style/SideLabel"
+                android:text="@string/settings" />
+        </LinearLayout>
+    </LinearLayout>
 
     <!-- Sabit baslik: opak bant + altinda yumusak gecis -->
     <LinearLayout

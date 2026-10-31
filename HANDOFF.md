@@ -1,9 +1,9 @@
-# Devir Notu — Movie Browser (son güncelleme: 31.10.2026, v3.4)
+# Devir Notu — Movie Browser (son güncelleme: 31.10.2026, v3.5)
 
 Sonraki oturum için kısa durum. Ayrıntılı geçmiş git log'da.
 
 ## Durum
-- Sürüm: `versionName 3.4` / `versionCode 34` (yerel commit, **push YOK**). Push kullanıcı "push" deyince.
+- Sürüm: `versionName 3.5` / `versionCode 35` (yerel commit, **push YOK**). Push kullanıcı "push" deyince.
 - Paket: `com.tvfilmizle` (üzerine kurulum için değişmemeli).
 - APK: `MovieBrowser-3.2.apk` (debug imzalı, sideload).
 - Site listesi: `sites.json` (GitHub `thenorth/moviebrowser`), açılışta + 5 dk sonra çekilir; günlük keşif `.github/workflows/update-sites.yml`.
@@ -16,6 +16,7 @@ Sonraki oturum için kısa durum. Ayrıntılı geçmiş git log'da.
 5. **Scraper iyileştirmesi**: `li:has(img)` geçişi (afiş `<a>` dışında olan temalar), platform/logo görselleri elenir, gerçek ızgara slider'dan önce gelir.
 6. **OYNAT = tam ekran (v3.3)**: oynatma başlayınca sinema modu; oynatıcı yoksa 1,5 sn sonra bir kez daha dener.
 7. **2. oynat düğmesi (v3.4)**: `Player.PLAY_JS` — aynı kaynaklı videoyu oynatır / sayfa içi oynat düğmesine basar; bulamazsa oynatıcı iframe'i için ekran merkezine bir kez dokunur (`autoStarted`, sayfa başına 1 kez). Duraklatma için `TOGGLE_JS` artık `paused` döner.
+8. **Solda sabit menü (v3.5)**: eylem kartları ızgaradan çıktı; `activity_main.xml` içinde 222dp'lik `side_bar` (7 satır: ara, keşfet, listem, durum, adres, yenile, ayarlar). Izgara 5 sütun, `paddingLeft 262dp`. D-pad: ızgaranın ilk sütununda SOL → menü (`MainActivity.dispatchKeyEvent`), SAĞ → ızgara; menüden dönüşte `highlightSelected()` halkayı tazeler. `SiteKind` kaldırıldı.
 
 ## Doğrulanan (BlueStacks, Android 9)
 - Keşfet ızgarası 24 film, site etiketi görünür; platform logo kartları elendi.

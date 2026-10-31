@@ -12,6 +12,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.view.LayoutInflater
+import android.view.KeyEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
@@ -70,7 +71,7 @@ class MainActivity : Activity() {
         adapter = SiteAdapter(this, entries)
         grid.adapter = adapter
         grid.setOnItemClickListener { _, _, position, _ ->
-            entries.getOrNull(position)?.let { activate(it) }
+            entries.getOrNull(position)?.let { openSite(it) }
         }
         grid.setOnItemSelectedListener(object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
@@ -82,10 +83,57 @@ class MainActivity : Activity() {
 
             override fun onNothingSelected(parent: AdapterView<*>?) = Unit
         })
+        // Odak menuden donunce de secili kart gorunsun.
+        grid.setOnFocusChangeListener { _, hasFocus -> if (hasFocus) highlightSelected() }
 
+        bindSideBar()
         fill(SiteRepository.cached(this))
         refreshList(false)
         checkForUpdate()
+    }
+
+    /** Soldaki sabit menu. */
+    private fun bindSideBar() {
+        findViewById<View>(R.id.side_search).setOnClickListener { askSearch() }
+        findViewById<View>(R.id.side_discover).setOnClickListener {
+            startActivity(Intent(this, DiscoverActivity::class.java))
+        }
+        findViewById<View>(R.id.side_watchlist).setOnClickListener {
+            startActivity(Intent(this, WatchlistActivity::class.java))
+        }
+        findViewById<View>(R.id.side_status).setOnClickListener {
+            startActivity(Intent(this, StatusActivity::class.java))
+        }
+        findViewById<View>(R.id.side_url).setOnClickListener { askUrl() }
+        findViewById<View>(R.id.side_refresh).setOnClickListener { refreshList(true) }
+        findViewById<View>(R.id.side_settings).setOnClickListener {
+            startActivity(Intent(this, SettingsActivity::class.java))
+        }
+    }
+
+    /** Secili kartin halkasini tazeler (odak menuden donunce). */
+    private fun highlightSelected() {
+        val idx = grid.selectedItemPosition - grid.firstVisiblePosition
+        for (i in 0 until grid.childCount) {
+            setFocused(grid.getChildAt(i), i == idx)
+        }
+    }
+
+    /** Soldaki menu ile ızgara arasında odak gecisi (GridView LEFT tusunu kendi yutuyor). */
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        if (event.action == KeyEvent.ACTION_DOWN) {
+            if (event.keyCode == KeyEvent.KEYCODE_DPAD_LEFT && grid.hasFocus() &&
+                grid.selectedItemPosition % grid.numColumns == 0
+            ) {
+                findViewById<View>(R.id.side_search).requestFocus()
+                return true
+            }
+            if (event.keyCode == KeyEvent.KEYCODE_DPAD_RIGHT && !grid.hasFocus()) {
+                grid.requestFocus()
+                return true
+            }
+        }
+        return super.dispatchKeyEvent(event)
     }
 
     /** GitHub'daki son release ile kurulu surumu karsilastirir. */
@@ -123,34 +171,19 @@ class MainActivity : Activity() {
         handler.removeCallbacks(tick)
     }
 
-    private fun fill(sites: List<Site>) {        entries.clear()
+    private fun fill(sites: List<Site>) {
+        entries.clear()
         entries.addAll(sites)
-        entries.add(Site(getString(R.string.search_title), getString(R.string.search_sub), SiteKind.SEARCH))
-        entries.add(Site(getString(R.string.discover), getString(R.string.discover_sub), SiteKind.DISCOVER))
-        entries.add(Site(getString(R.string.watchlist), getString(R.string.watchlist_sub), SiteKind.WATCHLIST))
-        entries.add(Site(getString(R.string.status_title), getString(R.string.status_sub), SiteKind.STATUS))
-        entries.add(Site(getString(R.string.custom_url), getString(R.string.custom_url_sub), SiteKind.CUSTOM))
-        entries.add(Site(getString(R.string.refresh_list), getString(R.string.refresh_list_sub), SiteKind.REFRESH))
-        entries.add(Site(getString(R.string.settings), getString(R.string.vpn_title), SiteKind.SETTINGS))
         adapter.notifyDataSetChanged()
         grid.setSelection(0)
     }
 
-    private fun activate(site: Site) {
-        when (site.kind) {
-            SiteKind.CUSTOM -> askUrl()
-            SiteKind.REFRESH -> refreshList(true)
-            SiteKind.SETTINGS -> startActivity(Intent(this, SettingsActivity::class.java))
-            SiteKind.SEARCH -> askSearch()
-            SiteKind.DISCOVER -> startActivity(Intent(this, DiscoverActivity::class.java))
-            SiteKind.WATCHLIST -> startActivity(Intent(this, WatchlistActivity::class.java))
-            SiteKind.STATUS -> startActivity(Intent(this, StatusActivity::class.java))
-            SiteKind.SITE -> startActivity(
-                Intent(this, SiteFilmsActivity::class.java)
-                    .putExtra(SiteFilmsActivity.EXTRA_URL, site.url)
-                    .putExtra(SiteFilmsActivity.EXTRA_NAME, site.name)
-            )
-        }
+    private fun openSite(site: Site) {
+        startActivity(
+            Intent(this, SiteFilmsActivity::class.java)
+                .putExtra(SiteFilmsActivity.EXTRA_URL, site.url)
+                .putExtra(SiteFilmsActivity.EXTRA_NAME, site.name)
+        )
     }
 
     /** Google'da film arar (sonuc tarayicida acilir). */
@@ -222,12 +255,7 @@ class MainActivity : Activity() {
             .start()
     }
 
-    private fun refreshBadge(): TextView? {
-        val pos = entries.indexOfFirst { it.kind == SiteKind.REFRESH }
-        if (pos < 0) return null
-        val child = grid.getChildAt(pos - grid.firstVisiblePosition) ?: return null
-        return child.findViewById(R.id.site_badge)
-    }
+    private fun refreshBadge(): TextView? = findViewById(R.id.side_refresh_glyph)
 
     private fun startSpin() {
         val glyph = refreshBadge() ?: return
@@ -285,76 +313,49 @@ private class SiteAdapter(private val ctx: Context, private val items: List<Site
         view.scaleX = 1f
         view.scaleY = 1f
         view.translationZ = 0f
-        view.background = art(ctx, site)
+        view.background = art(site)
         val host = try { android.net.Uri.parse(site.url).host } catch (e: Exception) { null }
-        val blocked = site.kind == SiteKind.SITE && SiteHealth.isBlocked(ctx, host)
+        val blocked = SiteHealth.isBlocked(ctx, host)
         view.findViewById<TextView>(R.id.site_flag).visibility = if (blocked) View.VISIBLE else View.GONE
         val badge = view.findViewById<TextView>(R.id.site_badge)
         val logo = view.findViewById<ImageView>(R.id.site_logo)
-        if (site.kind == SiteKind.SITE) {
-            badge.text = site.name.take(1).uppercase()
-            badge.setTextColor(Color.WHITE)
-            badge.alpha = 1f
-            val known = host?.let { Favicons.cached(it) }
-            if (known != null) {
-                logo.tag = host
-                logo.setImageBitmap(known)
-                logo.visibility = View.VISIBLE
-                badge.visibility = View.GONE
-            } else {
-                logo.setImageDrawable(null)
-                logo.visibility = View.GONE
-                badge.visibility = View.VISIBLE
-                if (host != null && logo.tag != host) {
-                    logo.tag = host
-                    Favicons.load(ctx, host) { bmp ->
-                        if (bmp != null && logo.tag == host) {
-                            logo.setImageBitmap(bmp)
-                            logo.visibility = View.VISIBLE
-                            badge.visibility = View.GONE
-                        }
-                    }
-                }
-            }
+        badge.text = site.name.take(1).uppercase()
+        badge.setTextColor(Color.WHITE)
+        badge.alpha = 1f
+        val known = host?.let { Favicons.cached(it) }
+        if (known != null) {
+            logo.tag = host
+            logo.setImageBitmap(known)
+            logo.visibility = View.VISIBLE
+            badge.visibility = View.GONE
         } else {
             logo.setImageDrawable(null)
             logo.visibility = View.GONE
             badge.visibility = View.VISIBLE
-            badge.alpha = 1f
-            badge.text = when (site.kind) {
-                SiteKind.CUSTOM -> "+"
-                SiteKind.REFRESH -> "↻"
-                SiteKind.SETTINGS -> "⚙"
-                SiteKind.SEARCH -> "ARA"
-                SiteKind.DISCOVER -> "◎"
-                SiteKind.WATCHLIST -> "★"
-                SiteKind.STATUS -> "✓"
-                else -> ""
+            if (host != null && logo.tag != host) {
+                logo.tag = host
+                Favicons.load(ctx, host) { bmp ->
+                    if (bmp != null && logo.tag == host) {
+                        logo.setImageBitmap(bmp)
+                        logo.visibility = View.VISIBLE
+                        badge.visibility = View.GONE
+                    }
+                }
             }
-            badge.textSize = 18f
-            badge.setTextColor(Color.parseColor("#FF9F1A"))
         }
         view.findViewById<TextView>(R.id.site_name).text = site.name
         view.findViewById<TextView>(R.id.site_url).text = site.url
         return view
     }
 
-    /** Site adindan turetilen afis renkleri; islem kartlari koyu yuzey. */
-    private fun art(ctx: Context, site: Site): Drawable {
+    /** Site adindan turetilen afis renkleri. */
+    private fun art(site: Site): Drawable {
         val d = ctx.resources.displayMetrics.density
-        return if (site.kind == SiteKind.SITE) {
-            val hue = (abs(site.name.hashCode()) % 360).toFloat()
-            val top = Color.HSVToColor(floatArrayOf(hue, 0.40f, 0.44f))
-            val bottom = Color.HSVToColor(floatArrayOf(hue, 0.62f, 0.15f))
-            GradientDrawable(GradientDrawable.Orientation.TL_BR, intArrayOf(top, bottom)).apply {
-                cornerRadius = 12 * d
-            }
-        } else {
-            GradientDrawable().apply {
-                setColor(Color.parseColor("#141A22"))
-                cornerRadius = 12 * d
-                setStroke((1 * d).toInt(), Color.parseColor("#33FFFFFF"))
-            }
+        val hue = (abs(site.name.hashCode()) % 360).toFloat()
+        val top = Color.HSVToColor(floatArrayOf(hue, 0.40f, 0.44f))
+        val bottom = Color.HSVToColor(floatArrayOf(hue, 0.62f, 0.15f))
+        return GradientDrawable(GradientDrawable.Orientation.TL_BR, intArrayOf(top, bottom)).apply {
+            cornerRadius = 12 * d
         }
     }
 }
