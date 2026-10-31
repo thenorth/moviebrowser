@@ -1,9 +1,9 @@
-# Devir Notu — Movie Browser (son güncelleme: 31.10.2026, v3.2)
+# Devir Notu — Movie Browser (son güncelleme: 31.10.2026, v3.4)
 
 Sonraki oturum için kısa durum. Ayrıntılı geçmiş git log'da.
 
 ## Durum
-- Sürüm: `versionName 3.2` / `versionCode 32` (yerel commit, **push YOK**). Push kullanıcı "push" deyince.
+- Sürüm: `versionName 3.4` / `versionCode 34` (yerel commit, **push YOK**). Push kullanıcı "push" deyince.
 - Paket: `com.tvfilmizle` (üzerine kurulum için değişmemeli).
 - APK: `MovieBrowser-3.2.apk` (debug imzalı, sideload).
 - Site listesi: `sites.json` (GitHub `thenorth/moviebrowser`), açılışta + 5 dk sonra çekilir; günlük keşif `.github/workflows/update-sites.yml`.
@@ -14,6 +14,8 @@ Sonraki oturum için kısa durum. Ayrıntılı geçmiş git log'da.
 3. **Keşfet**: `DiscoverActivity` — ilk 6 siteden paralel kazıma, başlığa göre tekilleştirme, kart üstünde site adı (`item_film.xml` → `film_site`). Ana ekranda "Keşfet" kartı (`SiteKind.DISCOVER`).
 4. **Kategoriler (dizi/film)**: `SiteFilmsActivity` üstünde chip şeridi, `Scraper.Page.categories` (nav/menü linklerinden), chip = o kategori sayfasını yükle.
 5. **Scraper iyileştirmesi**: `li:has(img)` geçişi (afiş `<a>` dışında olan temalar), platform/logo görselleri elenir, gerçek ızgara slider'dan önce gelir.
+6. **OYNAT = tam ekran (v3.3)**: oynatma başlayınca sinema modu; oynatıcı yoksa 1,5 sn sonra bir kez daha dener.
+7. **2. oynat düğmesi (v3.4)**: `Player.PLAY_JS` — aynı kaynaklı videoyu oynatır / sayfa içi oynat düğmesine basar; bulamazsa oynatıcı iframe'i için ekran merkezine bir kez dokunur (`autoStarted`, sayfa başına 1 kez). Duraklatma için `TOGGLE_JS` artık `paused` döner.
 
 ## Doğrulanan (BlueStacks, Android 9)
 - Keşfet ızgarası 24 film, site etiketi görünür; platform logo kartları elendi.

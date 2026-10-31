@@ -21,12 +21,12 @@ object Player {
   }
 
   var v = bigVideo(document);
-  if (v) { if (v.paused) { v.play(); } else { v.pause(); } return 'video'; }
+  if (v) { if (v.paused) { try { v.play(); } catch (e) {} return 'video'; } v.pause(); return 'paused'; }
 
   for (var f = 0; f < window.frames.length; f++) {
     try {
       var fv = bigVideo(window.frames[f].document);
-      if (fv) { if (fv.paused) { fv.play(); } else { fv.pause(); } return 'video'; }
+      if (fv) { if (fv.paused) { try { fv.play(); } catch (e) {} return 'video'; } fv.pause(); return 'paused'; }
     } catch (e) {}
   }
 
@@ -73,6 +73,48 @@ object Player {
     return 'started';
   }
 
+  return 'none';
+})()
+"""
+
+    /**
+     * Oynatıcının ikinci (büyük) oynat düğümünü başlatır; video zaten oynuyorsa dokunmaz.
+     * Donus: "playing" | "started" | "none" (none = iframe ici, merkeze dokunmak gerekir).
+     */
+    const val PLAY_JS = """
+(function(){
+  function big(doc){
+    try {
+      var vs = doc.querySelectorAll('video');
+      for (var i = 0; i < vs.length; i++) {
+        var r = vs[i].getBoundingClientRect();
+        if (r.width > 120 && r.height > 80) return vs[i];
+      }
+    } catch (e) {}
+    return null;
+  }
+
+  var v = big(document);
+  if (v) { if (!v.paused) return 'playing'; try { v.play(); } catch (e) {} return 'started'; }
+
+  for (var f = 0; f < window.frames.length; f++) {
+    var fv = big(window.frames[f]);
+    if (fv) { if (!fv.paused) return 'playing'; try { fv.play(); } catch (e) {} return 'started'; }
+  }
+
+  var triggers = ['.vjs-big-play-button', '.plyr__control[data-plyr=play]',
+                  '[class*=play-button]', '[class*=playButton]', '[id*=play-button]',
+                  '[class*=play-icon]', '.play-btn', '.poster-play', '.player-cover'];
+  for (var t = 0; t < triggers.length; t++) {
+    var els = document.querySelectorAll(triggers[t]);
+    for (var k = 0; k < els.length; k++) {
+      var el = els[k], r = el.getBoundingClientRect();
+      if (r.width < 20 || r.height < 20) continue;
+      var cs = getComputedStyle(el);
+      if (cs.visibility === 'hidden' || cs.display === 'none') continue;
+      try { el.click(); return 'started'; } catch (e) {}
+    }
+  }
   return 'none';
 })()
 """

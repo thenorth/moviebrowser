@@ -68,6 +68,7 @@ class BrowserActivity : Activity() {
     private var customCallback: WebChromeClient.CustomViewCallback? = null
     private var homeUrl = ""
     private var fsActive = false
+    private var autoStarted = false
     private var crashUrl = ""
     private var crashCount = 0
     private var erroredHost: String? = null
@@ -220,6 +221,7 @@ class BrowserActivity : Activity() {
             if (view === active) {
                 urlBar.setText(url)
                 fsActive = false
+                autoStarted = false
                 uaRetried = false
                 toolbar.visibility = View.VISIBLE
             }
@@ -581,10 +583,15 @@ class BrowserActivity : Activity() {
             val value = try { JSONTokener(result ?: "null").nextValue() } catch (e: Exception) { null }
             if (value !is String) return@evaluateJavascript
             when {
-                value == "video" -> enterFullscreen()
+                value == "video" -> {
+                    enterFullscreen()
+                    scheduleAutoStart()
+                }
+                value == "paused" -> Unit
                 value == "started" -> {
                     Toast.makeText(this, R.string.starting, Toast.LENGTH_SHORT).show()
                     w.postDelayed({ enterFullscreen() }, 1200)
+                    scheduleAutoStart(2600)
                 }
                 value == "none" -> Toast.makeText(this, R.string.no_player, Toast.LENGTH_SHORT).show()
                 value.startsWith("{") -> {
@@ -594,8 +601,25 @@ class BrowserActivity : Activity() {
                     } catch (e: Exception) {
                     }
                     w.postDelayed({ enterFullscreen() }, 1800)
+                    scheduleAutoStart(3200)
                 }
             }
+        }
+    }
+
+    /** Sayfa basina bir kez: oynatıcının ikinci oynat düğmesini kendiliğinden başlatır. */
+    private fun scheduleAutoStart(delayMs: Long = 3000) {
+        if (autoStarted) return
+        autoStarted = true
+        web.postDelayed({ if (!isFinishing) autoStartPlayback() }, delayMs)
+    }
+
+    private fun autoStartPlayback() {
+        val w = active ?: web
+        w.evaluateJavascript(Player.PLAY_JS) { result ->
+            val value = try { JSONTokener(result ?: "null").nextValue() as? String } catch (e: Exception) { null }
+            // Ayni kaynakli video/dugme yoksa oynatıcı iframe icindedir: merkezdeki buyuk oynat dugmesine dokun.
+            if (value == "none") tapWeb(0.5f, 0.5f)
         }
     }
 
