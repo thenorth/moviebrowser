@@ -84,10 +84,11 @@ class MainActivity : Activity() {
             override fun onNothingSelected(parent: AdapterView<*>?) = Unit
         })
         // Odak menuden donunce de secili kart gorunsun.
-        grid.setOnFocusChangeListener { _, hasFocus -> if (hasFocus) highlightSelected() }
+        grid.setOnFocusChangeListener { _, hasFocus -> if (hasFocus) grid.post { highlightSelected() } }
 
         bindSideBar()
         fill(SiteRepository.cached(this))
+        grid.post { grid.requestFocus() }
         refreshList(false)
         checkForUpdate()
     }
@@ -113,7 +114,8 @@ class MainActivity : Activity() {
 
     /** Secili kartin halkasini tazeler (odak menuden donunce). */
     private fun highlightSelected() {
-        val idx = grid.selectedItemPosition - grid.firstVisiblePosition
+        val pos = if (grid.selectedItemPosition < 0) 0 else grid.selectedItemPosition
+        val idx = pos - grid.firstVisiblePosition
         for (i in 0 until grid.childCount) {
             setFocused(grid.getChildAt(i), i == idx)
         }
@@ -176,6 +178,12 @@ class MainActivity : Activity() {
         entries.addAll(sites)
         adapter.notifyDataSetChanged()
         grid.setSelection(0)
+        grid.post {
+            val side = findViewById<View>(R.id.side_bar)
+            if (!side.hasFocus() && !grid.hasFocus()) grid.requestFocus()
+            if (!side.hasFocus()) grid.setSelection(0)
+            highlightSelected()
+        }
     }
 
     private fun openSite(site: Site) {
@@ -255,7 +263,7 @@ class MainActivity : Activity() {
             .start()
     }
 
-    private fun refreshBadge(): TextView? = findViewById(R.id.side_refresh_glyph)
+    private fun refreshBadge(): View? = findViewById(R.id.side_refresh_glyph)
 
     private fun startSpin() {
         val glyph = refreshBadge() ?: return

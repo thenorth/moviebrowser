@@ -13,6 +13,7 @@
         android:clipToPadding="false"
         android:drawSelectorOnTop="false"
         android:focusable="true"
+        android:focusableInTouchMode="true"
         android:horizontalSpacing="14dp"
         android:listSelector="@android:color/transparent"
         android:numColumns="5"
@@ -39,10 +40,10 @@
             android:id="@+id/side_search"
             style="@style/SideItem">
 
-            <TextView
-                style="@style/SideGlyph"
-                android:text="ARA"
-                android:textSize="12sp" />
+            <ImageView
+                style="@style/SideIcon"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_search" />
 
             <TextView
                 style="@style/SideLabel"
@@ -53,9 +54,10 @@
             android:id="@+id/side_discover"
             style="@style/SideItem">
 
-            <TextView
-                style="@style/SideGlyph"
-                android:text="◎" />
+            <ImageView
+                style="@style/SideIcon"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_discover" />
 
             <TextView
                 style="@style/SideLabel"
@@ -66,9 +68,10 @@
             android:id="@+id/side_watchlist"
             style="@style/SideItem">
 
-            <TextView
-                style="@style/SideGlyph"
-                android:text="★" />
+            <ImageView
+                style="@style/SideIcon"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_star" />
 
             <TextView
                 style="@style/SideLabel"
@@ -79,9 +82,10 @@
             android:id="@+id/side_status"
             style="@style/SideItem">
 
-            <TextView
-                style="@style/SideGlyph"
-                android:text="✓" />
+            <ImageView
+                style="@style/SideIcon"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_check" />
 
             <TextView
                 style="@style/SideLabel"
@@ -92,9 +96,10 @@
             android:id="@+id/side_url"
             style="@style/SideItem">
 
-            <TextView
-                style="@style/SideGlyph"
-                android:text="+" />
+            <ImageView
+                style="@style/SideIcon"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_plus" />
 
             <TextView
                 style="@style/SideLabel"
@@ -105,10 +110,11 @@
             android:id="@+id/side_refresh"
             style="@style/SideItem">
 
-            <TextView
+            <ImageView
                 android:id="@+id/side_refresh_glyph"
-                style="@style/SideGlyph"
-                android:text="↻" />
+                style="@style/SideIcon"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_refresh" />
 
             <TextView
                 style="@style/SideLabel"
@@ -119,9 +125,10 @@
             android:id="@+id/side_settings"
             style="@style/SideItem">
 
-            <TextView
-                style="@style/SideGlyph"
-                android:text="⚙" />
+            <ImageView
+                style="@style/SideIcon"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_settings" />
 
             <TextView
                 style="@style/SideLabel"

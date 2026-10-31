@@ -26,6 +26,7 @@ class StatusActivity : Activity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_status)
         window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
+        Panel.apply(this)
 
         sites.addAll(SiteRepository.cached(this))
         sites.forEach { codes[it.url] = -1 }

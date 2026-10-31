@@ -13,7 +13,7 @@
         android:focusable="true"
         android:horizontalSpacing="14dp"
         android:listSelector="@android:color/transparent"
-        android:numColumns="6"
+        android:numColumns="4"
         android:paddingLeft="38dp"
         android:paddingTop="92dp"
         android:paddingRight="38dp"

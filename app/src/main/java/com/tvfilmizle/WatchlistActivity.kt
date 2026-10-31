@@ -31,6 +31,7 @@ class WatchlistActivity : Activity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_watchlist)
         window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
+        Panel.apply(this)
 
         grid = findViewById(R.id.list)
         empty = findViewById(R.id.empty)

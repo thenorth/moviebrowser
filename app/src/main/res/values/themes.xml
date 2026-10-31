@@ -8,6 +8,14 @@
         <item name="android:alertDialogTheme">@style/DialogTheme</item>
     </style>
 
+    <!-- Sagdan acilan panel: soldaki sabit menu gorunur kalir -->
+    <style name="PanelTheme" parent="@style/AppTheme">
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:backgroundDimEnabled">false</item>
+        <item name="android:windowContentOverlay">@null</item>
+    </style>
+
     <style name="DialogTheme" parent="@android:style/Theme.Material.Dialog.Alert">
         <item name="android:windowBackground">@drawable/dialog_bg</item>
         <item name="android:colorAccent">@color/accent</item>
@@ -61,18 +69,17 @@
         <item name="android:background">@drawable/tool_button_bg</item>
         <item name="android:clickable">true</item>
         <item name="android:focusable">true</item>
+        <item name="android:focusableInTouchMode">true</item>
         <item name="android:gravity">center_vertical</item>
         <item name="android:orientation">horizontal</item>
         <item name="android:paddingLeft">14dp</item>
         <item name="android:paddingRight">14dp</item>
     </style>
 
-    <style name="SideGlyph">
-        <item name="android:layout_width">34dp</item>
-        <item name="android:layout_height">wrap_content</item>
-        <item name="android:textColor">@color/accent</item>
-        <item name="android:textSize">15sp</item>
-        <item name="android:textStyle">bold</item>
+    <style name="SideIcon">
+        <item name="android:layout_width">20dp</item>
+        <item name="android:layout_height">20dp</item>
+        <item name="android:layout_marginEnd">14dp</item>
     </style>
 
     <style name="SideLabel">

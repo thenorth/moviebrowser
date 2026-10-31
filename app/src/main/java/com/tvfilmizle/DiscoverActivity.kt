@@ -36,6 +36,7 @@ class DiscoverActivity : Activity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_discover)
         window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
+        Panel.apply(this)
 
         grid = findViewById(R.id.grid)
         empty = findViewById(R.id.empty)

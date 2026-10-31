@@ -28,6 +28,7 @@ class SettingsActivity : Activity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_settings)
         window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
+        Panel.apply(this)
 
         toggle = findViewById(R.id.vpn_switch)
         status = findViewById(R.id.vpn_status)
