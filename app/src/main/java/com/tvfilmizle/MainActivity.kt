@@ -126,6 +126,7 @@ class MainActivity : Activity() {
     private fun fill(sites: List<Site>) {        entries.clear()
         entries.addAll(sites)
         entries.add(Site(getString(R.string.search_title), getString(R.string.search_sub), SiteKind.SEARCH))
+        entries.add(Site(getString(R.string.discover), getString(R.string.discover_sub), SiteKind.DISCOVER))
         entries.add(Site(getString(R.string.watchlist), getString(R.string.watchlist_sub), SiteKind.WATCHLIST))
         entries.add(Site(getString(R.string.status_title), getString(R.string.status_sub), SiteKind.STATUS))
         entries.add(Site(getString(R.string.custom_url), getString(R.string.custom_url_sub), SiteKind.CUSTOM))
@@ -141,6 +142,7 @@ class MainActivity : Activity() {
             SiteKind.REFRESH -> refreshList(true)
             SiteKind.SETTINGS -> startActivity(Intent(this, SettingsActivity::class.java))
             SiteKind.SEARCH -> askSearch()
+            SiteKind.DISCOVER -> startActivity(Intent(this, DiscoverActivity::class.java))
             SiteKind.WATCHLIST -> startActivity(Intent(this, WatchlistActivity::class.java))
             SiteKind.STATUS -> startActivity(Intent(this, StatusActivity::class.java))
             SiteKind.SITE -> startActivity(
@@ -324,6 +326,7 @@ private class SiteAdapter(private val ctx: Context, private val items: List<Site
                 SiteKind.REFRESH -> "↻"
                 SiteKind.SETTINGS -> "⚙"
                 SiteKind.SEARCH -> "ARA"
+                SiteKind.DISCOVER -> "◎"
                 SiteKind.WATCHLIST -> "★"
                 SiteKind.STATUS -> "✓"
                 else -> ""

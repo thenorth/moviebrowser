@@ -15,7 +15,7 @@
         android:listSelector="@android:color/transparent"
         android:numColumns="6"
         android:paddingLeft="38dp"
-        android:paddingTop="86dp"
+        android:paddingTop="92dp"
         android:paddingRight="38dp"
         android:paddingBottom="80dp"
         android:scrollbars="none"
@@ -37,54 +37,77 @@
         android:layout_height="wrap_content"
         android:layout_gravity="top"
         android:background="@drawable/header_fade"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:paddingLeft="38dp"
-        android:paddingTop="18dp"
-        android:paddingRight="38dp"
-        android:paddingBottom="14dp">
+        android:orientation="vertical"
+        android:paddingBottom="10dp">
 
-        <TextView
-            android:id="@+id/btn_back"
-            android:layout_width="wrap_content"
-            android:layout_height="40dp"
-            android:background="@drawable/tool_button_bg"
-            android:clickable="true"
-            android:focusable="true"
-            android:gravity="center"
-            android:paddingLeft="18dp"
-            android:paddingRight="18dp"
-            android:text="@string/back_button"
-            android:textColor="@color/tool_button_text"
-            android:textSize="12sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:id="@+id/title"
-            android:layout_width="0dp"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="18dp"
-            android:layout_weight="1"
-            android:ellipsize="end"
-            android:singleLine="true"
-            android:textColor="@color/text"
-            android:textSize="24sp"
-            android:textStyle="bold" />
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingLeft="38dp"
+            android:paddingTop="16dp"
+            android:paddingRight="38dp"
+            android:paddingBottom="8dp">
 
-        <TextView
-            android:id="@+id/btn_site"
-            android:layout_width="wrap_content"
-            android:layout_height="40dp"
-            android:background="@drawable/tool_button_bg"
-            android:clickable="true"
-            android:focusable="true"
-            android:gravity="center"
-            android:paddingLeft="18dp"
-            android:paddingRight="18dp"
-            android:text="@string/open_site"
-            android:textColor="@color/tool_button_text"
-            android:textSize="12sp"
-            android:textStyle="bold" />
+            <TextView
+                android:id="@+id/btn_back"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:background="@drawable/tool_button_bg"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:paddingLeft="18dp"
+                android:paddingRight="18dp"
+                android:text="@string/back_button"
+                android:textColor="@color/tool_button_text"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/title"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="18dp"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:singleLine="true"
+                android:textColor="@color/text"
+                android:textSize="23sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/btn_site"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:background="@drawable/tool_button_bg"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:paddingLeft="18dp"
+                android:paddingRight="18dp"
+                android:text="@string/open_site"
+                android:textColor="@color/tool_button_text"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <HorizontalScrollView
+            android:id="@+id/cat_scroll"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingLeft="38dp"
+            android:paddingRight="38dp"
+            android:scrollbars="none"
+            android:visibility="gone">
+
+            <LinearLayout
+                android:id="@+id/cat_row"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal" />
+        </HorizontalScrollView>
     </LinearLayout>
 
     <LinearLayout

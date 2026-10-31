@@ -544,7 +544,7 @@ class BrowserActivity : Activity() {
     }
 
     /** MENU tusu: kumandanin ulasamadigi eylemler tek listede. */
-    /** Sayfayi listeye ekler (baslik + url + site). */
+    /** Sayfayi listeye ekler (baslik + url + site + afis). */
     private fun addToWatchlist() {
         val w = active ?: web
         val url = w.url ?: return
@@ -553,8 +553,23 @@ class BrowserActivity : Activity() {
             return
         }
         val title = w.title?.takeIf { it.isNotBlank() } ?: url
-        Watchlist.add(this, Watchlist.Item(title, url, Scraper.hostOf(url)))
+        val site = Scraper.hostOf(url)
+        Watchlist.add(this, Watchlist.Item(title, url, site))
         Toast.makeText(this, R.string.added_watch, Toast.LENGTH_SHORT).show()
+
+        // Afis: sayfadaki og:image (varsa) ile kaydi tamamla.
+        w.evaluateJavascript(
+            """(function(){var m=document.querySelector('meta[property="og:image"],meta[name="twitter:image"],link[rel="image_src"]');if(!m)return '';var v=m.content||m.href||'';if(!v)return '';try{return new URL(v,location.href).href}catch(e){return ''}})()"""
+        ) { result ->
+            val poster = try {
+                JSONTokener(result ?: "null").nextValue() as? String
+            } catch (e: Exception) {
+                null
+            }
+            if (!poster.isNullOrBlank()) {
+                Watchlist.add(this, Watchlist.Item(title, url, site, poster))
+            }
+        }
     }
 
     private fun togglePlay() {

@@ -68,6 +68,12 @@
             android:screenOrientation="landscape" />
 
         <activity
+            android:name=".DiscoverActivity"
+            android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|screenSize|smallestScreenSize|uiMode"
+            android:exported="false"
+            android:screenOrientation="landscape" />
+
+        <activity
             android:name=".StatusActivity"
             android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|screenSize|smallestScreenSize|uiMode"
             android:exported="false"

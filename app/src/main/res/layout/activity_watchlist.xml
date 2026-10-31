@@ -4,21 +4,23 @@
     android:layout_height="match_parent"
     android:background="@drawable/bg_tv">
 
-    <ListView
+    <GridView
         android:id="@+id/list"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:clipToPadding="false"
-        android:divider="@android:color/transparent"
-        android:dividerHeight="6dp"
         android:drawSelectorOnTop="false"
         android:focusable="true"
-        android:listSelector="@drawable/row_selector"
+        android:horizontalSpacing="14dp"
+        android:listSelector="@android:color/transparent"
+        android:numColumns="6"
         android:paddingLeft="38dp"
-        android:paddingTop="86dp"
+        android:paddingTop="92dp"
         android:paddingRight="38dp"
         android:paddingBottom="80dp"
-        android:scrollbars="none" />
+        android:scrollbars="none"
+        android:stretchMode="columnWidth"
+        android:verticalSpacing="16dp" />
 
     <TextView
         android:id="@+id/empty"
@@ -41,7 +43,7 @@
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingLeft="38dp"
-        android:paddingTop="18dp"
+        android:paddingTop="16dp"
         android:paddingRight="38dp"
         android:paddingBottom="14dp">
 
@@ -61,13 +63,12 @@
             android:textStyle="bold" />
 
         <TextView
-            android:id="@+id/title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="18dp"
             android:text="@string/watchlist"
             android:textColor="@color/text"
-            android:textSize="24sp"
+            android:textSize="23sp"
             android:textStyle="bold" />
 
         <View
@@ -81,6 +82,41 @@
             android:layout_height="wrap_content"
             android:textColor="@color/text_dim"
             android:textSize="12sp" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:background="@drawable/hint_scrim"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:paddingTop="22dp"
+        android:paddingBottom="10dp">
+
+        <TextView
+            style="@style/KeyCap"
+            android:text="@string/key_ok" />
+
+        <TextView
+            style="@style/KeyLabel"
+            android:text="@string/key_ok_action" />
+
+        <TextView
+            style="@style/KeyCap"
+            android:text="@string/key_hold" />
+
+        <TextView
+            style="@style/KeyLabel"
+            android:text="@string/key_hold_remove" />
+
+        <TextView
+            style="@style/KeyCap"
+            android:text="@string/key_back" />
+
+        <TextView
+            style="@style/KeyLabel"
+            android:text="@string/key_back_action" />
     </LinearLayout>
 
 </FrameLayout>

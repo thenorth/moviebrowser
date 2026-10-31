@@ -4,10 +4,15 @@ import android.content.Context
 import org.json.JSONArray
 import org.json.JSONObject
 
-/** Tarayıcıdan eklenen film listesi (baslik + url + site). */
+/** Tarayicidan/izgaradan eklenen film listesi (baslik + url + site + afis). */
 object Watchlist {
 
-    data class Item(val title: String, val url: String, val site: String)
+    data class Item(
+        val title: String,
+        val url: String,
+        val site: String,
+        val poster: String? = null
+    )
 
     private const val P = "watchlist"
 
@@ -18,7 +23,14 @@ object Watchlist {
             val arr = JSONArray(raw)
             for (i in 0 until arr.length()) {
                 val o = arr.getJSONObject(i)
-                out.add(Item(o.optString("title"), o.optString("url"), o.optString("site")))
+                out.add(
+                    Item(
+                        o.optString("title"),
+                        o.optString("url"),
+                        o.optString("site"),
+                        o.optString("poster").ifBlank { null }
+                    )
+                )
             }
         } catch (e: Exception) {
             // bozuk kayit: bos liste
@@ -47,6 +59,7 @@ object Watchlist {
                     .put("title", it.title)
                     .put("url", it.url)
                     .put("site", it.site)
+                    .put("poster", it.poster ?: "")
             )
         }
         prefs(ctx).edit().putString("items", arr.toString()).apply()
