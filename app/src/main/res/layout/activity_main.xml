@@ -13,128 +13,16 @@
         android:clipToPadding="false"
         android:drawSelectorOnTop="false"
         android:focusable="true"
-        android:focusableInTouchMode="true"
         android:horizontalSpacing="14dp"
         android:listSelector="@android:color/transparent"
-        android:numColumns="5"
-        android:paddingLeft="262dp"
+        android:numColumns="6"
+        android:paddingLeft="38dp"
         android:paddingTop="86dp"
         android:paddingRight="38dp"
         android:paddingBottom="86dp"
         android:scrollbars="none"
         android:stretchMode="columnWidth"
         android:verticalSpacing="16dp" />
-
-    <!-- Solda sabit menu -->
-    <LinearLayout
-        android:id="@+id/side_bar"
-        android:layout_width="222dp"
-        android:layout_height="match_parent"
-        android:layout_gravity="start"
-        android:layout_marginStart="26dp"
-        android:layout_marginTop="96dp"
-        android:orientation="vertical"
-        android:paddingBottom="86dp">
-
-        <LinearLayout
-            android:id="@+id/side_search"
-            style="@style/SideItem">
-
-            <ImageView
-                style="@style/SideIcon"
-                android:contentDescription="@null"
-                android:src="@drawable/ic_search" />
-
-            <TextView
-                style="@style/SideLabel"
-                android:text="@string/search_title" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/side_discover"
-            style="@style/SideItem">
-
-            <ImageView
-                style="@style/SideIcon"
-                android:contentDescription="@null"
-                android:src="@drawable/ic_discover" />
-
-            <TextView
-                style="@style/SideLabel"
-                android:text="@string/discover" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/side_watchlist"
-            style="@style/SideItem">
-
-            <ImageView
-                style="@style/SideIcon"
-                android:contentDescription="@null"
-                android:src="@drawable/ic_star" />
-
-            <TextView
-                style="@style/SideLabel"
-                android:text="@string/watchlist" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/side_status"
-            style="@style/SideItem">
-
-            <ImageView
-                style="@style/SideIcon"
-                android:contentDescription="@null"
-                android:src="@drawable/ic_check" />
-
-            <TextView
-                style="@style/SideLabel"
-                android:text="@string/status_title" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/side_url"
-            style="@style/SideItem">
-
-            <ImageView
-                style="@style/SideIcon"
-                android:contentDescription="@null"
-                android:src="@drawable/ic_plus" />
-
-            <TextView
-                style="@style/SideLabel"
-                android:text="@string/custom_url" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/side_refresh"
-            style="@style/SideItem">
-
-            <ImageView
-                android:id="@+id/side_refresh_glyph"
-                style="@style/SideIcon"
-                android:contentDescription="@null"
-                android:src="@drawable/ic_refresh" />
-
-            <TextView
-                style="@style/SideLabel"
-                android:text="@string/refresh_list" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/side_settings"
-            style="@style/SideItem">
-
-            <ImageView
-                style="@style/SideIcon"
-                android:contentDescription="@null"
-                android:src="@drawable/ic_settings" />
-
-            <TextView
-                style="@style/SideLabel"
-                android:text="@string/settings" />
-        </LinearLayout>
-    </LinearLayout>
 
     <!-- Sabit baslik: opak bant + altinda yumusak gecis -->
     <LinearLayout
@@ -159,17 +47,17 @@
                 android:layout_height="wrap_content"
                 android:text="@string/brand_first"
                 android:textColor="@color/accent"
-                android:textSize="20sp"
+                android:textSize="23sp"
                 android:textStyle="bold" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="6dp"
-                android:letterSpacing="0.12"
+                android:layout_marginStart="7dp"
+                android:letterSpacing="0.16"
                 android:text="@string/brand_second"
                 android:textColor="@color/text"
-                android:textSize="20sp"
+                android:textSize="23sp"
                 android:textStyle="bold" />
 
             <View

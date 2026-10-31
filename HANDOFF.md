@@ -1,9 +1,9 @@
-# Devir Notu — Movie Browser (son güncelleme: 31.10.2026, v3.10)
+# Devir Notu — Movie Browser (son güncelleme: 31.10.2026, v3.11)
 
 Sonraki oturum için kısa durum. Ayrıntılı geçmiş git log'da.
 
 ## Durum
-- Sürüm: `versionName 3.10` / `versionCode 40` (yerel commit, **push YOK**). Push kullanıcı "push" deyince.
+- Sürüm: `versionName 3.11` / `versionCode 41` (yerel commit, **push YOK**). Push kullanıcı "push" deyince.
 - Paket: `com.tvfilmizle` (üzerine kurulum için değişmemeli).
 - APK: `MovieBrowser-3.2.apk` (debug imzalı, sideload).
 - Site listesi: `sites.json` (GitHub `thenorth/moviebrowser`), açılışta + 5 dk sonra çekilir; günlük keşif `.github/workflows/update-sites.yml`.
@@ -21,6 +21,7 @@ Sonraki oturum için kısa durum. Ayrıntılı geçmiş git log'da.
 10. **Panel geri tuşu kaldırıldı (v3.7)**: panel layout'larındaki `btn_back` silindi; panellerde **SOL** = menüye dön (`dispatchKeyEvent` → `finish()`; ızgaralarda yalnız ilk sütunda). Listem/Keşfet alt ipucunda "SOL Menü" yazıyor. Kumanda: ana ekranda SOL → menü, menüde AŞAĞI/YUKARI + OK, panelde SOL → menü.
 11. **Menü/kumanda düzeltmesi (v3.8)**: `selectedItemPosition` açılışta -1 olabildiği için SOL menüye hiç geçmiyordu → -1 iken 0 kabul edilir (ana ekran + Listem/Keşfet). Menü satırlarına `OnKeyListener` eklendi (DPAD_CENTER/ENTER/NUMPAD_ENTER/BUTTON_A, ACTION_DOWN) — UP göndermeyen kumandalarda da OK çalışır. `Panel.apply` artık pencere `attributes` (gravity/width/height) da yazıyor.
 12. **Tek dokunuş (v3.9)**: menü satırları `focusableInTouchMode` olduğu için farede ilk dokunuş yalnız odak veriyordu; `OnTouchListener` ACTION_UP'ta `performClick()` çağırıyor → menü tek tıkla açılıyor. (Aynı turda 3.8'in tek-SOL düzeltmesi de dahil.)
+13. **Geri alma (v3.11)**: 3.5–3.10 arası menü/panel denemesi geri alındı (kaynak `1726fa3` / v3.4 durumuna döndü). Sol menü ve sağ paneller yok; eylem kartları yine ana ızgarada (6 sütun), bölümler tam ekran ve **geri düğmeleri geri geldi**. Vektör ikonlar kartlarda korunuyor (`ic_*`, kart içindeki `site_logo`), yenileme ikonu dönüyor. Panel.kt silindi.
 
 ## Doğrulanan (BlueStacks, Android 9)
 - Keşfet ızgarası 24 film, site etiketi görünür; platform logo kartları elendi.

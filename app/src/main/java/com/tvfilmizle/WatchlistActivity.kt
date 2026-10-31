@@ -31,11 +31,11 @@ class WatchlistActivity : Activity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_watchlist)
         window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
-        Panel.apply(this)
 
         grid = findViewById(R.id.list)
         empty = findViewById(R.id.empty)
         count = findViewById(R.id.count)
+        findViewById<View>(R.id.btn_back).setOnClickListener { finish() }
 
         adapter = WatchAdapter(this, items)
         grid.adapter = adapter
@@ -55,16 +55,8 @@ class WatchlistActivity : Activity() {
         reload()
     }
 
-    /** OK'a basili tut = listeden cikar; ilk sutunda SOL = menuye don. */
+    /** OK'a basili tut = listeden cikar. */
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
-        val pos = if (grid.selectedItemPosition < 0) 0 else grid.selectedItemPosition
-        if (event.action == KeyEvent.ACTION_DOWN &&
-            event.keyCode == KeyEvent.KEYCODE_DPAD_LEFT &&
-            pos % grid.numColumns == 0
-        ) {
-            finish()
-            return true
-        }
         val isOk = event.keyCode == KeyEvent.KEYCODE_DPAD_CENTER || event.keyCode == KeyEvent.KEYCODE_ENTER
         if (!isOk) return super.dispatchKeyEvent(event)
 
