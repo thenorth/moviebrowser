@@ -350,14 +350,17 @@ class BrowserActivity : Activity() {
 
     // ------------------------------------------------------------ tam ekran
 
-    private fun enterFullscreen() {
-        if (fsActive) return
+    private fun enterFullscreen(retries: Int = 1) {
+        if (fsActive || isFinishing) return
         val w = active ?: web
         w.evaluateJavascript(Fullscreen.ENTER_JS) { result ->
             val state = result?.trim()?.trim('"') ?: "none"
             if (state != "none") {
                 fsActive = true
                 toolbar.visibility = View.GONE
+            } else if (retries > 0) {
+                // Oynatıcı yeni açılmış olabilir: kısa sonra bir kez daha dene.
+                w.postDelayed({ enterFullscreen(retries - 1) }, 1500)
             }
         }
     }
@@ -578,13 +581,19 @@ class BrowserActivity : Activity() {
             val value = try { JSONTokener(result ?: "null").nextValue() } catch (e: Exception) { null }
             if (value !is String) return@evaluateJavascript
             when {
-                value == "video" -> Unit
-                value == "started" -> Toast.makeText(this, R.string.starting, Toast.LENGTH_SHORT).show()
+                value == "video" -> enterFullscreen()
+                value == "started" -> {
+                    Toast.makeText(this, R.string.starting, Toast.LENGTH_SHORT).show()
+                    w.postDelayed({ enterFullscreen() }, 1200)
+                }
                 value == "none" -> Toast.makeText(this, R.string.no_player, Toast.LENGTH_SHORT).show()
-                value.startsWith("{") -> try {
-                    val o = JSONObject(value)
-                    tapWeb(o.optDouble("nx", 0.5).toFloat(), o.optDouble("ny", 0.45).toFloat())
-                } catch (e: Exception) {
+                value.startsWith("{") -> {
+                    try {
+                        val o = JSONObject(value)
+                        tapWeb(o.optDouble("nx", 0.5).toFloat(), o.optDouble("ny", 0.45).toFloat())
+                    } catch (e: Exception) {
+                    }
+                    w.postDelayed({ enterFullscreen() }, 1800)
                 }
             }
         }
