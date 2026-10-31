@@ -3,6 +3,7 @@
 Sonraki oturum için kısa durum. Ayrıntılı geçmiş git log'da.
 
 ## Durum
+- **Sürüm numarası kuralı:** her değişiklikte artırma; kullanıcı "bitince/push" deyince tek seferde artır. Ara turlarda APK'yı aynı sürüm adıyla üretme, sadece `assembleDebug` + kur.
 - Sürüm: `versionName 3.14` / `versionCode 44` (yerel commit, **push YOK**). Push kullanıcı "push" deyince.
 - Paket: `com.tvfilmizle` (üzerine kurulum için değişmemeli).
 - APK: `MovieBrowser-3.2.apk` (debug imzalı, sideload).
