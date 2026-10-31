@@ -1,9 +1,9 @@
-# Devir Notu — Movie Browser (son güncelleme: 31.10.2026, v3.8)
+# Devir Notu — Movie Browser (son güncelleme: 31.10.2026, v3.9)
 
 Sonraki oturum için kısa durum. Ayrıntılı geçmiş git log'da.
 
 ## Durum
-- Sürüm: `versionName 3.8` / `versionCode 38` (yerel commit, **push YOK**). Push kullanıcı "push" deyince.
+- Sürüm: `versionName 3.9` / `versionCode 39` (yerel commit, **push YOK**). Push kullanıcı "push" deyince.
 - Paket: `com.tvfilmizle` (üzerine kurulum için değişmemeli).
 - APK: `MovieBrowser-3.2.apk` (debug imzalı, sideload).
 - Site listesi: `sites.json` (GitHub `thenorth/moviebrowser`), açılışta + 5 dk sonra çekilir; günlük keşif `.github/workflows/update-sites.yml`.
@@ -20,6 +20,7 @@ Sonraki oturum için kısa durum. Ayrıntılı geçmiş git log'da.
 9. **Sağdan açılan paneller + ikonlar (v3.6)**: `Panel.kt` + `PanelTheme` — Listem, Keşfet, Site durumu, Ayarlar artık ana ekranın sağında panel olarak açılıyor, soldaki menü görünür kalıyor (pencere `Gravity.END`, genişlik = ekran - 248dp, şeffaf zemin). Menü ikonları vektör: `ic_search/ic_discover/ic_star/ic_check/ic_plus/ic_refresh/ic_settings`. Touch-mode odak düzeltmeleri: `focusableInTouchMode` (grid + menü satırları), `fill()` sonunda `setSelection(0)` + `highlightSelected()`.
 10. **Panel geri tuşu kaldırıldı (v3.7)**: panel layout'larındaki `btn_back` silindi; panellerde **SOL** = menüye dön (`dispatchKeyEvent` → `finish()`; ızgaralarda yalnız ilk sütunda). Listem/Keşfet alt ipucunda "SOL Menü" yazıyor. Kumanda: ana ekranda SOL → menü, menüde AŞAĞI/YUKARI + OK, panelde SOL → menü.
 11. **Menü/kumanda düzeltmesi (v3.8)**: `selectedItemPosition` açılışta -1 olabildiği için SOL menüye hiç geçmiyordu → -1 iken 0 kabul edilir (ana ekran + Listem/Keşfet). Menü satırlarına `OnKeyListener` eklendi (DPAD_CENTER/ENTER/NUMPAD_ENTER/BUTTON_A, ACTION_DOWN) — UP göndermeyen kumandalarda da OK çalışır. `Panel.apply` artık pencere `attributes` (gravity/width/height) da yazıyor.
+12. **Tek dokunuş (v3.9)**: menü satırları `focusableInTouchMode` olduğu için farede ilk dokunuş yalnız odak veriyordu; `OnTouchListener` ACTION_UP'ta `performClick()` çağırıyor → menü tek tıkla açılıyor. (Aynı turda 3.8'in tek-SOL düzeltmesi de dahil.)
 
 ## Doğrulanan (BlueStacks, Android 9)
 - Keşfet ızgarası 24 film, site etiketi görünür; platform logo kartları elendi.

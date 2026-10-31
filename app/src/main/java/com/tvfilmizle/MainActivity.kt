@@ -108,6 +108,17 @@ class MainActivity : Activity() {
     private fun sideRow(id: Int, action: () -> Unit) {
         val row = findViewById<View>(id)
         row.setOnClickListener { action() }
+        // focusableInTouchMode satirlarda ilk dokunus sadece odak veriyordu: tek dokunusta calis.
+        row.setOnTouchListener { v, e ->
+            when (e.action) {
+                android.view.MotionEvent.ACTION_DOWN -> true
+                android.view.MotionEvent.ACTION_UP -> {
+                    v.performClick()
+                    true
+                }
+                else -> false
+            }
+        }
         row.setOnKeyListener { _, keyCode, event ->
             val ok = keyCode == KeyEvent.KEYCODE_DPAD_CENTER ||
                 keyCode == KeyEvent.KEYCODE_ENTER ||
