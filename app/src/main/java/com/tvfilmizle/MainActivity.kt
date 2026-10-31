@@ -101,6 +101,7 @@ class MainActivity : Activity() {
 
     /** Soldaki sabit menu; secilen bolum sagda acilir. */
     private fun bindSideBar() {
+        sideRow(R.id.side_home) { showSites() }
         sideRow(R.id.side_search) { showSection("search") }
         sideRow(R.id.side_discover) { showSection("discover") }
         sideRow(R.id.side_watchlist) { showSection("watch") }
@@ -236,7 +237,7 @@ class MainActivity : Activity() {
     /** Soldaki menu ile icerik arasÄ±nda odak gecisi; panelde OK'a basili tutma. */
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
         val isOk = event.keyCode == KeyEvent.KEYCODE_DPAD_CENTER || event.keyCode == KeyEvent.KEYCODE_ENTER
-        if (isOk && panelLongPress != null) {
+        if (isOk && panelLongPress != null && inside(currentFocus, panel)) {
             if (event.action == KeyEvent.ACTION_DOWN) {
                 if (panelPressRunnable == null && !panelPressDone) {
                     val r = Runnable {

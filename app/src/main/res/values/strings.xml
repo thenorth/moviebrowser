@@ -83,12 +83,14 @@
     <string name="open_site">SİTEYİ AÇ</string>
     <string name="watchlist">Listem</string>
     <string name="watchlist_sub">Kaydedilen filmler</string>
+    <string name="home_title">Ana Sayfa</string>
     <string name="discover">Keşfet</string>
     <string name="discover_sub">Tüm sitelerden filmler</string>
     <string name="key_hold_remove">Listeden çıkar</string>
     <string name="removed_watch">Listeden çıkarıldı</string>
     <string name="watch_empty">Listen boş.\nTarayıcıda MENÜ → Listeme ekle.</string>
     <string name="remove">SİL</string>
+    <string name="remove_confirm">Listeden çıkarılsın mı?</string>
     <string name="add_watch">Listeme ekle</string>
     <string name="added_watch">Listeme eklendi</string>
     <string name="in_watch">Zaten listende</string>

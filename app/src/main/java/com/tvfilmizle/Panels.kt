@@ -61,9 +61,16 @@ object Panels {
             val pos = grid.selectedItemPosition
             val item = rows.getOrNull(if (pos < 0) 0 else pos)
             if (item != null) {
-                Watchlist.remove(a, item.url)
-                Toast.makeText(a, R.string.removed_watch, Toast.LENGTH_SHORT).show()
-                reload()
+                AlertDialog.Builder(a)
+                    .setTitle(item.title)
+                    .setMessage(R.string.remove_confirm)
+                    .setPositiveButton(R.string.remove) { _, _ ->
+                        Watchlist.remove(a, item.url)
+                        Toast.makeText(a, R.string.removed_watch, Toast.LENGTH_SHORT).show()
+                        reload()
+                    }
+                    .setNegativeButton(android.R.string.cancel, null)
+                    .show()
             }
         }
     }
