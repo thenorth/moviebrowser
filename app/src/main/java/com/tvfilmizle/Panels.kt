@@ -13,6 +13,7 @@ import android.webkit.CookieManager
 import android.webkit.WebStorage
 import android.webkit.WebView
 import android.widget.BaseAdapter
+import android.widget.EditText
 import android.widget.GridView
 import android.widget.ImageView
 import android.widget.ListView
@@ -245,6 +246,33 @@ object Panels {
             }
             .setNegativeButton(android.R.string.cancel, null)
             .show()
+    }
+
+    // ---------------------------------------------------------------- Arama / adres
+    /** Panel icindeki tek satirlik giris alani. */
+    fun input(
+        a: Activity,
+        root: View,
+        titleRes: Int,
+        hintRes: Int,
+        actionRes: Int,
+        onSubmit: (String) -> Unit
+    ) {
+        root.findViewById<TextView>(R.id.title).text = a.getString(titleRes)
+        val input = root.findViewById<EditText>(R.id.input)
+        input.hint = a.getString(hintRes)
+        val action = root.findViewById<TextView>(R.id.action)
+        action.setText(actionRes)
+        val submit = {
+            val q = input.text.toString().trim()
+            if (q.isNotEmpty()) onSubmit(q)
+        }
+        action.setOnClickListener { submit() }
+        input.setOnEditorActionListener { _, _, _ ->
+            submit()
+            true
+        }
+        input.requestFocus()
     }
 
     // ---------------------------------------------------------------- yardimci

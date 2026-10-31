@@ -19,7 +19,6 @@ import android.view.WindowManager
 import android.view.animation.LinearInterpolator
 import android.widget.AdapterView
 import android.widget.BaseAdapter
-import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.GridView
 import android.widget.ImageView
@@ -102,11 +101,11 @@ class MainActivity : Activity() {
 
     /** Soldaki sabit menu; secilen bolum sagda acilir. */
     private fun bindSideBar() {
-        sideRow(R.id.side_search) { askSearch() }
+        sideRow(R.id.side_search) { showSection("search") }
         sideRow(R.id.side_discover) { showSection("discover") }
         sideRow(R.id.side_watchlist) { showSection("watch") }
         sideRow(R.id.side_status) { showSection("status") }
-        sideRow(R.id.side_url) { askUrl() }
+        sideRow(R.id.side_url) { showSection("url") }
         sideRow(R.id.side_refresh) { refreshList(true) }
         sideRow(R.id.side_settings) { showSection("settings") }
     }
@@ -122,7 +121,8 @@ class MainActivity : Activity() {
             "discover" -> R.layout.activity_discover
             "watch" -> R.layout.activity_watchlist
             "status" -> R.layout.activity_status
-            else -> R.layout.activity_settings
+            "settings" -> R.layout.activity_settings
+            else -> R.layout.panel_input
         }
         val root = layoutInflater.inflate(layout, panel, false)
         panel.addView(root)
@@ -149,10 +149,32 @@ class MainActivity : Activity() {
                 Panels.status(this, root)
                 null
             }
-            else -> {
+            "settings" -> {
                 Panels.settings(this, root)
                 null
             }
+            else -> {
+                if (name == "search") {
+                    Panels.input(
+                        this, root, R.string.search_title, R.string.search_hint, R.string.search_action
+                    ) { q ->
+                        Panels.open(
+                            this,
+                            "https://www.google.com/search?q=" + android.net.Uri.encode(q + " film izle")
+                        )
+                    }
+                } else {
+                    Panels.input(this, root, R.string.custom_url, R.string.url_hint, R.string.go) { q ->
+                        Panels.open(this, if (q.startsWith("http")) q else "https://$q")
+                    }
+                }
+                null
+            }
+        }
+        if (name == "search" || name == "url") {
+            // Klavye acilsin, imlec alanda olsun.
+            window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE)
+            return
         }
         // Menu odakli kalir: asagi/yukari ile bolum degistirmek kolay olsun.
         val row = when (name) {
@@ -164,7 +186,7 @@ class MainActivity : Activity() {
         findViewById<View>(row).requestFocus()
     }
 
-    /** Site ızgarasına doner. */
+    /** Site Ä±zgarasÄ±na doner. */
     private fun showSites() {
         section = ""
         panelLongPress = null
@@ -211,7 +233,7 @@ class MainActivity : Activity() {
         }
     }
 
-    /** Soldaki menu ile icerik arasında odak gecisi; panelde OK'a basili tutma. */
+    /** Soldaki menu ile icerik arasÄ±nda odak gecisi; panelde OK'a basili tutma. */
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
         val isOk = event.keyCode == KeyEvent.KEYCODE_DPAD_CENTER || event.keyCode == KeyEvent.KEYCODE_ENTER
         if (isOk && panelLongPress != null) {
@@ -333,7 +355,7 @@ class MainActivity : Activity() {
         handler.removeCallbacks(tick)
     }
 
-    /** Panel acikken GERI: site ızgarasına don. */
+    /** Panel acikken GERI: site Ä±zgarasÄ±na don. */
     override fun onBackPressed() {
         if (section.isNotEmpty()) {
             showSites()
@@ -363,29 +385,6 @@ class MainActivity : Activity() {
                 .putExtra(SiteFilmsActivity.EXTRA_URL, site.url)
                 .putExtra(SiteFilmsActivity.EXTRA_NAME, site.name)
         )
-    }
-
-    /** Google'da film arar (sonuc tarayicida acilir). */
-    private fun askSearch() {
-        val input = EditText(this).apply {
-            setSingleLine()
-            hint = getString(R.string.search_hint)
-            setPadding(48, 36, 48, 36)
-        }
-        val dialog = AlertDialog.Builder(this)
-            .setTitle(R.string.search_title)
-            .setView(input)
-            .setPositiveButton(R.string.search_action) { _, _ ->
-                val q = input.text.toString().trim()
-                if (q.isNotEmpty()) {
-                    open("https://www.google.com/search?q=" + android.net.Uri.encode(q + " film izle"))
-                }
-            }
-            .setNegativeButton(android.R.string.cancel, null)
-            .create()
-        dialog.setOnShowListener { input.requestFocus() }
-        dialog.show()
-        dialog.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE)
     }
 
     private fun refreshList(manual: Boolean) {
@@ -455,26 +454,6 @@ class MainActivity : Activity() {
 
     private fun open(url: String) {
         startActivity(Intent(this, BrowserActivity::class.java).putExtra(BrowserActivity.EXTRA_URL, url))
-    }
-
-    private fun askUrl() {
-        val input = EditText(this).apply {
-            setSingleLine()
-            hint = "https://"
-            setPadding(48, 36, 48, 36)
-        }
-        val dialog = AlertDialog.Builder(this)
-            .setTitle(R.string.custom_url)
-            .setView(input)
-            .setPositiveButton(R.string.go) { _, _ ->
-                val raw = input.text.toString().trim()
-                if (raw.isNotEmpty()) open(if (raw.startsWith("http")) raw else "https://$raw")
-            }
-            .setNegativeButton(android.R.string.cancel, null)
-            .create()
-        dialog.setOnShowListener { input.requestFocus() }
-        dialog.show()
-        dialog.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE)
     }
 }
 
