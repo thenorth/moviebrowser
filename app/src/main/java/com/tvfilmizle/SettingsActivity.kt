@@ -33,8 +33,6 @@ class SettingsActivity : Activity() {
         toggle = findViewById(R.id.vpn_switch)
         status = findViewById(R.id.vpn_status)
 
-        findViewById<android.view.View>(R.id.btn_back).setOnClickListener { finish() }
-
         toggle.isChecked = Warp.connected
         renderStatus(if (Warp.connected) getString(R.string.vpn_on) else getString(R.string.vpn_off))
 
@@ -67,6 +65,17 @@ class SettingsActivity : Activity() {
     override fun onResume() {
         super.onResume()
         SleepTimer.attach(this)
+    }
+
+    /** SOL = menuye don. */
+    override fun dispatchKeyEvent(event: android.view.KeyEvent): Boolean {
+        if (event.action == android.view.KeyEvent.ACTION_DOWN &&
+            event.keyCode == android.view.KeyEvent.KEYCODE_DPAD_LEFT
+        ) {
+            finish()
+            return true
+        }
+        return super.dispatchKeyEvent(event)
     }
 
     private fun pickSleep(value: TextView) {

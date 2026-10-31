@@ -41,7 +41,6 @@ class DiscoverActivity : Activity() {
         grid = findViewById(R.id.grid)
         empty = findViewById(R.id.empty)
         count = findViewById(R.id.count)
-        findViewById<View>(R.id.btn_back).setOnClickListener { finish() }
 
         adapter = DiscoverAdapter(this, entries)
         grid.adapter = adapter
@@ -57,8 +56,15 @@ class DiscoverActivity : Activity() {
         load()
     }
 
-    /** OK'a basili tut = listeye ekle. */
+    /** OK'a basili tut = listeye ekle; ilk sutunda SOL = menuye don. */
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        if (event.action == KeyEvent.ACTION_DOWN &&
+            event.keyCode == KeyEvent.KEYCODE_DPAD_LEFT &&
+            grid.selectedItemPosition % grid.numColumns == 0
+        ) {
+            finish()
+            return true
+        }
         val isOk = event.keyCode == KeyEvent.KEYCODE_DPAD_CENTER || event.keyCode == KeyEvent.KEYCODE_ENTER
         if (!isOk) return super.dispatchKeyEvent(event)
         if (event.action == KeyEvent.ACTION_DOWN) {

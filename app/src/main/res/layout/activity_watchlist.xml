@@ -48,24 +48,8 @@
         android:paddingBottom="14dp">
 
         <TextView
-            android:id="@+id/btn_back"
-            android:layout_width="wrap_content"
-            android:layout_height="40dp"
-            android:background="@drawable/tool_button_bg"
-            android:clickable="true"
-            android:focusable="true"
-            android:gravity="center"
-            android:paddingLeft="18dp"
-            android:paddingRight="18dp"
-            android:text="@string/back_button"
-            android:textColor="@color/tool_button_text"
-            android:textSize="12sp"
-            android:textStyle="bold" />
-
-        <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="18dp"
             android:text="@string/watchlist"
             android:textColor="@color/text"
             android:textSize="23sp"
@@ -109,6 +93,14 @@
         <TextView
             style="@style/KeyLabel"
             android:text="@string/key_hold_remove" />
+
+        <TextView
+            style="@style/KeyCap"
+            android:text="@string/key_left" />
+
+        <TextView
+            style="@style/KeyLabel"
+            android:text="@string/key_left_menu" />
 
         <TextView
             style="@style/KeyCap"
