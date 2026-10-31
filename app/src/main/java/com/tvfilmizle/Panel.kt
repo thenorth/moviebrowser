@@ -12,11 +12,14 @@ object Panel {
     fun apply(a: Activity) {
         val w = a.window
         w.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-        w.setGravity(Gravity.END)
         val dm = a.resources.displayMetrics
-        w.setLayout(
-            dm.widthPixels - (248 * dm.density).toInt(),
-            WindowManager.LayoutParams.MATCH_PARENT
-        )
+        val width = (dm.widthPixels - (248 * dm.density).toInt()).coerceAtLeast(dm.widthPixels / 2)
+        // setLayout bazi cihazlarda yok sayiliyor; pencere ozelliklerini de yaz.
+        val lp = w.attributes
+        lp.gravity = Gravity.END
+        lp.width = width
+        lp.height = WindowManager.LayoutParams.MATCH_PARENT
+        w.attributes = lp
+        w.setLayout(width, WindowManager.LayoutParams.MATCH_PARENT)
     }
 }

@@ -58,9 +58,10 @@ class DiscoverActivity : Activity() {
 
     /** OK'a basili tut = listeye ekle; ilk sutunda SOL = menuye don. */
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        val pos = if (grid.selectedItemPosition < 0) 0 else grid.selectedItemPosition
         if (event.action == KeyEvent.ACTION_DOWN &&
             event.keyCode == KeyEvent.KEYCODE_DPAD_LEFT &&
-            grid.selectedItemPosition % grid.numColumns == 0
+            pos % grid.numColumns == 0
         ) {
             finish()
             return true

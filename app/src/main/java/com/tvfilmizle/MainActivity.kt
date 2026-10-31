@@ -95,20 +95,30 @@ class MainActivity : Activity() {
 
     /** Soldaki sabit menu. */
     private fun bindSideBar() {
-        findViewById<View>(R.id.side_search).setOnClickListener { askSearch() }
-        findViewById<View>(R.id.side_discover).setOnClickListener {
-            startActivity(Intent(this, DiscoverActivity::class.java))
-        }
-        findViewById<View>(R.id.side_watchlist).setOnClickListener {
-            startActivity(Intent(this, WatchlistActivity::class.java))
-        }
-        findViewById<View>(R.id.side_status).setOnClickListener {
-            startActivity(Intent(this, StatusActivity::class.java))
-        }
-        findViewById<View>(R.id.side_url).setOnClickListener { askUrl() }
-        findViewById<View>(R.id.side_refresh).setOnClickListener { refreshList(true) }
-        findViewById<View>(R.id.side_settings).setOnClickListener {
-            startActivity(Intent(this, SettingsActivity::class.java))
+        sideRow(R.id.side_search) { askSearch() }
+        sideRow(R.id.side_discover) { startActivity(Intent(this, DiscoverActivity::class.java)) }
+        sideRow(R.id.side_watchlist) { startActivity(Intent(this, WatchlistActivity::class.java)) }
+        sideRow(R.id.side_status) { startActivity(Intent(this, StatusActivity::class.java)) }
+        sideRow(R.id.side_url) { askUrl() }
+        sideRow(R.id.side_refresh) { refreshList(true) }
+        sideRow(R.id.side_settings) { startActivity(Intent(this, SettingsActivity::class.java)) }
+    }
+
+    /** Menude OK hem dokunusla hem kumandayla (bazi kumandalar yalniz DOWN gonderir) calisir. */
+    private fun sideRow(id: Int, action: () -> Unit) {
+        val row = findViewById<View>(id)
+        row.setOnClickListener { action() }
+        row.setOnKeyListener { _, keyCode, event ->
+            val ok = keyCode == KeyEvent.KEYCODE_DPAD_CENTER ||
+                keyCode == KeyEvent.KEYCODE_ENTER ||
+                keyCode == KeyEvent.KEYCODE_NUMPAD_ENTER ||
+                keyCode == KeyEvent.KEYCODE_BUTTON_A
+            if (ok && event.action == KeyEvent.ACTION_DOWN) {
+                action()
+                true
+            } else {
+                false
+            }
         }
     }
 
@@ -124,8 +134,9 @@ class MainActivity : Activity() {
     /** Soldaki menu ile ızgara arasında odak gecisi (GridView LEFT tusunu kendi yutuyor). */
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
         if (event.action == KeyEvent.ACTION_DOWN) {
+            val pos = if (grid.selectedItemPosition < 0) 0 else grid.selectedItemPosition
             if (event.keyCode == KeyEvent.KEYCODE_DPAD_LEFT && grid.hasFocus() &&
-                grid.selectedItemPosition % grid.numColumns == 0
+                pos % grid.numColumns == 0
             ) {
                 findViewById<View>(R.id.side_search).requestFocus()
                 return true
