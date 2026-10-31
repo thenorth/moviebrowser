@@ -159,17 +159,17 @@
                 android:layout_height="wrap_content"
                 android:text="@string/brand_first"
                 android:textColor="@color/accent"
-                android:textSize="23sp"
+                android:textSize="20sp"
                 android:textStyle="bold" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="7dp"
-                android:letterSpacing="0.16"
+                android:layout_marginStart="6dp"
+                android:letterSpacing="0.12"
                 android:text="@string/brand_second"
                 android:textColor="@color/text"
-                android:textSize="23sp"
+                android:textSize="20sp"
                 android:textStyle="bold" />
 
             <View

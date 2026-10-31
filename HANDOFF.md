@@ -1,9 +1,9 @@
-# Devir Notu — Movie Browser (son güncelleme: 31.10.2026, v3.9)
+# Devir Notu — Movie Browser (son güncelleme: 31.10.2026, v3.10)
 
 Sonraki oturum için kısa durum. Ayrıntılı geçmiş git log'da.
 
 ## Durum
-- Sürüm: `versionName 3.9` / `versionCode 39` (yerel commit, **push YOK**). Push kullanıcı "push" deyince.
+- Sürüm: `versionName 3.10` / `versionCode 40` (yerel commit, **push YOK**). Push kullanıcı "push" deyince.
 - Paket: `com.tvfilmizle` (üzerine kurulum için değişmemeli).
 - APK: `MovieBrowser-3.2.apk` (debug imzalı, sideload).
 - Site listesi: `sites.json` (GitHub `thenorth/moviebrowser`), açılışta + 5 dk sonra çekilir; günlük keşif `.github/workflows/update-sites.yml`.
