@@ -20,8 +20,10 @@ import android.view.animation.LinearInterpolator
 import android.widget.AdapterView
 import android.widget.BaseAdapter
 import android.widget.EditText
+import android.widget.FrameLayout
 import android.widget.GridView
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import java.text.SimpleDateFormat
@@ -34,10 +36,15 @@ class MainActivity : Activity() {
 
     private val entries = ArrayList<Site>()
     private lateinit var grid: GridView
+    private lateinit var panel: FrameLayout
     private lateinit var clock: TextView
     private lateinit var status: TextView
     private lateinit var statusDot: View
     private lateinit var adapter: SiteAdapter
+    private var section = ""
+    private var panelLongPress: (() -> Unit)? = null
+    private var panelPressDone = false
+    private var panelPressRunnable: Runnable? = null
 
     private var refreshing = false
     private var spin: ObjectAnimator? = null
@@ -64,6 +71,7 @@ class MainActivity : Activity() {
         window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
 
         grid = findViewById(R.id.site_grid)
+        panel = findViewById(R.id.panel)
         clock = findViewById(R.id.clock)
         status = findViewById(R.id.status)
         statusDot = findViewById(R.id.status_dot)
@@ -92,15 +100,78 @@ class MainActivity : Activity() {
         checkForUpdate()
     }
 
-    /** Soldaki sabit menu. */
+    /** Soldaki sabit menu; secilen bolum sagda acilir. */
     private fun bindSideBar() {
         sideRow(R.id.side_search) { askSearch() }
-        sideRow(R.id.side_discover) { startActivity(Intent(this, DiscoverActivity::class.java)) }
-        sideRow(R.id.side_watchlist) { startActivity(Intent(this, WatchlistActivity::class.java)) }
-        sideRow(R.id.side_status) { startActivity(Intent(this, StatusActivity::class.java)) }
+        sideRow(R.id.side_discover) { showSection("discover") }
+        sideRow(R.id.side_watchlist) { showSection("watch") }
+        sideRow(R.id.side_status) { showSection("status") }
         sideRow(R.id.side_url) { askUrl() }
         sideRow(R.id.side_refresh) { refreshList(true) }
-        sideRow(R.id.side_settings) { startActivity(Intent(this, SettingsActivity::class.java)) }
+        sideRow(R.id.side_settings) { showSection("settings") }
+    }
+
+    /** Bolumu sagdaki panelde acar; menu yerinde kalir. */
+    private fun showSection(name: String) {
+        section = name
+        grid.visibility = View.GONE
+        panel.visibility = View.VISIBLE
+        panel.removeAllViews()
+        panelLongPress = null
+        val layout = when (name) {
+            "discover" -> R.layout.activity_discover
+            "watch" -> R.layout.activity_watchlist
+            "status" -> R.layout.activity_status
+            else -> R.layout.activity_settings
+        }
+        val root = layoutInflater.inflate(layout, panel, false)
+        panel.addView(root)
+        // Panel kendi basligini tasiyor: ust bosluk kucultulur.
+        val d = resources.displayMetrics.density
+        val list = when (name) {
+            "discover" -> root.findViewById<View>(R.id.grid)
+            "status", "watch" -> root.findViewById<View>(R.id.list)
+            else -> null
+        }
+        list?.setPadding((38 * d).toInt(), (56 * d).toInt(), (38 * d).toInt(), (80 * d).toInt())
+        // Panelde geri dugmesi ve alt ipucu seridi gereksiz.
+        root.findViewById<View>(R.id.btn_back)?.visibility = View.GONE
+        if (name == "discover" || name == "watch") {
+            (root as? ViewGroup)?.let {
+                val last = it.getChildAt(it.childCount - 1)
+                if (last is LinearLayout) last.visibility = View.GONE
+            }
+        }
+        panelLongPress = when (name) {
+            "discover" -> Panels.discover(this, root)
+            "watch" -> Panels.watchlist(this, root)
+            "status" -> {
+                Panels.status(this, root)
+                null
+            }
+            else -> {
+                Panels.settings(this, root)
+                null
+            }
+        }
+        // Menu odakli kalir: asagi/yukari ile bolum degistirmek kolay olsun.
+        val row = when (name) {
+            "discover" -> R.id.side_discover
+            "watch" -> R.id.side_watchlist
+            "status" -> R.id.side_status
+            else -> R.id.side_settings
+        }
+        findViewById<View>(row).requestFocus()
+    }
+
+    /** Site ızgarasına doner. */
+    private fun showSites() {
+        section = ""
+        panelLongPress = null
+        panel.removeAllViews()
+        panel.visibility = View.GONE
+        grid.visibility = View.VISIBLE
+        grid.post { grid.requestFocus() }
     }
 
     /** Menude OK hem dokunusla hem kumandayla calisir (ilk dokunus sadece odak vermesin). */
@@ -140,22 +211,81 @@ class MainActivity : Activity() {
         }
     }
 
-    /** Soldaki menu ile ızgara arasında odak gecisi (GridView LEFT tusunu kendi yutuyor). */
+    /** Soldaki menu ile icerik arasında odak gecisi; panelde OK'a basili tutma. */
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
-        if (event.action == KeyEvent.ACTION_DOWN) {
-            val pos = if (grid.selectedItemPosition < 0) 0 else grid.selectedItemPosition
-            if (event.keyCode == KeyEvent.KEYCODE_DPAD_LEFT && grid.hasFocus() &&
-                pos % grid.numColumns == 0
-            ) {
-                findViewById<View>(R.id.side_search).requestFocus()
-                return true
+        val isOk = event.keyCode == KeyEvent.KEYCODE_DPAD_CENTER || event.keyCode == KeyEvent.KEYCODE_ENTER
+        if (isOk && panelLongPress != null) {
+            if (event.action == KeyEvent.ACTION_DOWN) {
+                if (panelPressRunnable == null && !panelPressDone) {
+                    val r = Runnable {
+                        panelPressDone = true
+                        panelLongPress?.invoke()
+                    }
+                    panelPressRunnable = r
+                    panel.postDelayed(r, 450)
+                }
+            } else if (event.action == KeyEvent.ACTION_UP) {
+                panelPressRunnable?.let { panel.removeCallbacks(it) }
+                panelPressRunnable = null
+                if (panelPressDone) {
+                    panelPressDone = false
+                    return true
+                }
             }
-            if (event.keyCode == KeyEvent.KEYCODE_DPAD_RIGHT && !grid.hasFocus()) {
-                grid.requestFocus()
+        }
+
+        if (event.action == KeyEvent.ACTION_DOWN) {
+            val side = findViewById<View>(R.id.side_bar)
+            val focused = currentFocus
+            if (event.keyCode == KeyEvent.KEYCODE_DPAD_LEFT) {
+                if (grid.visibility == View.VISIBLE && grid.hasFocus()) {
+                    val pos = if (grid.selectedItemPosition < 0) 0 else grid.selectedItemPosition
+                    if (pos % grid.numColumns == 0) {
+                        findViewById<View>(R.id.side_search).requestFocus()
+                        return true
+                    }
+                } else if (section.isNotEmpty() && !inside(focused, side)) {
+                    findViewById<View>(R.id.side_search).requestFocus()
+                    return true
+                }
+            }
+            if (event.keyCode == KeyEvent.KEYCODE_DPAD_RIGHT && inside(focused, side)) {
+                focusContent()
                 return true
             }
         }
         return super.dispatchKeyEvent(event)
+    }
+
+    private fun inside(v: View?, ancestor: View): Boolean {
+        var x: View? = v
+        while (x != null) {
+            if (x === ancestor) return true
+            x = x.parent as? View
+        }
+        return false
+    }
+
+    /** Izgara/liste ilk sutunda mi? (secim yoksa ilk oge kabul edilir) */
+    private fun focusContent() {
+        var target: View? = null
+        if (section.isEmpty()) {
+            target = grid
+        } else {
+            val f = findFocusable(panel)
+            if (f != null) target = f
+        }
+        target?.requestFocus()
+    }
+
+    private fun findFocusable(group: ViewGroup): View? {
+        for (i in 0 until group.childCount) {
+            val c = group.getChildAt(i)
+            if (c.visibility != View.VISIBLE) continue
+            if (c.isFocusable) return c
+            if (c is ViewGroup) findFocusable(c)?.let { return it }
+        }
+        return null
     }
 
     /** GitHub'daki son release ile kurulu surumu karsilastirir. */
@@ -184,13 +314,32 @@ class MainActivity : Activity() {
         super.onResume()
         SleepTimer.attach(this)
         handler.post(tick)
+        // Listem tarayicidan donuste tazelensin.
+        if (section == "watch") {
+            showSection("watch")
+            panel.post { focusContent() }
+        }
         val age = System.currentTimeMillis() - SiteRepository.lastUpdate(this)
         if (!refreshing && age > 5 * 60 * 1000L) refreshList(false)
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        Panels.vpnResult(this, requestCode, resultCode)
     }
 
     override fun onPause() {
         super.onPause()
         handler.removeCallbacks(tick)
+    }
+
+    /** Panel acikken GERI: site ızgarasına don. */
+    override fun onBackPressed() {
+        if (section.isNotEmpty()) {
+            showSites()
+        } else {
+            super.onBackPressed()
+        }
     }
 
     private fun fill(sites: List<Site>) {
@@ -200,8 +349,10 @@ class MainActivity : Activity() {
         grid.setSelection(0)
         grid.post {
             val side = findViewById<View>(R.id.side_bar)
-            if (!side.hasFocus() && !grid.hasFocus()) grid.requestFocus()
-            if (!side.hasFocus()) grid.setSelection(0)
+            if (grid.visibility == View.VISIBLE && !side.hasFocus() && !grid.hasFocus()) {
+                grid.requestFocus()
+            }
+            if (grid.visibility == View.VISIBLE && !side.hasFocus()) grid.setSelection(0)
             highlightSelected()
         }
     }

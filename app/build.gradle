@@ -11,8 +11,8 @@ android {
         applicationId "com.tvfilmizle"
         minSdk 21
         targetSdk 34
-        versionCode 42
-        versionName "3.12"
+        versionCode 43
+        versionName "3.13"
     }
 
     buildTypes {

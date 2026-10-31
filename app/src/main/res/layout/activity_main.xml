@@ -25,6 +25,15 @@
         android:stretchMode="columnWidth"
         android:verticalSpacing="16dp" />
 
+    <!-- Sag icerik paneli: secilen menu burada acilir -->
+    <FrameLayout
+        android:id="@+id/panel"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginStart="248dp"
+        android:layout_marginTop="92dp"
+        android:visibility="gone" />
+
     <!-- Solda sabit menu -->
     <LinearLayout
         android:id="@+id/side_bar"
