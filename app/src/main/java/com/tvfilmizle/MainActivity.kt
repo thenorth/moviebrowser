@@ -231,7 +231,7 @@ class MainActivity : Activity() {
                 null
             }
             "settings" -> {
-                Panels.settings(this, root)
+                Panels.settings(this, root) { v -> checkUpdateManually(v) }
                 null
             }
             "detail" -> {
@@ -601,6 +601,28 @@ class MainActivity : Activity() {
         spin?.cancel()
         spin = null
         refreshBadge()?.rotation = 0f
+    }
+
+    /** Ayarlar > Uygulamayi guncelle: GitHub'daki son surumu kontrol eder. */
+    private fun checkUpdateManually(status: TextView) {
+        status.text = getString(R.string.update_checking)
+        Updater.check(this) { tag, apk, page ->
+            runOnUiThread {
+                if (isFinishing) return@runOnUiThread
+                if (tag == null) {
+                    status.text = getString(R.string.update_check_failed)
+                    return@runOnUiThread
+                }
+                val installed = Updater.installedVersion(this)
+                if (!Updater.isNewer(tag, installed)) {
+                    status.text = getString(R.string.update_latest, installed)
+                    return@runOnUiThread
+                }
+                status.text = getString(R.string.update_found, tag)
+                if (!apk.isNullOrEmpty()) downloadApk(apk, tag)
+                else if (!page.isNullOrEmpty()) open(page)
+            }
+        }
     }
 
     /** APK'yi indirir; bitince kurulum ekranini acar. */

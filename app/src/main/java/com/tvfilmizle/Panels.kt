@@ -618,7 +618,7 @@ object Panels {
     }
 
     // ---------------------------------------------------------------- Ayarlar
-    fun settings(a: Activity, root: View) {
+    fun settings(a: Activity, root: View, onUpdate: (TextView) -> Unit = {}) {
         vpnToggle = root.findViewById(R.id.vpn_switch)
         vpnStatus = root.findViewById(R.id.vpn_status)
         val toggle = vpnToggle ?: return
@@ -643,6 +643,9 @@ object Panels {
         sleepValue.text = SleepTimer.remainingText(a)
         root.findViewById<View>(R.id.sleep_row).setOnClickListener { pickSleep(a, sleepValue) }
         root.findViewById<View>(R.id.clear_row).setOnClickListener { confirmClear(a) }
+
+        val updateValue = root.findViewById<TextView>(R.id.update_value)
+        root.findViewById<View>(R.id.update_row).setOnClickListener { onUpdate(updateValue) }
 
         val version = try {
             a.packageManager.getPackageInfo(a.packageName, 0).versionName ?: ""

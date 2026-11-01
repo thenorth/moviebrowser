@@ -80,6 +80,13 @@
     <string name="update_msg">Yeni sürüm %1$s hazır (kurulu: %2$s). Şimdi indirilsin mi?</string>
     <string name="update_yes">İndir</string>
     <string name="update_later">Sonra</string>
+    <string name="update_check_title">Uygulamayı güncelle</string>
+    <string name="update_check_desc">GitHub\'dan yeni sürümü indir ve kur</string>
+    <string name="update_check">Kontrol et</string>
+    <string name="update_checking">Kontrol ediliyor…</string>
+    <string name="update_check_failed">Güncelleme kontrol edilemedi</string>
+    <string name="update_latest">Güncel · v%1$s</string>
+    <string name="update_found">v%1$s indiriliyor…</string>
     <string name="update_manual">APK indirildi. Kurmak için bildirimden açın.</string>
     <string name="whats_new">Yenilikler</string>
     <string name="whats_new_ok">Tamam</string>
