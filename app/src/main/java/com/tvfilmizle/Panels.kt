@@ -715,7 +715,7 @@ object Panels {
     }
 
     // ---------------------------------------------------------------- Ayarlar
-    fun settings(a: Activity, root: View, onUpdate: (TextView) -> Unit = {}, onAddSite: () -> Unit = {}) {
+    fun settings(a: Activity, root: View, onUpdate: (TextView) -> Unit = {}) {
         vpnToggle = root.findViewById(R.id.vpn_switch)
         vpnStatus = root.findViewById(R.id.vpn_status)
         val toggle = vpnToggle ?: return
@@ -743,7 +743,6 @@ object Panels {
 
         val updateValue = root.findViewById<TextView>(R.id.update_value)
         root.findViewById<View>(R.id.update_row).setOnClickListener { onUpdate(updateValue) }
-        root.findViewById<View>(R.id.add_site_row).setOnClickListener { onAddSite() }
 
         val version = try {
             a.packageManager.getPackageInfo(a.packageName, 0).versionName ?: ""

@@ -282,52 +282,6 @@
             </LinearLayout>
         </LinearLayout>
 
-        <!-- Site ekle -->
-        <LinearLayout
-            android:id="@+id/add_site_row"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
-            android:background="@drawable/action_card_bg_big"
-            android:clickable="true"
-            android:focusable="true"
-            android:foreground="@drawable/settings_row_ring"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:padding="22dp">
-
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/add_site_title"
-                    android:textColor="@color/text"
-                    android:textSize="17sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:text="@string/add_site_desc"
-                    android:textColor="@color/text_dim"
-                    android:textSize="12sp" />
-            </LinearLayout>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="+"
-                android:textColor="@color/accent"
-                android:textSize="18sp"
-                android:textStyle="bold" />
-        </LinearLayout>
-
         <!-- Uygulamayi guncelle -->
         <LinearLayout
             android:id="@+id/update_row"

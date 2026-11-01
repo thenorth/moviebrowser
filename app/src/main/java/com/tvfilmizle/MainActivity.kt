@@ -24,7 +24,6 @@ import android.view.WindowManager
 import android.view.animation.LinearInterpolator
 import android.widget.AdapterView
 import android.widget.BaseAdapter
-import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.GridView
 import android.widget.ImageView
@@ -238,9 +237,7 @@ class MainActivity : Activity() {
                 null
             }
             "settings" -> {
-                Panels.settings(this, root, onUpdate = { v -> checkUpdateManually(v) }, onAddSite = {
-                    showAddSiteDialog()
-                })
+                Panels.settings(this, root, onUpdate = { v -> checkUpdateManually(v) })
                 null
             }
             "detail" -> {
@@ -652,41 +649,6 @@ class MainActivity : Activity() {
                 else if (!page.isNullOrEmpty()) open(page)
             }
         }
-    }
-
-    /** Ayarlar > Site ekle. */
-    private fun showAddSiteDialog() {
-        val name = EditText(this).apply {
-            hint = getString(R.string.add_site_name)
-            setSingleLine()
-            setPadding(40, 24, 40, 24)
-        }
-        val url = EditText(this).apply {
-            hint = getString(R.string.add_site_url)
-            setSingleLine()
-            setPadding(40, 24, 40, 24)
-        }
-        val box = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(40, 16, 40, 0)
-            addView(name)
-            addView(url)
-        }
-        AlertDialog.Builder(this)
-            .setTitle(R.string.add_site_title)
-            .setView(box)
-            .setPositiveButton(R.string.go) { _, _ ->
-                val raw = url.text.toString().trim()
-                if (raw.isEmpty()) return@setPositiveButton
-                val full = if (raw.startsWith("http")) raw else "https://$raw"
-                val n = name.text.toString().trim()
-                    .ifEmpty { Scraper.hostOf(full).ifEmpty { full } }
-                UserSites.add(this, n, full)
-                fill(SiteRepository.cached(this))
-                Toast.makeText(this, R.string.add_site_added, Toast.LENGTH_SHORT).show()
-            }
-            .setNegativeButton(android.R.string.cancel, null)
-            .show()
     }
 
     /** APK'yi indirir; bitince kurulum ekranini acar. */
