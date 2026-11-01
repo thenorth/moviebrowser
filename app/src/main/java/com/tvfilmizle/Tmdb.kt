@@ -12,6 +12,7 @@ import java.net.URLEncoder
 object Tmdb {
 
     data class Info(
+        val id: Int,
         val title: String,
         val year: String,
         val rating: String,
@@ -87,6 +88,7 @@ object Tmdb {
         val posterPath = o.optString("poster_path")
         val release = o.optString("release_date")
         return Info(
+            id = o.optInt("id"),
             title = o.optString("title").ifBlank { o.optString("original_title") },
             year = if (release.length >= 4) release.substring(0, 4) else "",
             rating = if (o.optDouble("vote_average", 0.0) > 0) {
@@ -97,8 +99,53 @@ object Tmdb {
         )
     }
 
-    private fun get(url: String): String? {
-        val c = URL(url).openConnection() as HttpURLConnection
+    /** Benzer filmler (baslik, yil). */
+    fun recommendations(id: Int): List<Pair<String, String>> {
+        val key = apiKey
+        if (key.isBlank() || id <= 0) return emptyList()
+        val json = get(
+            "https://api.themoviedb.org/3/movie/$id/recommendations?api_key=$key&language=tr-TR&page=1"
+        ) ?: return emptyList()
+        val arr = JSONObject(json).optJSONArray("results") ?: return emptyList()
+        val out = ArrayList<Pair<String, String>>()
+        for (i in 0 until minOf(arr.length(), 8)) {
+            val o = arr.getJSONObject(i)
+            val title = o.optString("title").ifBlank { o.optString("original_title") }
+            if (title.isBlank()) continue
+            val release = o.optString("release_date")
+            out.add(title to if (release.length >= 4) release.substring(0, 4) else "")
+        }
+        return out
+    }
+
+    /** Yonetmen + ilk oyuncular. */
+    fun credits(id: Int): List<String> {
+        val key = apiKey
+        if (key.isBlank() || id <= 0) return emptyList()
+        val json = get("https://api.themoviedb.org/3/movie/$id/credits?api_key=$key&language=tr-TR")
+            ?: return emptyList()
+        val root = JSONObject(json)
+        val out = ArrayList<String>()
+
+        root.optJSONArray("crew")?.let { crew ->
+            for (i in 0 until crew.length()) {
+                val c = crew.getJSONObject(i)
+                if (c.optString("job").equals("Director", true)) {
+                    val n = c.optString("name")
+                    if (n.isNotBlank()) out.add(n)
+                }
+            }
+        }
+        root.optJSONArray("cast")?.let { cast ->
+            for (i in 0 until minOf(cast.length(), 8)) {
+                val n = cast.getJSONObject(i).optString("name")
+                if (n.isNotBlank()) out.add(n)
+            }
+        }
+        return out
+    }
+
+    private fun get(url: String): String? {        val c = URL(url).openConnection() as HttpURLConnection
         c.connectTimeout = 6000
         c.readTimeout = 6000
         c.setRequestProperty("Accept", "application/json")

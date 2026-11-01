@@ -32,7 +32,13 @@ object Panels {
     const val REQ_VPN = 42
 
     /** Film karti. */
-    data class Row(val title: String, val url: String, val poster: String, val site: String)
+    data class Row(
+        val title: String,
+        val url: String,
+        val poster: String,
+        val site: String,
+        val meta: String = ""
+    )
 
     private var vpnToggle: Switch? = null
     private var vpnStatus: TextView? = null
@@ -138,7 +144,7 @@ object Panels {
 
     // ---------------------------------------------------------------- Kesfet
     /** Donus: OK'a basili tutulunca cagrilacak islem (listeye ekle). */
-    fun discover(a: Activity, root: View, onOpen: (Row) -> Unit): () -> Unit {
+    fun discover(a: Activity, root: View, onOpen: (Row, List<Row>) -> Unit): () -> Unit {
         val grid = root.findViewById<GridView>(R.id.grid)
         val empty = root.findViewById<TextView>(R.id.empty)
         val count = root.findViewById<TextView>(R.id.count)
@@ -147,10 +153,13 @@ object Panels {
         val shown = ArrayList<Row>()
         var siteFilter = ""
         var typeFilter = 0 // 0: hepsi, 1: film, 2: dizi
+        val alts = HashMap<String, MutableList<Row>>()
         val adapter = PanelFilmAdapter(a, shown)
         grid.adapter = adapter
 
-        grid.setOnItemClickListener { _, _, pos, _ -> shown.getOrNull(pos)?.let { onOpen(it) } }
+        grid.setOnItemClickListener { _, _, pos, _ ->
+            shown.getOrNull(pos)?.let { onOpen(it, alts[it.title] ?: emptyList()) }
+        }
 
         fun rebuild() {
             shown.clear()
@@ -225,7 +234,6 @@ object Panels {
         empty.text = a.getString(R.string.films_loading)
         empty.visibility = if (all.isEmpty()) View.VISIBLE else View.GONE
 
-        val seen = HashSet<String>()
         val sites = SiteRepository.cached(a)
         val done = AtomicInteger(0)
         for (s in sites) {
@@ -236,7 +244,15 @@ object Panels {
                         for (f in page.films.take(8)) {
                             // Ayni film/dizi baska sitede de olabilir: baslik anahtariyla tekille.
                             val key = keyOf(f.title)
-                            if (key.isEmpty() || !seen.add(key)) continue
+                            if (key.isEmpty()) continue
+                            val existing = all.firstOrNull { keyOf(it.title) == key }
+                            if (existing != null) {
+                                if (existing.site != s.name) {
+                                    alts.getOrPut(existing.title) { ArrayList() }
+                                        .add(Row(f.title, f.url, f.poster, s.name))
+                                }
+                                continue
+                            }
                             all.add(Row(f.title, f.url, f.poster, s.name))
                             added++
                         }
@@ -244,7 +260,10 @@ object Panels {
                             interleave(all)
                             rebuild()
                         }
-                        if (done.incrementAndGet() == sites.size) DiscoverCache.save(a, all)
+                        if (done.incrementAndGet() == sites.size) {
+                            enrich(a, all) { rebuild() }
+                            DiscoverCache.save(a, all)
+                        }
                     }
                 }
             }.start()
@@ -266,7 +285,13 @@ object Panels {
     }
 
     // --------------------------------------------------------------- Detay
-    fun detail(a: Activity, root: View, row: Row, onWatch: () -> Unit) {
+    fun detail(
+        a: Activity,
+        root: View,
+        row: Row,
+        alts: List<Row> = emptyList(),
+        onWatch: () -> Unit
+    ) {
         val titleView = root.findViewById<TextView>(R.id.detail_title)
         val siteView = root.findViewById<TextView>(R.id.detail_site)
         val info = root.findViewById<TextView>(R.id.detail_info)
@@ -291,9 +316,26 @@ object Panels {
         }
         loadPoster(row.poster)
 
+        // Ayni film baska sitelerde de varsa kaynak degistirme
+        if (alts.isNotEmpty()) {
+            val btn = root.findViewById<TextView>(R.id.detail_sources)
+            btn.visibility = View.VISIBLE
+            btn.setOnClickListener {
+                AlertDialog.Builder(a)
+                    .setTitle(R.string.other_sources)
+                    .setItems(alts.map { it.site }.toTypedArray()) { _, w ->
+                        watch(a, alts[w])
+                    }
+                    .setNegativeButton(android.R.string.cancel, null)
+                    .show()
+            }
+        }
+
         // Once TMDB (varsa), yoksa Turkce Vikipedi.
         Thread {
             val tmdb = Tmdb.load(row.title)
+            val cast = if (tmdb != null) Tmdb.credits(tmdb.id) else emptyList()
+            val similar = if (tmdb != null) Tmdb.recommendations(tmdb.id) else emptyList()
             val wiki = if (tmdb == null) FilmInfo.load(row.title) else null
             a.runOnUiThread {
                 if (info.parent == null) return@runOnUiThread
@@ -303,6 +345,44 @@ object Panels {
                     info.text = tmdb.overview
                     siteView.text = if (tmdb.rating.isEmpty()) row.site else row.site + " · ★ " + tmdb.rating
                     if (tmdb.poster.isNotEmpty()) loadPoster(tmdb.poster)
+
+                    if (cast.isNotEmpty()) {
+                        val btn = root.findViewById<TextView>(R.id.detail_cast)
+                        btn.visibility = View.VISIBLE
+                        btn.setOnClickListener {
+                            AlertDialog.Builder(a)
+                                .setTitle(R.string.cast_title)
+                                .setItems(cast.toTypedArray()) { _, w ->
+                                    open(
+                                        a,
+                                        "https://www.google.com/search?q=" +
+                                            android.net.Uri.encode(cast[w] + " filmleri")
+                                    )
+                                }
+                                .setNegativeButton(android.R.string.cancel, null)
+                                .show()
+                        }
+                    }
+                    if (similar.isNotEmpty()) {
+                        val btn = root.findViewById<TextView>(R.id.detail_similar)
+                        btn.visibility = View.VISIBLE
+                        btn.setOnClickListener {
+                            val labels = similar.map {
+                                if (it.second.isEmpty()) it.first else it.first + " (" + it.second + ")"
+                            }
+                            AlertDialog.Builder(a)
+                                .setTitle(R.string.similar_title)
+                                .setItems(labels.toTypedArray()) { _, w ->
+                                    open(
+                                        a,
+                                        "https://www.google.com/search?q=" +
+                                            android.net.Uri.encode(similar[w].first + " film izle")
+                                    )
+                                }
+                                .setNegativeButton(android.R.string.cancel, null)
+                                .show()
+                        }
+                    }
                 } else if (!wiki.isNullOrBlank()) {
                     info.text = wiki
                 } else {
@@ -590,6 +670,28 @@ object Panels {
     }
 
     // ---------------------------------------------------------------- yardimci
+    /** Kartlarda yil/puan: TMDB'den ilk 24 film icin arka planda. */
+    private fun enrich(a: Activity, rows: ArrayList<Row>, onChange: () -> Unit) {
+        if (!Tmdb.enabled()) return
+        for (r in rows.take(24)) {
+            Thread {
+                val info = Tmdb.load(r.title) ?: return@Thread
+                val parts = ArrayList<String>()
+                if (info.year.isNotEmpty()) parts.add(info.year)
+                if (info.rating.isNotEmpty()) parts.add("★ " + info.rating)
+                if (parts.isEmpty()) return@Thread
+                val meta = parts.joinToString(" · ")
+                a.runOnUiThread {
+                    val i = rows.indexOfFirst { it.url == r.url }
+                    if (i >= 0) {
+                        rows[i] = rows[i].copy(meta = meta)
+                        onChange()
+                    }
+                }
+            }.start()
+        }
+    }
+
     /** Baslik normalizasyonu: ayni film farkli sitelerde tekrarlanmasin. */
     private fun keyOf(title: String): String {
         var t = title.lowercase(java.util.Locale("tr"))
@@ -672,8 +774,8 @@ private class PanelFilmAdapter(private val ctx: Context, private val items: List
         val img = view.findViewById<ImageView>(R.id.film_poster)
         view.findViewById<TextView>(R.id.film_title).text = row.title
         view.findViewById<TextView>(R.id.film_site).apply {
-            text = row.site
-            visibility = if (row.site.isBlank()) View.GONE else View.VISIBLE
+            text = if (row.meta.isEmpty()) row.site else row.site + " · " + row.meta
+            visibility = if (row.site.isBlank() && row.meta.isBlank()) View.GONE else View.VISIBLE
         }
 
         if (row.poster.isBlank()) {

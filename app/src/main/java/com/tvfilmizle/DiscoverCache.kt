@@ -27,7 +27,8 @@ object DiscoverCache {
                         o.optString("title"),
                         o.optString("url"),
                         o.optString("poster"),
-                        o.optString("site")
+                        o.optString("site"),
+                        o.optString("meta")
                     )
                 )
             }
@@ -46,6 +47,7 @@ object DiscoverCache {
                     .put("url", it.url)
                     .put("poster", it.poster)
                     .put("site", it.site)
+                    .put("meta", it.meta)
             )
         }
         prefs(ctx).edit().putString(K, arr.toString())

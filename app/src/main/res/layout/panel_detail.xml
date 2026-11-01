@@ -114,6 +114,57 @@
                 android:textSize="13sp"
                 android:textStyle="bold"
                 android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/detail_cast"
+                android:layout_width="wrap_content"
+                android:layout_height="46dp"
+                android:layout_marginTop="12dp"
+                android:background="@drawable/tool_button_bg"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:paddingLeft="28dp"
+                android:paddingRight="28dp"
+                android:text="@string/cast_title"
+                android:textColor="@color/tool_button_text"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/detail_similar"
+                android:layout_width="wrap_content"
+                android:layout_height="46dp"
+                android:layout_marginTop="12dp"
+                android:background="@drawable/tool_button_bg"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:paddingLeft="28dp"
+                android:paddingRight="28dp"
+                android:text="@string/similar_title"
+                android:textColor="@color/tool_button_text"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/detail_sources"
+                android:layout_width="wrap_content"
+                android:layout_height="46dp"
+                android:layout_marginTop="12dp"
+                android:background="@drawable/tool_button_bg"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:paddingLeft="28dp"
+                android:paddingRight="28dp"
+                android:text="@string/other_sources"
+                android:textColor="@color/tool_button_text"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:visibility="gone" />
         </LinearLayout>
     </LinearLayout>
 </LinearLayout>

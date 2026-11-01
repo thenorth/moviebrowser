@@ -107,6 +107,9 @@
     <string name="films_filter">Filmler</string>
     <string name="series_filter">Diziler</string>
     <string name="episodes">Bölümler</string>
+    <string name="cast_title">Oyuncular</string>
+    <string name="similar_title">Benzer filmler</string>
+    <string name="other_sources">Diğer kaynaklar</string>
     <string name="discover">Keşfet</string>
     <string name="discover_sub">Tüm sitelerden filmler</string>
     <string name="key_hold_remove">Listeden çıkar</string>

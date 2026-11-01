@@ -192,7 +192,7 @@ class MainActivity : Activity() {
             }
         }
         panelLongPress = when (name) {
-            "discover" -> Panels.discover(this, root) { openFilm(it) }
+            "discover" -> Panels.discover(this, root) { row, alt -> openFilm(row, alt) }
             "watch" -> Panels.watchlist(this, root) { openFilm(it) }
             "recent" -> Panels.recent(this, root) { openFilm(it) }
             "status" -> {
@@ -244,12 +244,14 @@ class MainActivity : Activity() {
     }
 
     private var detailRow: Panels.Row? = null
+    private var detailAlts: List<Panels.Row> = emptyList()
     private var prevSection = ""
 
     /** Film kartina basinca once detay paneli acilir. */
-    private fun openFilm(row: Panels.Row) {
+    private fun openFilm(row: Panels.Row, alts: List<Panels.Row> = emptyList()) {
         prevSection = section
         detailRow = row
+        detailAlts = alts
         showSection("detail")
     }
 
@@ -259,7 +261,7 @@ class MainActivity : Activity() {
             showSites()
             return
         }
-        Panels.detail(this, root, row, onWatch = {
+        Panels.detail(this, root, row, detailAlts, onWatch = {
             Panels.watch(this, row)
         })
     }
