@@ -61,7 +61,10 @@ class SiteFilmsActivity : Activity() {
         adapter = FilmAdapter(this, films)
         grid.adapter = adapter
         grid.setOnItemClickListener { _, _, position, _ ->
-            films.getOrNull(position)?.let { openBrowser(it.url) }
+            films.getOrNull(position)?.let {
+                History.add(this, it.title, it.url, it.poster, siteName)
+                openBrowser(it.url)
+            }
         }
 
         load(siteUrl)

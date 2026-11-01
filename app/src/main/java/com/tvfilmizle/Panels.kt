@@ -16,12 +16,14 @@ import android.widget.BaseAdapter
 import android.widget.EditText
 import android.widget.GridView
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.ListView
 import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
 import java.net.HttpURLConnection
 import java.net.URL
+import java.util.concurrent.atomic.AtomicInteger
 
 /** Ana ekranin sagindaki bolum panelleri (menu sabit kalir). */
 object Panels {
@@ -37,14 +39,14 @@ object Panels {
 
     // ---------------------------------------------------------------- Listem
     /** Donus: OK'a basili tutulunca cagrilacak islem (listeden cikar). */
-    fun watchlist(a: Activity, root: View): () -> Unit {
+    fun watchlist(a: Activity, root: View, onOpen: (Row) -> Unit): () -> Unit {
         val grid = root.findViewById<GridView>(R.id.list)
         val empty = root.findViewById<TextView>(R.id.empty)
         val count = root.findViewById<TextView>(R.id.count)
         val rows = ArrayList<Row>()
         val adapter = PanelFilmAdapter(a, rows)
         grid.adapter = adapter
-        grid.setOnItemClickListener { _, _, pos, _ -> rows.getOrNull(pos)?.let { open(a, it.url) } }
+        grid.setOnItemClickListener { _, _, pos, _ -> rows.getOrNull(pos)?.let { onOpen(it) } }
 
         fun reload() {
             rows.clear()
@@ -73,57 +75,155 @@ object Panels {
         }
     }
 
-    // ---------------------------------------------------------------- Kesfet
-    /** Donus: OK'a basili tutulunca cagrilacak islem (listeye ekle). */
-    fun discover(a: Activity, root: View): () -> Unit {
-        val grid = root.findViewById<GridView>(R.id.grid)
+    // ------------------------------------------------------------ Son izlenenler
+    fun recent(a: Activity, root: View, onOpen: (Row) -> Unit): () -> Unit {
+        root.findViewById<TextView>(R.id.panel_title)?.text = a.getString(R.string.recent_title)
+        val grid = root.findViewById<GridView>(R.id.list)
         val empty = root.findViewById<TextView>(R.id.empty)
         val count = root.findViewById<TextView>(R.id.count)
         val rows = ArrayList<Row>()
         val adapter = PanelFilmAdapter(a, rows)
         grid.adapter = adapter
-        grid.setOnItemClickListener { _, _, pos, _ -> rows.getOrNull(pos)?.let { open(a, it.url) } }
-        empty.text = a.getString(R.string.films_loading)
+        grid.setOnItemClickListener { _, _, pos, _ -> rows.getOrNull(pos)?.let { onOpen(it) } }
 
-        // Tum siteler paralel; hangi site once yanit verirse en uste o girer.
+        fun reload() {
+            rows.clear()
+            History.all(a).forEach {
+                val ep = episodeOf(it.title)
+                rows.add(Row(it.title, it.url, it.poster, if (ep.isEmpty()) it.site else it.site + " · " + ep))
+            }
+            adapter.notifyDataSetChanged()
+            count.text = rows.size.toString() + " film"
+            empty.text = a.getString(R.string.recent_empty)
+            empty.visibility = if (rows.isEmpty()) View.VISIBLE else View.GONE
+        }
+        reload()
+
+        return {
+            val pos = grid.selectedItemPosition
+            val item = rows.getOrNull(if (pos < 0) 0 else pos)
+            if (item != null) {
+                History.remove(a, item.url)
+                reload()
+            }
+        }
+    }
+
+    // ---------------------------------------------------------------- Kesfet
+    /** Donus: OK'a basili tutulunca cagrilacak islem (listeye ekle). */
+    fun discover(a: Activity, root: View, onOpen: (Row) -> Unit): () -> Unit {
+        val grid = root.findViewById<GridView>(R.id.grid)
+        val empty = root.findViewById<TextView>(R.id.empty)
+        val count = root.findViewById<TextView>(R.id.count)
+        val chipRow = root.findViewById<LinearLayout>(R.id.filter_chips)
+        val all = ArrayList<Row>()
+        val shown = ArrayList<Row>()
+        var filter = ""
+        val adapter = PanelFilmAdapter(a, shown)
+        grid.adapter = adapter
+
+        grid.setOnItemClickListener { _, _, pos, _ -> shown.getOrNull(pos)?.let { onOpen(it) } }
+
+        fun rebuild() {
+            shown.clear()
+            if (filter.isEmpty()) shown.addAll(all) else shown.addAll(all.filter { it.site == filter })
+            adapter.notifyDataSetChanged()
+            count.text = shown.size.toString() + " film"
+            empty.visibility = if (shown.isEmpty()) View.VISIBLE else View.GONE
+        }
+
+        // Site filtreleri
+        chipRow.removeAllViews()
+        val d = a.resources.displayMetrics.density
+        fun chip(name: String, site: String) {
+            val chip = TextView(a)
+            chip.text = name
+            chip.textSize = 12f
+            chip.setTextColor(Color.parseColor("#F2F6FA"))
+            chip.gravity = android.view.Gravity.CENTER
+            chip.setBackgroundResource(R.drawable.tool_button_bg)
+            chip.isFocusable = true
+            chip.isClickable = true
+            val lp = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                (34 * d).toInt()
+            )
+            lp.rightMargin = (8 * d).toInt()
+            chip.layoutParams = lp
+            chip.setPadding((14 * d).toInt(), 0, (14 * d).toInt(), 0)
+            chip.setOnClickListener {
+                filter = site
+                rebuild()
+            }
+            chipRow.addView(chip)
+        }
+        chip(a.getString(R.string.all_sites), "")
+        SiteRepository.cached(a).forEach { chip(it.name, it.name) }
+
+        // Onbellek varsa aninda goster
+        all.addAll(DiscoverCache.load(a))
+        rebuild()
+        if (DiscoverCache.isFresh(a)) return { addToWatch(a, shown, grid) }
+
+        empty.text = a.getString(R.string.films_loading)
+        empty.visibility = if (all.isEmpty()) View.VISIBLE else View.GONE
+
         val seen = HashSet<String>()
-        for (s in SiteRepository.cached(a)) {
+        val sites = SiteRepository.cached(a)
+        val done = AtomicInteger(0)
+        for (s in sites) {
             Thread {
                 Scraper.load(s.url, 6000) { page ->
                     a.runOnUiThread {
                         var added = 0
-                        // Ayni film farkli sitelerde olabilir; site etiketiyle ayirt edilir.
                         for (f in page.films.take(8)) {
                             if (!seen.add(f.url)) continue
-                            rows.add(Row(f.title, f.url, f.poster, s.name))
+                            all.add(Row(f.title, f.url, f.poster, s.name))
                             added++
                         }
                         if (added > 0) {
-                            interleave(rows)
-                            adapter.notifyDataSetChanged()
-                            empty.visibility = View.GONE
-                            count.text = rows.size.toString() + " film"
+                            interleave(all)
+                            rebuild()
                         }
+                        if (done.incrementAndGet() == sites.size) DiscoverCache.save(a, all)
                     }
                 }
             }.start()
         }
 
-        return {
-            val pos = grid.selectedItemPosition
-            val r = rows.getOrNull(if (pos < 0) 0 else pos) ?: Row("", "", "", "")
-            if (r.url.isNotEmpty()) {
-                if (Watchlist.has(a, r.url)) {
-                    Toast.makeText(a, R.string.in_watch, Toast.LENGTH_SHORT).show()
-                } else {
-                    Watchlist.add(a, Watchlist.Item(r.title, r.url, r.site, r.poster))
-                    Toast.makeText(a, R.string.added_watch, Toast.LENGTH_SHORT).show()
-                }
-            }
+        return { addToWatch(a, shown, grid) }
+    }
+
+    private fun addToWatch(a: Activity, shown: List<Row>, grid: GridView) {
+        val pos = grid.selectedItemPosition
+        val r = shown.getOrNull(if (pos < 0) 0 else pos) ?: return
+        if (r.url.isEmpty()) return
+        if (Watchlist.has(a, r.url)) {
+            Toast.makeText(a, R.string.in_watch, Toast.LENGTH_SHORT).show()
+        } else {
+            Watchlist.add(a, Watchlist.Item(r.title, r.url, r.site, r.poster))
+            Toast.makeText(a, R.string.added_watch, Toast.LENGTH_SHORT).show()
         }
     }
 
-    // ------------------------------------------------------------ Site durumu
+    // --------------------------------------------------------------- Detay
+    fun detail(a: Activity, root: View, row: Row, onWatch: () -> Unit, onAdd: () -> Unit) {
+        root.findViewById<TextView>(R.id.detail_title).text = row.title
+        root.findViewById<TextView>(R.id.detail_site).text = row.site
+        val img = root.findViewById<ImageView>(R.id.detail_poster)
+        if (row.poster.isBlank()) {
+            img.setImageDrawable(null)
+        } else {
+            val cached = Images.cached(row.poster)
+            if (cached != null) img.setImageBitmap(cached)
+            else Images.load(a, row.poster) { bmp -> if (bmp != null) img.setImageBitmap(bmp) }
+        }
+        root.findViewById<View>(R.id.detail_watch).setOnClickListener { onWatch() }
+        root.findViewById<View>(R.id.detail_add).setOnClickListener { onAdd() }
+        root.findViewById<View>(R.id.detail_watch).requestFocus()
+    }
+
+    // ---------------------------------------------------------------- Site durumu
     fun status(a: Activity, root: View) {
         val sites = SiteRepository.cached(a)
         val codes = HashMap<String, Int>()
@@ -282,6 +382,14 @@ object Panels {
     }
 
     // ---------------------------------------------------------------- yardimci
+    /** "3. Sezon 5. Bölüm" -> "S3B5" (dizi bolum takibi icin kisa etiket). */
+    private val EP_RX = Regex("(?i)(\\d+)\\s*\\.?\\s*sezon\\D{0,12}?(\\d+)\\s*\\.?\\s*b[oö]l[uü]m")
+
+    private fun episodeOf(title: String): String {
+        val m = EP_RX.find(title) ?: return ""
+        return "S" + m.groupValues[1] + "B" + m.groupValues[2]
+    }
+
     /** Siteleri sirayla karistirir: her siteden birer film, sonra ikinciler... */
     private fun interleave(rows: MutableList<Row>) {
         val groups = LinkedHashMap<String, MutableList<Row>>()
@@ -308,6 +416,12 @@ object Panels {
         a.startActivity(Intent(a, BrowserActivity::class.java).putExtra(BrowserActivity.EXTRA_URL, url))
     }
 
+    /** Panellerden film acarken gecmise yaz. */
+    fun watch(a: Activity, row: Row) {
+        if (row.title.isNotEmpty()) History.add(a, row.title, row.url, row.poster, row.site)
+        open(a, row.url)
+    }
+
     private fun ping(url: String): Int = try {
         val c = URL(url).openConnection() as HttpURLConnection
         c.connectTimeout = 8000
@@ -323,7 +437,7 @@ object Panels {
     }
 }
 
-/** Listem / Kesfet icin poster karti. */
+/** Listem / Kesfet / Son izlenenler icin poster karti. */
 private class PanelFilmAdapter(private val ctx: Context, private val items: List<Panels.Row>) : BaseAdapter() {
 
     private val inflater = LayoutInflater.from(ctx)
@@ -397,15 +511,15 @@ private class StatusAdapter(
             }
             code in 200..399 -> {
                 dot.setTextColor(Color.parseColor("#59D986"))
-                text.text = ctx.getString(R.string.status_ok) + " Ãƒâ€šÃ‚Â· " + code
+                text.text = ctx.getString(R.string.status_ok) + " · " + code
             }
             code == 403 || code == 429 || code == 503 -> {
                 dot.setTextColor(Color.parseColor("#FF9F1A"))
-                text.text = ctx.getString(R.string.status_protected) + " Ãƒâ€šÃ‚Â· " + code
+                text.text = ctx.getString(R.string.status_protected) + " · " + code
             }
             else -> {
                 dot.setTextColor(Color.parseColor("#FF6B6B"))
-                text.text = ctx.getString(R.string.status_error) + " Ãƒâ€šÃ‚Â· " + code
+                text.text = ctx.getString(R.string.status_error) + " · " + code
             }
         }
         return view

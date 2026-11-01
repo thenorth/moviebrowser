@@ -81,6 +81,23 @@
             android:textSize="12sp" />
     </LinearLayout>
 
+    <HorizontalScrollView
+        android:id="@+id/filter_scroll"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top"
+        android:layout_marginTop="82dp"
+        android:paddingLeft="38dp"
+        android:paddingRight="38dp"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:id="@+id/filter_chips"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal" />
+    </HorizontalScrollView>
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

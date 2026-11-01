@@ -9,7 +9,18 @@ Sonraki oturum için kısa durum. Ayrıntılı geçmiş git log'da.
 - APK: `MovieBrowser-3.2.apk` (debug imzalı, sideload).
 - Site listesi: `sites.json` (GitHub `thenorth/moviebrowser`), açılışta + 5 dk sonra çekilir; günlük keşif `.github/workflows/update-sites.yml`.
 
-## Bu turda eklenenler (v3.2)
+## Bu turda eklenenler (v3.14+)
+- **Keşfet önbelleği** (`DiscoverCache`): sonuçlar 10 dk taze; sekmeye dönünce anında.
+- **Son izlenenler + devam** (`History`): panel + menü satırı; en son açılan film en üstte; uzun basış = geçmişten çıkar.
+- **Film detay paneli** (`panel_detail.xml`): afiş, ad, site, İZLE / Listeme ekle; GERİ bir önceki bölüme döner.
+- **Keşfet filtresi**: site çipleri (Tümü + siteler).
+- **Site favorileri** (`Favorites`): site kartında OK'a basılı tut → favori; favoriler ızgaranın başına geçer.
+- **Otomatik VPN** (`BrowserActivity`): SiteHealth engelli işaretlediyse ve WARP kapalıysa hata anında VPN'i kendisi açar (host başına 1 kez).
+- **Uygulama içi güncelleme**: APK DownloadManager ile iner, bitince kurulum ekranı açılır (`downloadReceiver`).
+- **Dizi bölüm etiketi**: Son izlenenler'de başlıkta "3. Sezon 5. Bölüm" varsa site etiketi `S3B5` gösterir (tam sezon/bölüm listesi henüz yok).
+
+### v3.2 notları
+
 1. **Listem afişli**: `Watchlist.Item.poster`; `WatchlistActivity` 6 sütunlu afiş ızgarası, OK'a basılı tut = listeden çıkar.
 2. **Afiş kaynağı**: film ızgarasından eklerken `Scraper.Film.poster`; tarayıcıdan eklerken sayfanın `og:image`/`twitter:image` değeri (`BrowserActivity.addToWatchlist`).
 3. **Keşfet**: `DiscoverActivity` — ilk 6 siteden paralel kazıma, başlığa göre tekilleştirme, kart üstünde site adı (`item_film.xml` → `film_site`). Ana ekranda "Keşfet" kartı (`SiteKind.DISCOVER`).

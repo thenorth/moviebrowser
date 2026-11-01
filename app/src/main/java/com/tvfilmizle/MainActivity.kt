@@ -3,12 +3,17 @@ package com.tvfilmizle
 import android.animation.ObjectAnimator
 import android.app.Activity
 import android.app.AlertDialog
+import android.app.DownloadManager
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.graphics.Color
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.GradientDrawable
+import android.os.Build
 import android.os.Bundle
+import android.os.Environment
 import android.os.Handler
 import android.os.Looper
 import android.view.LayoutInflater
@@ -44,6 +49,30 @@ class MainActivity : Activity() {
     private var panelLongPress: (() -> Unit)? = null
     private var panelPressDone = false
     private var panelPressRunnable: Runnable? = null
+    private var apkDownloadId = -1L
+
+    private companion object {
+        const val APK_MIME = "application/vnd.android.package-archive"
+    }
+
+    private val downloadReceiver = object : BroadcastReceiver() {
+        override fun onReceive(ctx: Context?, intent: Intent?) {
+            if (intent?.action != DownloadManager.ACTION_DOWNLOAD_COMPLETE) return
+            val id = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1L)
+            if (id != apkDownloadId) return
+            val dm = getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+            val uri = dm.getUriForDownloadedFile(id) ?: return
+            try {
+                startActivity(
+                    Intent(Intent.ACTION_VIEW)
+                        .setDataAndType(uri, APK_MIME)
+                        .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
+                )
+            } catch (e: Exception) {
+                Toast.makeText(this@MainActivity, R.string.update_manual, Toast.LENGTH_LONG).show()
+            }
+        }
+    }
 
     private var refreshing = false
     private var spin: ObjectAnimator? = null
@@ -94,6 +123,7 @@ class MainActivity : Activity() {
         grid.setOnFocusChangeListener { _, hasFocus -> if (hasFocus) grid.post { highlightSelected() } }
 
         bindSideBar()
+        registerDownloadReceiver()
         fill(SiteRepository.cached(this))
         refreshList(false)
         checkForUpdate()
@@ -105,6 +135,7 @@ class MainActivity : Activity() {
         sideRow(R.id.side_search) { showSection("search") }
         sideRow(R.id.side_discover) { showSection("discover") }
         sideRow(R.id.side_watchlist) { showSection("watch") }
+        sideRow(R.id.side_recent) { showSection("recent") }
         sideRow(R.id.side_status) { showSection("status") }
         sideRow(R.id.side_url) { showSection("url") }
         sideRow(R.id.side_refresh) { refreshList(true) }
@@ -120,9 +151,10 @@ class MainActivity : Activity() {
         panelLongPress = null
         val layout = when (name) {
             "discover" -> R.layout.activity_discover
-            "watch" -> R.layout.activity_watchlist
+            "watch", "recent" -> R.layout.activity_watchlist
             "status" -> R.layout.activity_status
             "settings" -> R.layout.activity_settings
+            "detail" -> R.layout.panel_detail
             else -> R.layout.panel_input
         }
         val root = layoutInflater.inflate(layout, panel, false)
@@ -131,27 +163,33 @@ class MainActivity : Activity() {
         val d = resources.displayMetrics.density
         val list = when (name) {
             "discover" -> root.findViewById<View>(R.id.grid)
-            "status", "watch" -> root.findViewById<View>(R.id.list)
+            "status", "watch", "recent" -> root.findViewById<View>(R.id.list)
             else -> null
         }
-        list?.setPadding((38 * d).toInt(), (56 * d).toInt(), (38 * d).toInt(), (80 * d).toInt())
+        val topDp = if (name == "discover") 120 else 56
+        list?.setPadding((38 * d).toInt(), (topDp * d).toInt(), (38 * d).toInt(), (80 * d).toInt())
         // Panelde geri dugmesi ve alt ipucu seridi gereksiz.
         root.findViewById<View>(R.id.btn_back)?.visibility = View.GONE
-        if (name == "discover" || name == "watch") {
+        if (name == "discover" || name == "watch" || name == "recent") {
             (root as? ViewGroup)?.let {
                 val last = it.getChildAt(it.childCount - 1)
                 if (last is LinearLayout) last.visibility = View.GONE
             }
         }
         panelLongPress = when (name) {
-            "discover" -> Panels.discover(this, root)
-            "watch" -> Panels.watchlist(this, root)
+            "discover" -> Panels.discover(this, root) { openFilm(it) }
+            "watch" -> Panels.watchlist(this, root) { openFilm(it) }
+            "recent" -> Panels.recent(this, root) { openFilm(it) }
             "status" -> {
                 Panels.status(this, root)
                 null
             }
             "settings" -> {
                 Panels.settings(this, root)
+                null
+            }
+            "detail" -> {
+                bindDetail(root)
                 null
             }
             else -> {
@@ -172,6 +210,7 @@ class MainActivity : Activity() {
                 null
             }
         }
+        if (name == "detail") return
         if (name == "search" || name == "url") {
             // Klavye acilsin, imlec alanda olsun.
             window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE)
@@ -181,10 +220,39 @@ class MainActivity : Activity() {
         val row = when (name) {
             "discover" -> R.id.side_discover
             "watch" -> R.id.side_watchlist
+            "recent" -> R.id.side_recent
             "status" -> R.id.side_status
             else -> R.id.side_settings
         }
         findViewById<View>(row).requestFocus()
+    }
+
+    private var detailRow: Panels.Row? = null
+    private var prevSection = ""
+
+    /** Film kartina basinca once detay paneli acilir. */
+    private fun openFilm(row: Panels.Row) {
+        prevSection = section
+        detailRow = row
+        showSection("detail")
+    }
+
+    private fun bindDetail(root: View) {
+        val row = detailRow
+        if (row == null) {
+            showSites()
+            return
+        }
+        Panels.detail(this, root, row, onWatch = {
+            Panels.watch(this, row)
+        }, onAdd = {
+            if (Watchlist.has(this, row.url)) {
+                Toast.makeText(this, R.string.in_watch, Toast.LENGTH_SHORT).show()
+            } else {
+                Watchlist.add(this, Watchlist.Item(row.title, row.url, row.site, row.poster))
+                Toast.makeText(this, R.string.added_watch, Toast.LENGTH_SHORT).show()
+            }
+        })
     }
 
     /** Site Ä±zgarasÄ±na doner. */
@@ -237,12 +305,17 @@ class MainActivity : Activity() {
     /** Soldaki menu ile icerik arasÄ±nda odak gecisi; panelde OK'a basili tutma. */
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
         val isOk = event.keyCode == KeyEvent.KEYCODE_DPAD_CENTER || event.keyCode == KeyEvent.KEYCODE_ENTER
-        if (isOk && panelLongPress != null && inside(currentFocus, panel)) {
+        val longAction: (() -> Unit)? = when {
+            panelLongPress != null && inside(currentFocus, panel) -> panelLongPress
+            grid.hasFocus() && grid.visibility == View.VISIBLE -> ({ toggleFavorite() })
+            else -> null
+        }
+        if (isOk && longAction != null) {
             if (event.action == KeyEvent.ACTION_DOWN) {
                 if (panelPressRunnable == null && !panelPressDone) {
                     val r = Runnable {
                         panelPressDone = true
-                        panelLongPress?.invoke()
+                        longAction.invoke()
                     }
                     panelPressRunnable = r
                     panel.postDelayed(r, 450)
@@ -324,8 +397,8 @@ class MainActivity : Activity() {
                     .setTitle(R.string.update_title)
                     .setMessage(getString(R.string.update_msg, tag, installed))
                     .setPositiveButton(R.string.update_yes) { _, _ ->
-                        val url = if (!apk.isNullOrEmpty()) apk else page
-                        if (!url.isNullOrEmpty()) open(url)
+                        if (!apk.isNullOrEmpty()) downloadApk(apk, tag)
+                        else if (!page.isNullOrEmpty()) open(page)
                     }
                     .setNegativeButton(R.string.update_later, null)
                     .show()
@@ -358,16 +431,27 @@ class MainActivity : Activity() {
 
     /** Panel acikken GERI: site Ä±zgarasÄ±na don. */
     override fun onBackPressed() {
-        if (section.isNotEmpty()) {
-            showSites()
-        } else {
-            super.onBackPressed()
+        when {
+            section == "detail" && prevSection.isNotEmpty() -> showSection(prevSection)
+            section.isNotEmpty() -> showSites()
+            else -> super.onBackPressed()
         }
+    }
+
+    /** Site kartinda OK'a basili tut = favoriye ekle/cikar. */
+    private fun toggleFavorite() {
+        val pos = if (grid.selectedItemPosition < 0) 0 else grid.selectedItemPosition
+        val site = entries.getOrNull(pos) ?: return
+        val added = Favorites.toggle(this, site.url)
+        Toast.makeText(this, if (added) R.string.fav_added else R.string.fav_removed, Toast.LENGTH_SHORT).show()
+        val list = entries.toList()
+        fill(list)
     }
 
     private fun fill(sites: List<Site>) {
         entries.clear()
-        entries.addAll(sites)
+        val favs = Favorites.all(this)
+        entries.addAll(sites.sortedBy { if (favs.contains(it.url)) 0 else 1 })
         adapter.notifyDataSetChanged()
         grid.setSelection(0)
         grid.post {
@@ -451,6 +535,43 @@ class MainActivity : Activity() {
         spin?.cancel()
         spin = null
         refreshBadge()?.rotation = 0f
+    }
+
+    /** APK'yi indirir; bitince kurulum ekranini acar. */
+    private fun downloadApk(url: String, tag: String) {
+        try {
+            val dm = getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+            val request = DownloadManager.Request(android.net.Uri.parse(url))
+                .setTitle("Movie Browser " + tag)
+                .setMimeType(APK_MIME)
+                .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+                .setDestinationInExternalFilesDir(
+                    this, Environment.DIRECTORY_DOWNLOADS, "moviebrowser-$tag.apk"
+                )
+            apkDownloadId = dm.enqueue(request)
+            Toast.makeText(this, R.string.downloading, Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) {
+            Toast.makeText(this, R.string.download_failed, Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private fun registerDownloadReceiver() {
+        val filter = IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(downloadReceiver, filter, Context.RECEIVER_EXPORTED)
+        } else {
+            @Suppress("UnspecifiedRegisterReceiverFlag")
+            registerReceiver(downloadReceiver, filter)
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        try {
+            unregisterReceiver(downloadReceiver)
+        } catch (e: Exception) {
+            // kayitli degil
+        }
     }
 
     private fun open(url: String) {

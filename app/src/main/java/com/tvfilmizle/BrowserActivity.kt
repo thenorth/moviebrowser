@@ -72,6 +72,7 @@ class BrowserActivity : Activity() {
     private var crashUrl = ""
     private var crashCount = 0
     private var erroredHost: String? = null
+    private val autoVpnHosts = HashSet<String>()
     private var defaultUa = ""
     private var uaRetried = false
     private var pendingReloadUrl: String? = null
@@ -266,6 +267,15 @@ class BrowserActivity : Activity() {
             }
             erroredHost = request.url.host
             SiteHealth.fail(this@BrowserActivity, request.url.host)
+            val host = request.url.host
+            // Site bilinen engelli ise VPN'i kendisi acmayi dene.
+            if (host != null && SiteHealth.isBlocked(this@BrowserActivity, host) &&
+                !Warp.connected && autoVpnHosts.add(host)
+            ) {
+                Toast.makeText(this@BrowserActivity, R.string.vpn_auto, Toast.LENGTH_SHORT).show()
+                enableVpnThenReload(request.url.toString())
+                return
+            }
             showLoadErrorDialog(request.url.toString(), msg)
             urlBar.setText(request.url.toString())
         }
