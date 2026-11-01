@@ -355,11 +355,12 @@ object Panels {
             }
         }
 
-        // Once TMDB (varsa), yoksa Turkce Vikipedi.
+        // Once TMDB (film/dizi), yoksa Turkce Vikipedi.
         Thread {
-            val tmdb = Tmdb.load(row.title)
-            val credits = if (tmdb != null) Tmdb.credits(tmdb.id) else null
-            val similar = if (tmdb != null) Tmdb.recommendations(tmdb.id) else emptyList()
+            val isSeries = Tmdb.looksLikeSeries(row.title, row.url)
+            val tmdb = Tmdb.load(row.title, isSeries)
+            val credits = if (tmdb != null) Tmdb.credits(tmdb.id, tmdb.mediaType) else null
+            val similar = if (tmdb != null) Tmdb.recommendations(tmdb.id, tmdb.mediaType) else emptyList()
             val wiki = if (tmdb == null) FilmInfo.load(row.title) else null
             a.runOnUiThread {
                 if (info.parent == null) return@runOnUiThread
@@ -377,7 +378,9 @@ object Panels {
                     // Yonetmen + oyuncular: aciklamanin altinda
                     if (credits != null) {
                         val parts = ArrayList<String>()
-                        if (credits.director.isNotEmpty()) parts.add("Yönetmen: " + credits.director)
+                        if (credits.names.isNotEmpty()) {
+                            parts.add(credits.role + ": " + credits.names.joinToString(", "))
+                        }
                         if (credits.cast.isNotEmpty()) {
                             parts.add("Oyuncular: " + credits.cast.take(5).joinToString(", "))
                         }
@@ -732,7 +735,7 @@ object Panels {
         if (!Tmdb.enabled()) return
         for (r in rows.take(24)) {
             Thread {
-                val info = Tmdb.load(r.title) ?: return@Thread
+                val info = Tmdb.load(r.title, Tmdb.looksLikeSeries(r.title)) ?: return@Thread
                 val parts = ArrayList<String>()
                 if (info.year.isNotEmpty()) parts.add(info.year)
                 if (info.rating.isNotEmpty()) parts.add("★ " + info.rating)
