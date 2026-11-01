@@ -62,6 +62,7 @@ object Panels {
         val sites = SiteRepository.cached(app)
         if (sites.isEmpty()) return
         warming = true
+        val run = DiscoverCache.runIndex(app)
         val all = ArrayList<Row>()
         val seen = HashSet<String>()
         val done = AtomicInteger(0)
@@ -69,7 +70,7 @@ object Panels {
             Thread {
                 Scraper.load(s.url, 6000) { page ->
                     synchronized(all) {
-                        for (f in page.films.take(8)) {
+                        for (f in rotated(page.films, run, 10)) {
                             val key = keyOf(f.title)
                             if (key.isEmpty() || !seen.add(key)) continue
                             all.add(Row(f.title, f.url, f.poster, s.name))
@@ -186,7 +187,7 @@ object Panels {
 
     // ---------------------------------------------------------------- Kesfet
     /** Donus: OK'a basili tutulunca cagrilacak islem (listeye ekle). */
-    fun discover(a: Activity, root: View, onOpen: (Row, List<Row>) -> Unit): () -> Unit {
+    fun discover(a: Activity, root: View, onOpen: (Row, List<Row>) -> Unit, onRefresh: () -> Unit): () -> Unit {
         val grid = root.findViewById<GridView>(R.id.grid)
         val empty = root.findViewById<TextView>(R.id.empty)
         val count = root.findViewById<TextView>(R.id.count)
@@ -250,6 +251,7 @@ object Panels {
         }
         fun rebuildChips() {
             chipRow.removeAllViews()
+            chip("↻ " + a.getString(R.string.reload)) { onRefresh() }
             chip(a.getString(R.string.all_sites)) {
                 siteFilter = ""
                 typeFilter = 0
@@ -292,12 +294,13 @@ object Panels {
 
         val sites = SiteRepository.cached(a)
         val done = AtomicInteger(0)
+        val run = DiscoverCache.nextRun(a)
         for (s in sites) {
             Thread {
                 Scraper.load(s.url, 6000) { page ->
                     a.runOnUiThread {
                         var added = 0
-                        for (f in page.films.take(8)) {
+                        for (f in rotated(page.films, run, 10)) {
                             // Ayni film/dizi baska sitede de olabilir: baslik anahtariyla tekille.
                             val key = keyOf(f.title)
                             if (key.isEmpty()) continue
@@ -830,6 +833,20 @@ object Panels {
             }
         }
         return out
+    }
+
+    /** Ayni sitelerden sirayla farkli filmler: her taramada pencere kayar. */
+    private fun rotated(films: List<Scraper.Film>, run: Int, per: Int): List<Scraper.Film> {
+        if (films.size <= per) return films
+        val start = (run * per) % films.size
+        val out = ArrayList<Scraper.Film>(per)
+        for (i in 0 until per) out.add(films[(start + i) % films.size])
+        return out
+    }
+
+    /** Keşfet'i elle yenilemek icin: onbellek ve akis sifirlanir. */
+    fun clearFeed() {
+        feed = emptyList()
     }
 
     /** Benzer film eslesmesi: once tam baslik, sonra kelime ortakligi. */

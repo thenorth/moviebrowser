@@ -10,10 +10,20 @@ object DiscoverCache {
     private const val P = "discover_cache2"
     private const val K = "rows"
     private const val K_TIME = "time"
-    private const val TTL = 10 * 60 * 1000L
+    private const val K_RUN = "run"
+    private const val TTL = 5 * 60 * 1000L
 
     fun isFresh(ctx: Context): Boolean =
         System.currentTimeMillis() - prefs(ctx).getLong(K_TIME, 0L) < TTL
+
+    /** Her taramada artan sayac: sitelerden farkli filmler secilir. */
+    fun runIndex(ctx: Context): Int = prefs(ctx).getInt(K_RUN, 0)
+
+    fun nextRun(ctx: Context): Int {
+        val r = prefs(ctx).getInt(K_RUN, 0)
+        prefs(ctx).edit().putInt(K_RUN, r + 1).apply()
+        return r
+    }
 
     fun load(ctx: Context): List<Panels.Row> {
         val raw = prefs(ctx).getString(K, null) ?: return emptyList()

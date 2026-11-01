@@ -223,7 +223,11 @@ class MainActivity : Activity() {
             }
         }
         panelLongPress = when (name) {
-            "discover" -> Panels.discover(this, root) { row, alt -> openFilm(row, alt) }
+            "discover" -> Panels.discover(this, root, onOpen = { row, alt -> openFilm(row, alt) }, onRefresh = {
+                DiscoverCache.clear(this)
+                Panels.clearFeed()
+                showSection("discover")
+            })
             "watch" -> Panels.watchlist(this, root) { openFilm(it) }
             "recent" -> Panels.recent(this, root) { openFilm(it) }
             "status" -> {
