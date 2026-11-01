@@ -29,10 +29,21 @@
         android:textColor="#B8C2CC"
         android:textSize="13sp" />
 
+    <TextView
+        android:id="@+id/detail_cast"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:ellipsize="end"
+        android:maxLines="2"
+        android:textColor="#8F9BA8"
+        android:textSize="11sp"
+        android:visibility="gone" />
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="18dp"
+        android:layout_marginTop="16dp"
         android:orientation="horizontal">
 
         <ImageView
@@ -70,7 +81,7 @@
                 android:id="@+id/detail_watch"
                 android:layout_width="wrap_content"
                 android:layout_height="46dp"
-                android:layout_marginTop="22dp"
+                android:layout_marginTop="18dp"
                 android:background="@drawable/tool_button_bg"
                 android:clickable="true"
                 android:focusable="true"
@@ -116,40 +127,6 @@
                 android:visibility="gone" />
 
             <TextView
-                android:id="@+id/detail_cast"
-                android:layout_width="wrap_content"
-                android:layout_height="46dp"
-                android:layout_marginTop="12dp"
-                android:background="@drawable/tool_button_bg"
-                android:clickable="true"
-                android:focusable="true"
-                android:gravity="center"
-                android:paddingLeft="28dp"
-                android:paddingRight="28dp"
-                android:text="@string/cast_title"
-                android:textColor="@color/tool_button_text"
-                android:textSize="13sp"
-                android:textStyle="bold"
-                android:visibility="gone" />
-
-            <TextView
-                android:id="@+id/detail_similar"
-                android:layout_width="wrap_content"
-                android:layout_height="46dp"
-                android:layout_marginTop="12dp"
-                android:background="@drawable/tool_button_bg"
-                android:clickable="true"
-                android:focusable="true"
-                android:gravity="center"
-                android:paddingLeft="28dp"
-                android:paddingRight="28dp"
-                android:text="@string/similar_title"
-                android:textColor="@color/tool_button_text"
-                android:textSize="13sp"
-                android:textStyle="bold"
-                android:visibility="gone" />
-
-            <TextView
                 android:id="@+id/detail_sources"
                 android:layout_width="wrap_content"
                 android:layout_height="46dp"
@@ -167,4 +144,30 @@
                 android:visibility="gone" />
         </LinearLayout>
     </LinearLayout>
+
+    <TextView
+        android:id="@+id/detail_similar_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="18dp"
+        android:text="@string/similar_title"
+        android:textColor="@color/text_dim"
+        android:textSize="12sp"
+        android:textStyle="bold"
+        android:visibility="gone" />
+
+    <HorizontalScrollView
+        android:id="@+id/detail_similar_scroll"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:scrollbars="none"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:id="@+id/detail_similar_row"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal" />
+    </HorizontalScrollView>
 </LinearLayout>

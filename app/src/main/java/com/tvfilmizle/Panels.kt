@@ -334,7 +334,7 @@ object Panels {
         // Once TMDB (varsa), yoksa Turkce Vikipedi.
         Thread {
             val tmdb = Tmdb.load(row.title)
-            val cast = if (tmdb != null) Tmdb.credits(tmdb.id) else emptyList()
+            val credits = if (tmdb != null) Tmdb.credits(tmdb.id) else null
             val similar = if (tmdb != null) Tmdb.recommendations(tmdb.id) else emptyList()
             val wiki = if (tmdb == null) FilmInfo.load(row.title) else null
             a.runOnUiThread {
@@ -346,43 +346,19 @@ object Panels {
                     siteView.text = if (tmdb.rating.isEmpty()) row.site else row.site + " · ★ " + tmdb.rating
                     if (tmdb.poster.isNotEmpty()) loadPoster(tmdb.poster)
 
-                    if (cast.isNotEmpty()) {
-                        val btn = root.findViewById<TextView>(R.id.detail_cast)
-                        btn.visibility = View.VISIBLE
-                        btn.setOnClickListener {
-                            AlertDialog.Builder(a)
-                                .setTitle(R.string.cast_title)
-                                .setItems(cast.toTypedArray()) { _, w ->
-                                    open(
-                                        a,
-                                        "https://www.google.com/search?q=" +
-                                            android.net.Uri.encode(cast[w] + " filmleri")
-                                    )
-                                }
-                                .setNegativeButton(android.R.string.cancel, null)
-                                .show()
+                    // Yonetmen + oyuncular: aciklamanin altinda
+                    if (credits != null) {
+                        val parts = ArrayList<String>()
+                        if (credits.director.isNotEmpty()) parts.add("Yönetmen: " + credits.director)
+                        if (credits.cast.isNotEmpty()) {
+                            parts.add("Oyuncular: " + credits.cast.take(5).joinToString(", "))
                         }
+                        val castView = root.findViewById<TextView>(R.id.detail_cast)
+                        castView.text = parts.joinToString("   ·   ")
+                        castView.visibility = View.VISIBLE
                     }
-                    if (similar.isNotEmpty()) {
-                        val btn = root.findViewById<TextView>(R.id.detail_similar)
-                        btn.visibility = View.VISIBLE
-                        btn.setOnClickListener {
-                            val labels = similar.map {
-                                if (it.second.isEmpty()) it.first else it.first + " (" + it.second + ")"
-                            }
-                            AlertDialog.Builder(a)
-                                .setTitle(R.string.similar_title)
-                                .setItems(labels.toTypedArray()) { _, w ->
-                                    open(
-                                        a,
-                                        "https://www.google.com/search?q=" +
-                                            android.net.Uri.encode(similar[w].first + " film izle")
-                                    )
-                                }
-                                .setNegativeButton(android.R.string.cancel, null)
-                                .show()
-                        }
-                    }
+
+                    if (similar.isNotEmpty()) showSimilar(a, root, similar)
                 } else if (!wiki.isNullOrBlank()) {
                     info.text = wiki
                 } else {
@@ -436,6 +412,52 @@ object Panels {
         }
 
         root.findViewById<View>(R.id.detail_watch).requestFocus()
+    }
+
+    /** Benzer filmler: detayin altinda kucuk afis seridi. */
+    private fun showSimilar(a: Activity, root: View, list: List<Tmdb.Similar>) {
+        val row = root.findViewById<LinearLayout>(R.id.detail_similar_row)
+        root.findViewById<View>(R.id.detail_similar_title).visibility = View.VISIBLE
+        root.findViewById<View>(R.id.detail_similar_scroll).visibility = View.VISIBLE
+        row.removeAllViews()
+        val d = a.resources.displayMetrics.density
+        val w = (86 * d).toInt()
+        val h = (124 * d).toInt()
+        for (s in list) {
+            val card = LinearLayout(a)
+            card.orientation = LinearLayout.VERTICAL
+            card.isFocusable = true
+            card.isClickable = true
+            card.layoutParams = LinearLayout.LayoutParams(w, LinearLayout.LayoutParams.WRAP_CONTENT)
+                .apply { rightMargin = (10 * d).toInt() }
+
+            val img = ImageView(a)
+            img.layoutParams = LinearLayout.LayoutParams(w, h)
+            img.scaleType = ImageView.ScaleType.CENTER_CROP
+            img.setBackgroundColor(Color.parseColor("#1A2230"))
+            if (s.poster.isNotEmpty()) {
+                Images.load(a, s.poster) { bmp -> if (bmp != null) img.setImageBitmap(bmp) }
+            }
+            card.addView(img)
+
+            val title = TextView(a)
+            title.text = if (s.year.isEmpty()) s.title else s.title + " (" + s.year + ")"
+            title.textSize = 9.5f
+            title.setTextColor(Color.parseColor("#B8C2CC"))
+            title.maxLines = 2
+            title.ellipsize = android.text.TextUtils.TruncateAt.END
+            title.layoutParams = LinearLayout.LayoutParams(w, LinearLayout.LayoutParams.WRAP_CONTENT)
+                .apply { topMargin = (4 * d).toInt() }
+            card.addView(title)
+
+            card.setOnFocusChangeListener { v, has ->
+                v.setBackgroundResource(if (has) R.drawable.tool_button_bg else 0)
+            }
+            card.setOnClickListener {
+                open(a, "https://www.google.com/search?q=" + android.net.Uri.encode(s.title + " film izle"))
+            }
+            row.addView(card)
+        }
     }
 
     // ---------------------------------------------------------------- Site durumu

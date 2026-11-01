@@ -99,50 +99,66 @@ object Tmdb {
         )
     }
 
-    /** Benzer filmler (baslik, yil). */
-    fun recommendations(id: Int): List<Pair<String, String>> {
+    data class Similar(val title: String, val year: String, val poster: String)
+
+    data class Credits(val director: String, val cast: List<String>)
+
+    /** Benzer filmler (baslik, yil, afis). */
+    fun recommendations(id: Int): List<Similar> {
         val key = apiKey
         if (key.isBlank() || id <= 0) return emptyList()
         val json = get(
             "https://api.themoviedb.org/3/movie/$id/recommendations?api_key=$key&language=tr-TR&page=1"
         ) ?: return emptyList()
         val arr = JSONObject(json).optJSONArray("results") ?: return emptyList()
-        val out = ArrayList<Pair<String, String>>()
+        val out = ArrayList<Similar>()
         for (i in 0 until minOf(arr.length(), 8)) {
             val o = arr.getJSONObject(i)
             val title = o.optString("title").ifBlank { o.optString("original_title") }
             if (title.isBlank()) continue
             val release = o.optString("release_date")
-            out.add(title to if (release.length >= 4) release.substring(0, 4) else "")
+            val posterPath = o.optString("poster_path")
+            out.add(
+                Similar(
+                    title,
+                    if (release.length >= 4) release.substring(0, 4) else "",
+                    if (posterPath.isBlank()) "" else "https://image.tmdb.org/t/p/w200$posterPath"
+                )
+            )
         }
         return out
     }
 
     /** Yonetmen + ilk oyuncular. */
-    fun credits(id: Int): List<String> {
+    fun credits(id: Int): Credits? {
         val key = apiKey
-        if (key.isBlank() || id <= 0) return emptyList()
+        if (key.isBlank() || id <= 0) return null
         val json = get("https://api.themoviedb.org/3/movie/$id/credits?api_key=$key&language=tr-TR")
-            ?: return emptyList()
+            ?: return null
         val root = JSONObject(json)
-        val out = ArrayList<String>()
+        var director = ""
+        val cast = ArrayList<String>()
 
         root.optJSONArray("crew")?.let { crew ->
             for (i in 0 until crew.length()) {
                 val c = crew.getJSONObject(i)
                 if (c.optString("job").equals("Director", true)) {
                     val n = c.optString("name")
-                    if (n.isNotBlank()) out.add(n)
+                    if (n.isNotBlank()) {
+                        director = n
+                        break
+                    }
                 }
             }
         }
-        root.optJSONArray("cast")?.let { cast ->
-            for (i in 0 until minOf(cast.length(), 8)) {
-                val n = cast.getJSONObject(i).optString("name")
-                if (n.isNotBlank()) out.add(n)
+        root.optJSONArray("cast")?.let { list ->
+            for (i in 0 until minOf(list.length(), 8)) {
+                val n = list.getJSONObject(i).optString("name")
+                if (n.isNotBlank()) cast.add(n)
             }
         }
-        return out
+        if (director.isBlank() && cast.isEmpty()) return null
+        return Credits(director, cast)
     }
 
     private fun get(url: String): String? {        val c = URL(url).openConnection() as HttpURLConnection
