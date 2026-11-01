@@ -142,6 +142,32 @@ class MainActivity : Activity() {
         fill(SiteRepository.cached(this))
         refreshList(false)
         checkForUpdate()
+        maybeShowWhatsNew()
+    }
+
+    /** Surum degistiyse (guncelleme sonrasi) yenilikler ekranini bir kez gosterir. */
+    private fun maybeShowWhatsNew() {
+        val version = try {
+            packageManager.getPackageInfo(packageName, 0).versionName ?: ""
+        } catch (e: Exception) {
+            ""
+        }
+        if (version.isEmpty()) return
+        val seen = Prefs.seenVersion(this)
+        if (seen.isEmpty()) {
+            Prefs.setSeenVersion(this, version)
+            return
+        }
+        if (seen == version) return
+        Prefs.setSeenVersion(this, version)
+        handler.postDelayed({
+            if (isFinishing) return@postDelayed
+            AlertDialog.Builder(this)
+                .setTitle(getString(R.string.whats_new) + " · v" + version)
+                .setMessage(R.string.whats_new_body)
+                .setPositiveButton(R.string.whats_new_ok, null)
+                .show()
+        }, 900)
     }
 
     /** Soldaki sabit menu; secilen bolum sagda acilir. */

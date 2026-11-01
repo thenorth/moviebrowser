@@ -81,6 +81,9 @@
     <string name="update_yes">İndir</string>
     <string name="update_later">Sonra</string>
     <string name="update_manual">APK indirildi. Kurmak için bildirimden açın.</string>
+    <string name="whats_new">Yenilikler</string>
+    <string name="whats_new_ok">Tamam</string>
+    <string name="whats_new_body">• Keşfet: TMDB’den yıl ve ★ puan\n• Film/dizi detayında Türkçe özet, oyuncular, benzerler\n• Listem’de arama, Son izlenenlerde “Devam”\n• Site ve tür filtreleri, favori site sırası\n• Tarayıcıda otomatik VPN, uygulama içi güncelleme\n• Dizi bölüm listesi ve daha birçok düzeltme</string>
     <string name="films_loading">Filmler yükleniyor…</string>
     <string name="films_empty">Filmler alınamadı, site tarayıcıda açılıyor…</string>
     <string name="no_results">Sonuç yok.</string>

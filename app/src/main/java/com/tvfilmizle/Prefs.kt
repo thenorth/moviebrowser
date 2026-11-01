@@ -29,6 +29,12 @@ object Prefs {
         get(ctx).edit().putString("notified_version", value).apply()
     }
 
+    fun seenVersion(ctx: Context): String = get(ctx).getString("seen_version", "") ?: ""
+
+    fun setSeenVersion(ctx: Context, value: String) {
+        get(ctx).edit().putString("seen_version", value).apply()
+    }
+
     private fun get(ctx: Context) =
         ctx.applicationContext.getSharedPreferences(P, Context.MODE_PRIVATE)
 }
