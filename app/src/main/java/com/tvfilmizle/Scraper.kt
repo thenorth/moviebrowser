@@ -17,7 +17,7 @@ object Scraper {
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
 
     private const val CATEGORY_RX =
-        "(?i)film|dizi|tür|yıl|yeni|popüler|keşfet|aksiyon|komedi|korku|dram"
+        "(?i)film|dizi|tür|yıl|yeni|eklen|popüler|keşfet|aksiyon|komedi|korku|dram"
 
     fun load(pageUrl: String, timeoutMs: Int = 12000, done: (Page) -> Unit) {
         Thread {
@@ -133,6 +133,7 @@ object Scraper {
     ) {
         if (title.length !in 2..90) return
         if (title.contains("|")) return
+        if (title.contains("afiş", true) || title.contains("afis", true)) return
         if (title.length > 55 && title.contains("izle", true)) return
         if (!href.startsWith("http") || href == pageUrl) return
         try {

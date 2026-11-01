@@ -295,35 +295,54 @@ object Panels {
         val sites = SiteRepository.cached(a)
         val done = AtomicInteger(0)
         val run = DiscoverCache.nextRun(a)
+
+        fun absorb(films: List<Scraper.Film>, siteName: String) {
+            var added = 0
+            for (f in films) {
+                // Ayni film/dizi baska sitede de olabilir: baslik anahtariyla tekille.
+                val key = keyOf(f.title)
+                if (key.isEmpty()) continue
+                val existing = all.firstOrNull { keyOf(it.title) == key }
+                if (existing != null) {
+                    if (existing.site != siteName) {
+                        alts.getOrPut(existing.title) { ArrayList() }
+                            .add(Row(f.title, f.url, f.poster, siteName))
+                    }
+                    continue
+                }
+                all.add(Row(f.title, f.url, f.poster, siteName))
+                added++
+            }
+            if (added > 0) {
+                interleave(all)
+                maybeRefreshChips()
+                rebuild()
+            }
+        }
+
+        fun finishSite() {
+            if (done.incrementAndGet() == sites.size) {
+                enrich(a, all) { rebuild() }
+                DiscoverCache.save(a, all)
+            }
+        }
+
+        val newRx = Regex("(?i)yeni|son eklen|son film|son eklenen")
         for (s in sites) {
             Thread {
                 Scraper.load(s.url, 6000) { page ->
-                    a.runOnUiThread {
-                        var added = 0
-                        for (f in rotated(page.films, run, 10)) {
-                            // Ayni film/dizi baska sitede de olabilir: baslik anahtariyla tekille.
-                            val key = keyOf(f.title)
-                            if (key.isEmpty()) continue
-                            val existing = all.firstOrNull { keyOf(it.title) == key }
-                            if (existing != null) {
-                                if (existing.site != s.name) {
-                                    alts.getOrPut(existing.title) { ArrayList() }
-                                        .add(Row(f.title, f.url, f.poster, s.name))
-                                }
-                                continue
+                    a.runOnUiThread { absorb(rotated(page.films, run, 8), s.name) }
+                    // Ana sayfa + "Yeni Filmler / Son Eklenenler" kategorisi
+                    val cat = page.categories.firstOrNull { newRx.containsMatchIn(it.first) }
+                    if (cat != null) {
+                        Scraper.load(cat.second, 5000) { p2 ->
+                            a.runOnUiThread {
+                                absorb(rotated(p2.films, run, 8), s.name)
+                                finishSite()
                             }
-                            all.add(Row(f.title, f.url, f.poster, s.name))
-                            added++
                         }
-                        if (added > 0) {
-                            interleave(all)
-                            maybeRefreshChips()
-                            rebuild()
-                        }
-                        if (done.incrementAndGet() == sites.size) {
-                            enrich(a, all) { rebuild() }
-                            DiscoverCache.save(a, all)
-                        }
+                    } else {
+                        a.runOnUiThread { finishSite() }
                     }
                 }
             }.start()
