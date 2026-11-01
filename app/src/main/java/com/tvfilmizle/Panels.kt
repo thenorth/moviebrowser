@@ -360,7 +360,7 @@ object Panels {
             }
         }
 
-        // Once TMDB (film/dizi), yoksa Turkce Vikipedi.
+        // Film/dizi bilgisi yalniz TMDB'den.
         Thread {
             val isSeries = Tmdb.looksLikeSeries(row.title, row.url)
             val tmdb = Tmdb.load(row.title, isSeries)
@@ -380,7 +380,6 @@ object Panels {
                     )
                 }
             } else emptyList<Row>()
-            val wiki = if (tmdb == null) FilmInfo.load(row.title) else null
             a.runOnUiThread {
                 if (info.parent == null) return@runOnUiThread
                 if (tmdb != null) {
@@ -409,8 +408,6 @@ object Panels {
                     }
 
                     if (similar.isNotEmpty()) showSimilar(a, root, similar, onOpenSimilar, row.url.isBlank())
-                } else if (!wiki.isNullOrBlank()) {
-                    info.text = wiki
                 } else {
                     info.text = a.getString(R.string.info_none)
                 }

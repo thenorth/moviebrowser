@@ -95,7 +95,7 @@
     <string name="detail_hint">Film bu sitede açılır.</string>
     <string name="no_source_hint">Bu film için doğrudan kaynak yok. Listeden veya Keşfet\'ten arayabilirsin.</string>
     <string name="info_loading">Film bilgisi yükleniyor…</string>
-    <string name="info_none">Bu film için Türkçe özet bulunamadı.</string>
+    <string name="info_none">TMDB\'de bu film/dizi için bilgi bulunamadı.</string>
     <string name="watch_now">İZLE</string>
     <string name="fav_added">Favorilere eklendi</string>
     <string name="fav_removed">Favorilerden çıkarıldı</string>
