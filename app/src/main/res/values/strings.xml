@@ -18,7 +18,7 @@
     <string name="key_back_action">Çık</string>
     <string name="key_hold">OK (BASILI)</string>
     <string name="key_hold_action">Listeme ekle</string>
-    <string name="custom_url">Adres gir</string>
+    <string name="custom_url">Adres ekle</string>
     <string name="custom_url_sub">Başka bir site adresi aç</string>
     <string name="refresh_list">Listeyi güncelle</string>
     <string name="refresh_list_sub">GitHub listesini şimdi çek</string>
@@ -36,7 +36,7 @@
     <string name="options">SEÇENEKLER</string>
     <string name="sites">SİTELER</string>
     <string name="url_hint">Adres</string>
-    <string name="url_note">Örn: sinemerkez.com — https:// yazmana gerek yok.</string>
+    <string name="url_note">Girdiğin adres ana listeye eklenir. Örn: sinemerkez.com</string>
     <string name="player_options">Oynatıcı seçenekleri</string>
     <string name="no_options">Bu sayfada oynatıcı seçeneği bulunamadı</string>
     <string name="cinema_hint">Tam ekrandan çıkmak için GERİ tuşuna basın</string>
@@ -161,4 +161,6 @@
     <string name="status_protected">Korumalı</string>
     <string name="status_error">Hata</string>
     <string name="status_unknown">Test edilmedi</string>
+    <string name="remove_site">Siteyi listeden çıkar</string>
+    <string name="site_removed">Site listeden çıkarıldı</string>
 </resources>

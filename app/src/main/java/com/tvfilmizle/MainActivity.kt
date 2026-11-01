@@ -264,9 +264,7 @@ class MainActivity : Activity() {
                         initial = "https://",
                         note = getString(R.string.url_note),
                         historyKind = SearchHistory.URL
-                    ) { q ->
-                        Panels.open(this, if (q.startsWith("http")) q else "https://$q")
-                    }
+                    ) { q -> addAddressAndOpen(q) }
                 }
                 null
             }
@@ -492,31 +490,49 @@ class MainActivity : Activity() {
         }
     }
 
+    /** Adres ekle: adresi listeye kaydeder ve tarayicida acar. */
+    private fun addAddressAndOpen(raw: String) {
+        val full = if (raw.startsWith("http")) raw else "https://$raw"
+        val host = Scraper.hostOf(full)
+        val name = host.removePrefix("www.").substringBefore(".")
+            .replaceFirstChar { it.uppercase() }
+        UserSites.add(this, name.ifBlank { full }, full)
+        fill(SiteRepository.cached(this))
+        Panels.open(this, full)
+    }
+
     /** Site kartinda OK'a basili tut = favori menusu (ekle/cikar, yukari/asagi tasi). */
     private fun favoriteMenu() {
         val pos = if (grid.selectedItemPosition < 0) 0 else grid.selectedItemPosition
         val site = entries.getOrNull(pos) ?: return
         val fav = Favorites.has(this, site.url)
+        val isUser = UserSites.all(this).any { it.url == site.url }
         val actions = ArrayList<String>()
         actions.add(getString(if (fav) R.string.fav_remove else R.string.fav_add))
         if (fav) {
             actions.add(getString(R.string.move_up))
             actions.add(getString(R.string.move_down))
         }
+        if (isUser) actions.add(getString(R.string.remove_site))
+
         AlertDialog.Builder(this)
             .setTitle(site.name)
             .setItems(actions.toTypedArray()) { _, which ->
-                when {
-                    !fav -> {
+                when (actions[which]) {
+                    getString(R.string.fav_add) -> {
                         Favorites.toggle(this, site.url)
                         Toast.makeText(this, R.string.fav_added, Toast.LENGTH_SHORT).show()
                     }
-                    which == 0 -> {
+                    getString(R.string.fav_remove) -> {
                         Favorites.toggle(this, site.url)
                         Toast.makeText(this, R.string.fav_removed, Toast.LENGTH_SHORT).show()
                     }
-                    which == 1 -> Favorites.move(this, site.url, true)
-                    else -> Favorites.move(this, site.url, false)
+                    getString(R.string.move_up) -> Favorites.move(this, site.url, true)
+                    getString(R.string.move_down) -> Favorites.move(this, site.url, false)
+                    getString(R.string.remove_site) -> {
+                        UserSites.remove(this, site.url)
+                        Toast.makeText(this, R.string.site_removed, Toast.LENGTH_SHORT).show()
+                    }
                 }
                 val list = entries.toList()
                 fill(list)
