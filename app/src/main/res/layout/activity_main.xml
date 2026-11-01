@@ -186,7 +186,7 @@
             android:background="#FA0A0F16"
             android:gravity="center_vertical"
             android:orientation="horizontal"
-            android:paddingLeft="38dp"
+            android:paddingLeft="26dp"
             android:paddingTop="20dp"
             android:paddingRight="38dp"
             android:paddingBottom="18dp">
