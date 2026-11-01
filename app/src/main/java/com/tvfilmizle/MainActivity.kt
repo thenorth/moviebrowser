@@ -218,7 +218,11 @@ class MainActivity : Activity() {
                         )
                     }
                 } else {
-                    Panels.input(this, root, R.string.custom_url, R.string.url_hint, R.string.go) { q ->
+                    Panels.input(
+                        this, root, R.string.custom_url, R.string.url_hint, R.string.go,
+                        initial = "https://",
+                        note = getString(R.string.url_note)
+                    ) { q ->
                         Panels.open(this, if (q.startsWith("http")) q else "https://$q")
                     }
                 }

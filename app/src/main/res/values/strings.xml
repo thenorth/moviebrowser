@@ -35,6 +35,7 @@
     <string name="options">SEÇENEKLER</string>
     <string name="sites">SİTELER</string>
     <string name="url_hint">Adres</string>
+    <string name="url_note">Örn: sinemerkez.com — https:// yazmana gerek yok.</string>
     <string name="player_options">Oynatıcı seçenekleri</string>
     <string name="no_options">Bu sayfada oynatıcı seçeneği bulunamadı</string>
     <string name="cinema_hint">Tam ekrandan çıkmak için GERİ tuşuna basın</string>

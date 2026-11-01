@@ -553,16 +553,28 @@ object Panels {
         titleRes: Int,
         hintRes: Int,
         actionRes: Int,
+        initial: String = "",
+        note: String = "",
         onSubmit: (String) -> Unit
     ) {
         root.findViewById<TextView>(R.id.title).text = a.getString(titleRes)
         val input = root.findViewById<EditText>(R.id.input)
         input.hint = a.getString(hintRes)
+        if (initial.isNotEmpty()) {
+            input.setText(initial)
+            input.setSelection(initial.length)
+        }
+        val noteView = root.findViewById<TextView>(R.id.input_note)
+        if (note.isNotEmpty()) {
+            noteView.text = note
+            noteView.visibility = View.VISIBLE
+        }
         val action = root.findViewById<TextView>(R.id.action)
         action.setText(actionRes)
         val submit = {
             val q = input.text.toString().trim()
-            if (q.isNotEmpty()) onSubmit(q)
+            // Sadece "https://" yaziliysa gonderilmesin
+            if (q.isNotEmpty() && q != "https://" && q != "http://") onSubmit(q)
         }
         action.setOnClickListener { submit() }
         input.setOnEditorActionListener { _, _, _ ->
