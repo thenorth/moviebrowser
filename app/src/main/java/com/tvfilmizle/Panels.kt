@@ -38,7 +38,8 @@ object Panels {
         val poster: String,
         val site: String,
         val meta: String = "",
-        val isSeries: Boolean = false
+        val isSeries: Boolean = false,
+        val fresh: Boolean = false
     )
 
     private var vpnToggle: Switch? = null
@@ -186,6 +187,40 @@ object Panels {
         }
     }
 
+    // ------------------------------------------------------------ Takip edilen diziler
+    fun series(a: Activity, root: View, onOpen: (Row) -> Unit): () -> Unit {
+        root.findViewById<TextView>(R.id.panel_title)?.text = a.getString(R.string.series_panel)
+        val grid = root.findViewById<GridView>(R.id.list)
+        val empty = root.findViewById<TextView>(R.id.empty)
+        val count = root.findViewById<TextView>(R.id.count)
+        val rows = ArrayList<Row>()
+        val adapter = PanelFilmAdapter(a, rows)
+        grid.adapter = adapter
+        grid.setOnItemClickListener { _, _, pos, _ -> rows.getOrNull(pos)?.let { onOpen(it) } }
+
+        fun reload() {
+            rows.clear()
+            History.followed(a).forEach {
+                rows.add(Row(it.title, it.url, it.poster, a.getString(R.string.series_last) + ": " + it.label))
+            }
+            adapter.notifyDataSetChanged()
+            count.text = rows.size.toString() + " dizi"
+            empty.text = a.getString(R.string.series_empty)
+            empty.visibility = if (rows.isEmpty()) View.VISIBLE else View.GONE
+        }
+        reload()
+
+        return {
+            val pos = grid.selectedItemPosition
+            val item = rows.getOrNull(if (pos < 0) 0 else pos)
+            if (item != null) {
+                History.unfollow(a, keyOf(item.title))
+                Toast.makeText(a, R.string.unfollowed, Toast.LENGTH_SHORT).show()
+                reload()
+            }
+        }
+    }
+
     // ---------------------------------------------------------------- Kesfet
     /** Donus: OK'a basili tutulunca cagrilacak islem (listeye ekle). */
     fun discover(a: Activity, root: View, onOpen: (Row, List<Row>) -> Unit, onRefresh: () -> Unit): () -> Unit {
@@ -197,6 +232,7 @@ object Panels {
         val shown = ArrayList<Row>()
         var siteFilter = ""
         var typeFilter = 0 // 0: hepsi, 1: film, 2: dizi
+        var freshOnly = false
         val alts = HashMap<String, MutableList<Row>>()
         val adapter = PanelFilmAdapter(a, shown)
         grid.adapter = adapter
@@ -209,6 +245,7 @@ object Panels {
             shown.clear()
             for (r in all) {
                 if (siteFilter.isNotEmpty() && !r.site.equals(siteFilter, true)) continue
+                if (freshOnly && !r.fresh) continue
                 val series = r.isSeries || Regex("(?i)bölüm|bolum|sezon|dizi").containsMatchIn(r.title)
                 if (typeFilter == 1 && series) continue
                 if (typeFilter == 2 && !series) continue
@@ -266,6 +303,13 @@ object Panels {
             chip(a.getString(R.string.series_filter)) {
                 siteFilter = ""
                 typeFilter = 2
+                freshOnly = false
+                rebuild()
+            }
+            chip(a.getString(R.string.today_filter)) {
+                siteFilter = ""
+                typeFilter = 0
+                freshOnly = true
                 rebuild()
             }
             val names = all.map { it.site }.distinct()
@@ -297,7 +341,7 @@ object Panels {
         val done = AtomicInteger(0)
         val run = DiscoverCache.nextRun(a)
 
-        fun absorb(films: List<Scraper.Film>, siteName: String, series: Boolean = false) {
+        fun absorb(films: List<Scraper.Film>, siteName: String, series: Boolean = false, fresh: Boolean = false) {
             var added = 0
             for (f in films) {
                 // Ayni film/dizi baska sitede de olabilir: baslik anahtariyla tekille.
@@ -307,11 +351,11 @@ object Panels {
                 if (existing != null) {
                     if (existing.site != siteName) {
                         alts.getOrPut(existing.title) { ArrayList() }
-                            .add(Row(f.title, f.url, f.poster, siteName, isSeries = series))
+                            .add(Row(f.title, f.url, f.poster, siteName, isSeries = series, fresh = fresh))
                     }
                     continue
                 }
-                all.add(Row(f.title, f.url, f.poster, siteName, isSeries = series))
+                all.add(Row(f.title, f.url, f.poster, siteName, isSeries = series, fresh = fresh))
                 added++
             }
             if (added > 0) {
@@ -338,10 +382,10 @@ object Panels {
                     val others = page.categories.filter { it != newCat && it != diziCat }
                     val extraCat = if (others.isNotEmpty()) others[run % others.size] else null
 
-                    val jobs = ArrayList<Pair<String, Boolean>>() // url, series
-                    newCat?.let { jobs.add(it.second to false) }
-                    diziCat?.let { jobs.add(it.second to true) }
-                    extraCat?.let { jobs.add(it.second to false) }
+                    val jobs = ArrayList<Triple<String, Boolean, Boolean>>() // url, series, fresh
+                    newCat?.let { jobs.add(Triple(it.second, false, true)) }
+                    diziCat?.let { jobs.add(Triple(it.second, true, false)) }
+                    extraCat?.let { jobs.add(Triple(it.second, false, false)) }
 
                     if (jobs.isEmpty()) {
                         a.runOnUiThread { finishSite() }
@@ -351,7 +395,7 @@ object Panels {
                     for (j in jobs) {
                         Scraper.load(j.first, 5000) { p2 ->
                             a.runOnUiThread {
-                                absorb(rotated(p2.films, run, 6), s.name, j.second)
+                                absorb(rotated(p2.films, run, 6), s.name, j.second, j.third)
                                 if (left.decrementAndGet() == 0) finishSite()
                             }
                         }
@@ -511,6 +555,7 @@ object Panels {
                                 val (label, url) = list[w]
                                 History.add(a, label, url, row.poster, row.site)
                                 History.setLastEpisode(a, seriesKey, label)
+                                History.follow(a, seriesKey, row.title, row.url, row.poster, row.site, label)
                                 open(a, url)
                             }
                             .setNegativeButton(android.R.string.cancel, null)
@@ -526,6 +571,7 @@ object Panels {
                         nextBtn.setOnClickListener {
                             History.add(a, next.first, next.second, row.poster, row.site)
                             History.setLastEpisode(a, seriesKey, next.first)
+                            History.follow(a, seriesKey, row.title, row.url, row.poster, row.site, next.first)
                             open(a, next.second)
                         }
                     }
@@ -669,7 +715,7 @@ object Panels {
     }
 
     // ---------------------------------------------------------------- Ayarlar
-    fun settings(a: Activity, root: View, onUpdate: (TextView) -> Unit = {}) {
+    fun settings(a: Activity, root: View, onUpdate: (TextView) -> Unit = {}, onAddSite: () -> Unit = {}) {
         vpnToggle = root.findViewById(R.id.vpn_switch)
         vpnStatus = root.findViewById(R.id.vpn_status)
         val toggle = vpnToggle ?: return
@@ -697,6 +743,7 @@ object Panels {
 
         val updateValue = root.findViewById<TextView>(R.id.update_value)
         root.findViewById<View>(R.id.update_row).setOnClickListener { onUpdate(updateValue) }
+        root.findViewById<View>(R.id.add_site_row).setOnClickListener { onAddSite() }
 
         val version = try {
             a.packageManager.getPackageInfo(a.packageName, 0).versionName ?: ""

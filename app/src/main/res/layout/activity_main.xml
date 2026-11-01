@@ -74,6 +74,20 @@
         </LinearLayout>
 
         <LinearLayout
+            android:id="@+id/side_series"
+            style="@style/SideItem">
+
+            <ImageView
+                style="@style/SideIcon"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_series" />
+
+            <TextView
+                style="@style/SideLabel"
+                android:text="@string/series_panel" />
+        </LinearLayout>
+
+        <LinearLayout
             android:id="@+id/side_search"
             style="@style/SideItem">
 

@@ -24,6 +24,7 @@ import android.view.WindowManager
 import android.view.animation.LinearInterpolator
 import android.widget.AdapterView
 import android.widget.BaseAdapter
+import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.GridView
 import android.widget.ImageView
@@ -178,6 +179,7 @@ class MainActivity : Activity() {
         sideRow(R.id.side_discover) { showSection("discover") }
         sideRow(R.id.side_watchlist) { showSection("watch") }
         sideRow(R.id.side_recent) { showSection("recent") }
+        sideRow(R.id.side_series) { showSection("series") }
         sideRow(R.id.side_status) { showSection("status") }
         sideRow(R.id.side_url) { showSection("url") }
         sideRow(R.id.side_refresh) { refreshList(true) }
@@ -193,7 +195,7 @@ class MainActivity : Activity() {
         panelLongPress = null
         val layout = when (name) {
             "discover" -> R.layout.activity_discover
-            "watch", "recent" -> R.layout.activity_watchlist
+            "watch", "recent", "series" -> R.layout.activity_watchlist
             "status" -> R.layout.activity_status
             "settings" -> R.layout.activity_settings
             "detail" -> R.layout.panel_detail
@@ -205,7 +207,7 @@ class MainActivity : Activity() {
         val d = resources.displayMetrics.density
         val list = when (name) {
             "discover" -> root.findViewById<View>(R.id.grid)
-            "status", "watch", "recent" -> root.findViewById<View>(R.id.list)
+            "status", "watch", "recent", "series" -> root.findViewById<View>(R.id.list)
             else -> null
         }
         val topDp = when (name) {
@@ -216,7 +218,7 @@ class MainActivity : Activity() {
         list?.setPadding((38 * d).toInt(), (topDp * d).toInt(), (38 * d).toInt(), (80 * d).toInt())
         // Panelde geri dugmesi ve alt ipucu seridi gereksiz.
         root.findViewById<View>(R.id.btn_back)?.visibility = View.GONE
-        if (name == "discover" || name == "watch" || name == "recent") {
+        if (name == "discover" || name == "watch" || name == "recent" || name == "series") {
             (root as? ViewGroup)?.let {
                 val last = it.getChildAt(it.childCount - 1)
                 if (last is LinearLayout) last.visibility = View.GONE
@@ -230,12 +232,15 @@ class MainActivity : Activity() {
             })
             "watch" -> Panels.watchlist(this, root) { openFilm(it) }
             "recent" -> Panels.recent(this, root) { openFilm(it) }
+            "series" -> Panels.series(this, root) { openFilm(it) }
             "status" -> {
                 Panels.status(this, root)
                 null
             }
             "settings" -> {
-                Panels.settings(this, root) { v -> checkUpdateManually(v) }
+                Panels.settings(this, root, onUpdate = { v -> checkUpdateManually(v) }, onAddSite = {
+                    showAddSiteDialog()
+                })
                 null
             }
             "detail" -> {
@@ -272,6 +277,7 @@ class MainActivity : Activity() {
             "discover" -> R.id.side_discover
             "watch" -> R.id.side_watchlist
             "recent" -> R.id.side_recent
+            "series" -> R.id.side_series
             "search" -> R.id.side_search
             "url" -> R.id.side_url
             "status" -> R.id.side_status
@@ -629,6 +635,41 @@ class MainActivity : Activity() {
                 else if (!page.isNullOrEmpty()) open(page)
             }
         }
+    }
+
+    /** Ayarlar > Site ekle. */
+    private fun showAddSiteDialog() {
+        val name = EditText(this).apply {
+            hint = getString(R.string.add_site_name)
+            setSingleLine()
+            setPadding(40, 24, 40, 24)
+        }
+        val url = EditText(this).apply {
+            hint = getString(R.string.add_site_url)
+            setSingleLine()
+            setPadding(40, 24, 40, 24)
+        }
+        val box = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(40, 16, 40, 0)
+            addView(name)
+            addView(url)
+        }
+        AlertDialog.Builder(this)
+            .setTitle(R.string.add_site_title)
+            .setView(box)
+            .setPositiveButton(R.string.go) { _, _ ->
+                val raw = url.text.toString().trim()
+                if (raw.isEmpty()) return@setPositiveButton
+                val full = if (raw.startsWith("http")) raw else "https://$raw"
+                val n = name.text.toString().trim()
+                    .ifEmpty { Scraper.hostOf(full).ifEmpty { full } }
+                UserSites.add(this, n, full)
+                fill(SiteRepository.cached(this))
+                Toast.makeText(this, R.string.add_site_added, Toast.LENGTH_SHORT).show()
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
     }
 
     /** APK'yi indirir; bitince kurulum ekranini acar. */

@@ -52,6 +52,86 @@ object History {
         prefs(ctx).edit().putString("series_" + seriesKey, label).apply()
     }
 
+    // ------------------------------------------------------------ takip edilen diziler
+    data class Follow(
+        val key: String,
+        val title: String,
+        val url: String,
+        val poster: String,
+        val site: String,
+        val label: String
+    )
+
+    fun followed(ctx: Context): List<Follow> {
+        val raw = prefs(ctx).getString("followed", null) ?: return emptyList()
+        val out = ArrayList<Follow>()
+        try {
+            val arr = JSONArray(raw)
+            for (i in 0 until arr.length()) {
+                val o = arr.getJSONObject(i)
+                out.add(
+                    Follow(
+                        o.optString("key"),
+                        o.optString("title"),
+                        o.optString("url"),
+                        o.optString("poster"),
+                        o.optString("site"),
+                        o.optString("label")
+                    )
+                )
+            }
+        } catch (e: Exception) {
+            // bozuk kayit
+        }
+        return out
+    }
+
+    /** Dizi takibine ekler/gunceller (en son izlenen bolum etiketiyle). */
+    fun follow(
+        ctx: Context,
+        key: String,
+        title: String,
+        url: String,
+        poster: String?,
+        site: String,
+        label: String
+    ) {
+        if (key.isBlank()) return
+        val list = followed(ctx).filterNot { it.key == key }.toMutableList()
+        list.add(0, Follow(key, title, url, poster ?: "", site, label))
+        while (list.size > 30) list.removeAt(list.size - 1)
+        val arr = JSONArray()
+        list.forEach {
+            arr.put(
+                JSONObject()
+                    .put("key", it.key)
+                    .put("title", it.title)
+                    .put("url", it.url)
+                    .put("poster", it.poster)
+                    .put("site", it.site)
+                    .put("label", it.label)
+            )
+        }
+        prefs(ctx).edit().putString("followed", arr.toString()).apply()
+    }
+
+    fun unfollow(ctx: Context, key: String) {
+        val list = followed(ctx).filterNot { it.key == key }
+        val arr = JSONArray()
+        list.forEach {
+            arr.put(
+                JSONObject()
+                    .put("key", it.key)
+                    .put("title", it.title)
+                    .put("url", it.url)
+                    .put("poster", it.poster)
+                    .put("site", it.site)
+                    .put("label", it.label)
+            )
+        }
+        prefs(ctx).edit().putString("followed", arr.toString()).apply()
+    }
+
     private fun save(ctx: Context, items: List<Item>) {
         val arr = JSONArray()
         items.forEach {

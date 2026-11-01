@@ -45,6 +45,23 @@
         <item name="android:textSize">11sp</item>
     </style>
 
+    <style name="ToolKey">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">38dp</item>
+        <item name="android:layout_marginEnd">4dp</item>
+        <item name="android:background">@drawable/toolbar_key_bg</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+        <item name="android:gravity">center</item>
+        <item name="android:letterSpacing">0.06</item>
+        <item name="android:paddingLeft">10dp</item>
+        <item name="android:paddingRight">10dp</item>
+        <item name="android:singleLine">true</item>
+        <item name="android:textColor">@color/tool_button_text</item>
+        <item name="android:textSize">9sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
     <style name="ToolButton">
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">38dp</item>
@@ -64,7 +81,7 @@
     <!-- Soldaki sabit menu satiri -->
     <style name="SideItem">
         <item name="android:layout_width">match_parent</item>
-        <item name="android:layout_height">44dp</item>
+        <item name="android:layout_height">40dp</item>
         <item name="android:layout_marginBottom">4dp</item>
         <item name="android:background">@drawable/tool_button_bg</item>
         <item name="android:clickable">true</item>

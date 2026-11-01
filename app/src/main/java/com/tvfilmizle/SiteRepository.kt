@@ -29,7 +29,11 @@ object SiteRepository {
 
     private fun prefs(ctx: Context) = ctx.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
 
-    fun cached(ctx: Context): List<Site> = parse(prefs(ctx).getString(K_JSON, null)) ?: Sites.DEFAULT
+    fun cached(ctx: Context): List<Site> {
+        val remote = parse(prefs(ctx).getString(K_JSON, null)) ?: Sites.DEFAULT
+        val mine = UserSites.all(ctx).map { Site(it.name, it.url) }
+        return (mine + remote).distinctBy { it.url }
+    }
 
     fun lastUpdate(ctx: Context): Long = prefs(ctx).getLong(K_TIME, 0L)
 

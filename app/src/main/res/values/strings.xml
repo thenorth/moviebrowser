@@ -29,7 +29,8 @@
     <string name="go">Git</string>
     <string name="back">GERİ</string>
     <string name="reload">YENİLE</string>
-    <string name="home">ANA SAYFA</string>
+    <string name="home">SAYFA BAŞI</string>
+    <string name="app_home">ANA MENÜ</string>
     <string name="play">OYNAT</string>
     <string name="fullscreen">TAM EKRAN</string>
     <string name="options">SEÇENEKLER</string>
@@ -81,7 +82,15 @@
     <string name="update_yes">İndir</string>
     <string name="update_later">Sonra</string>
     <string name="update_check_title">Uygulamayı güncelle</string>
-    <string name="update_check_desc">GitHub\'dan yeni sürümü indir ve kur</string>
+    <string name="add_site_title">Site ekle</string>
+    <string name="add_site_desc">Kendi film/dizi sitenizi listeye ekleyin</string>
+    <string name="add_site_name">Site adı</string>
+    <string name="add_site_url">https://ornek.com</string>
+    <string name="add_site_added">Site eklendi</string>
+    <string name="series_panel">Dizilerim</string>
+    <string name="series_empty">Takip ettiğin dizi yok.\nBir dizinin bölümünü açınca buraya eklenir.</string>
+    <string name="series_last">Kaldığın</string>
+    <string name="unfollowed">Takibi bıraktın</string>    <string name="update_check_desc">GitHub\'dan yeni sürümü indir ve kur</string>
     <string name="update_check">Kontrol et</string>
     <string name="update_checking">Kontrol ediliyor…</string>
     <string name="update_check_failed">Güncelleme kontrol edilemedi</string>
@@ -117,6 +126,7 @@
     <string name="all_sites">Tümü</string>
     <string name="films_filter">Filmler</string>
     <string name="series_filter">Diziler</string>
+    <string name="today_filter">Bugün</string>
     <string name="episodes">Bölümler</string>
     <string name="next_episode">Sıradaki bölüm</string>
     <string name="open_external">Harici oynatıcıda aç</string>

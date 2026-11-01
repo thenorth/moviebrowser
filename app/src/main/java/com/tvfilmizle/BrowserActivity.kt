@@ -128,6 +128,7 @@ class BrowserActivity : Activity() {
     }
 
     private fun bindButtons() {
+        findViewById<View>(R.id.btn_app_home).setOnClickListener { finish() }
         findViewById<View>(R.id.btn_back).setOnClickListener { if (!goBackInWeb()) finish() }
         findViewById<View>(R.id.btn_reload).setOnClickListener { active?.reload() }
         findViewById<View>(R.id.btn_home).setOnClickListener { active?.loadUrl(homeUrl) }
@@ -225,6 +226,16 @@ class BrowserActivity : Activity() {
                 autoStarted = false
                 uaRetried = false
                 toolbar.visibility = View.VISIBLE
+                // Daha once bu sitede VPN acildiysa otomatik baglan.
+                val host = try { android.net.Uri.parse(url).host } catch (e: Exception) { null }
+                if (host != null && VpnHosts.has(this@BrowserActivity, host) &&
+                    !Warp.connected && autoVpnHosts.add(host)
+                ) {
+                    Toast.makeText(this@BrowserActivity, R.string.vpn_auto, Toast.LENGTH_SHORT).show()
+                    Warp.connect(this@BrowserActivity) { ok, _ ->
+                        runOnUiThread { if (ok) view.loadUrl(url) }
+                    }
+                }
             }
         }
 
@@ -390,6 +401,8 @@ class BrowserActivity : Activity() {
     }
 
     private fun enableVpnThenReload(url: String) {
+        // Bu site icin VPN'i hatirla: sonraki acilista otomatik baglanir.
+        android.net.Uri.parse(url).host?.let { VpnHosts.add(this, it) }
         pendingReloadUrl = url
         val prep = VpnService.prepare(this)
         if (prep != null) {

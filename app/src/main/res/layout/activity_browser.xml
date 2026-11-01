@@ -37,46 +37,51 @@
         android:paddingBottom="8dp">
 
         <TextView
+            android:id="@+id/btn_app_home"
+            style="@style/ToolKey"
+            android:text="@string/app_home" />
+
+        <TextView
             android:id="@+id/btn_back"
-            style="@style/ToolButton"
+            style="@style/ToolKey"
             android:text="@string/back" />
 
         <TextView
             android:id="@+id/btn_reload"
-            style="@style/ToolButton"
+            style="@style/ToolKey"
             android:text="@string/reload" />
 
         <TextView
             android:id="@+id/btn_home"
-            style="@style/ToolButton"
+            style="@style/ToolKey"
             android:text="@string/home" />
 
         <TextView
             android:id="@+id/btn_play"
-            style="@style/ToolButton"
+            style="@style/ToolKey"
             android:text="@string/play" />
 
         <TextView
             android:id="@+id/btn_full"
-            style="@style/ToolButton"
+            style="@style/ToolKey"
             android:text="@string/fullscreen" />
 
         <TextView
             android:id="@+id/btn_options"
-            style="@style/ToolButton"
+            style="@style/ToolKey"
             android:text="@string/options" />
 
         <TextView
             android:id="@+id/btn_sites"
-            style="@style/ToolButton"
+            style="@style/ToolKey"
             android:text="@string/sites" />
 
         <EditText
             android:id="@+id/url_bar"
-            android:layout_width="0dp"
+            android:layout_width="320dp"
             android:layout_height="38dp"
+            android:layout_marginStart="6dp"
             android:layout_marginEnd="6dp"
-            android:layout_weight="1"
             android:background="@drawable/url_bg"
             android:hint="@string/url_hint"
             android:imeOptions="actionGo"
@@ -91,7 +96,7 @@
 
         <TextView
             android:id="@+id/btn_go"
-            style="@style/ToolButton"
+            style="@style/ToolKey"
             android:text="@string/go" />
 
     </LinearLayout>
