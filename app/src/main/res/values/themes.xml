@@ -47,15 +47,16 @@
 
     <style name="ToolKey">
         <item name="android:layout_width">wrap_content</item>
-        <item name="android:layout_height">38dp</item>
-        <item name="android:layout_marginEnd">4dp</item>
+        <item name="android:layout_height">40dp</item>
+        <item name="android:layout_marginEnd">5dp</item>
         <item name="android:background">@drawable/toolbar_key_bg</item>
         <item name="android:clickable">true</item>
+        <item name="android:drawablePadding">7dp</item>
         <item name="android:focusable">true</item>
         <item name="android:gravity">center</item>
         <item name="android:letterSpacing">0.06</item>
-        <item name="android:paddingLeft">10dp</item>
-        <item name="android:paddingRight">10dp</item>
+        <item name="android:paddingLeft">12dp</item>
+        <item name="android:paddingRight">13dp</item>
         <item name="android:singleLine">true</item>
         <item name="android:textColor">@color/tool_button_text</item>
         <item name="android:textSize">9sp</item>
