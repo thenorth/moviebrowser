@@ -1,6 +1,6 @@
 {
-  "version": 5,
-  "updated": "2026-10-30",
+  "version": 6,
+  "updated": "2026-11-01",
   "sites": [
     {
       "name": "HD Film Cehennemi",
@@ -61,6 +61,18 @@
     {
       "name": "Film Kovası",
       "url": "https://profilmizle.com/"
+    },
+    {
+      "name": "FullFilmizle",
+      "url": "https://fullfilmizlede.com/"
+    },
+    {
+      "name": "FilmPerdesi",
+      "url": "https://filmperdesi.org/"
+    },
+    {
+      "name": "DiziVibe",
+      "url": "https://dizivibe.com/"
     }
   ]
 }
