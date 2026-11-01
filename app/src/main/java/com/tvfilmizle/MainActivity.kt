@@ -237,7 +237,12 @@ class MainActivity : Activity() {
                 null
             }
             "settings" -> {
-                Panels.settings(this, root, onUpdate = { v -> checkUpdateManually(v) })
+                Panels.settings(
+                    this, root,
+                    onUpdate = { v -> checkUpdateManually(v) },
+                    onBackup = { Backup.save(this) },
+                    onRestore = { Backup.load(this) }
+                )
                 null
             }
             "detail" -> {
@@ -460,6 +465,7 @@ class MainActivity : Activity() {
         super.onResume()
         SleepTimer.attach(this)
         handler.post(tick)
+        updateResumeChip()
         // Listem tarayicidan donuste tazelensin.
         if (section == "watch") {
             showSection("watch")
@@ -469,9 +475,45 @@ class MainActivity : Activity() {
         if (!refreshing && age > 5 * 60 * 1000L) refreshList(false)
     }
 
+    /** Ust banttaki "Devam et" kisayolu: en son izlenen film/dizi. */
+    private fun updateResumeChip() {
+        val chip = findViewById<TextView>(R.id.btn_resume)
+        val last = History.all(this).firstOrNull()
+        if (last == null) {
+            chip.visibility = View.GONE
+            return
+        }
+        chip.text = getString(R.string.resume_chip, last.title)
+        chip.visibility = View.VISIBLE
+        chip.setOnClickListener {
+            chip.visibility = View.GONE
+            openFilm(Panels.Row(last.title, last.url, last.poster, last.site))
+        }
+    }
+
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         Panels.vpnResult(this, requestCode, resultCode)
+        val uri = data?.data
+        when (requestCode) {
+            Backup.REQ_SAVE -> if (resultCode == RESULT_OK && uri != null) {
+                val ok = Backup.write(this, uri)
+                Toast.makeText(
+                    this,
+                    if (ok) R.string.backup_done else R.string.backup_failed,
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+            Backup.REQ_LOAD -> if (resultCode == RESULT_OK && uri != null) {
+                val ok = Backup.read(this, uri)
+                Toast.makeText(
+                    this,
+                    if (ok) R.string.restore_done else R.string.backup_failed,
+                    Toast.LENGTH_SHORT
+                ).show()
+                if (ok) recreate()
+            }
+        }
     }
 
     override fun onPause() {

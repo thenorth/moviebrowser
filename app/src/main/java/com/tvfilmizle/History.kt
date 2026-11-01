@@ -52,6 +52,29 @@ object History {
         prefs(ctx).edit().putString("series_" + seriesKey, label).apply()
     }
 
+    /** Dizinin sitede gorulen en ust bolumu (yeni bolum kontrolu icin). */
+    fun newestSeen(ctx: Context, seriesKey: String): String? =
+        prefs(ctx).getString("newest_" + seriesKey, null)
+
+    fun setNewestSeen(ctx: Context, seriesKey: String, label: String) {
+        prefs(ctx).edit().putString("newest_" + seriesKey, label).apply()
+    }
+
+    /** "YENI" rozeti: dizi acilinca temizlenir. */
+    fun hasNew(ctx: Context, seriesKey: String): Boolean =
+        try { prefs(ctx).getBoolean("new_" + seriesKey, false) } catch (e: ClassCastException) { false }
+
+    fun setHasNew(ctx: Context, seriesKey: String, on: Boolean) {
+        prefs(ctx).edit().putBoolean("new_" + seriesKey, on).apply()
+    }
+
+    /** Yeni bolum kontrolu en son ne zaman yapildi. */
+    fun checkedAt(ctx: Context): Long = try { prefs(ctx).getLong("new_checked", 0L) } catch (e: ClassCastException) { 0L }
+
+    fun setCheckedAt(ctx: Context, time: Long) {
+        prefs(ctx).edit().putLong("new_checked", time).apply()
+    }
+
     // ------------------------------------------------------------ takip edilen diziler
     data class Follow(
         val key: String,

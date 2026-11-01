@@ -223,6 +223,27 @@
                 android:textSize="23sp"
                 android:textStyle="bold" />
 
+            <TextView
+                android:id="@+id/btn_resume"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:layout_marginStart="26dp"
+                android:background="@drawable/toolbar_key_bg"
+                android:clickable="true"
+                android:drawablePadding="7dp"
+                android:drawableStart="@drawable/ic_tb_play"
+                android:ellipsize="end"
+                android:focusable="true"
+                android:gravity="center"
+                android:maxWidth="460dp"
+                android:paddingLeft="14dp"
+                android:paddingRight="16dp"
+                android:singleLine="true"
+                android:textColor="@color/tool_button_text"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:visibility="gone" />
+
             <View
                 android:layout_width="0dp"
                 android:layout_height="1dp"

@@ -64,6 +64,7 @@ class BrowserActivity : Activity() {
 
     private val children = mutableListOf<WebView>()
     private var active: WebView? = null
+    private var advanced = false
     private var customView: View? = null
     private var customCallback: WebChromeClient.CustomViewCallback? = null
     private var homeUrl = ""
@@ -93,6 +94,25 @@ class BrowserActivity : Activity() {
                 if (Prefs.autoFullscreen(this@BrowserActivity) && !fsActive) enterFullscreen()
             }
         }
+
+        @JavascriptInterface
+        fun videoEnded() {
+            runOnUiThread { playNextEpisode() }
+        }
+    }
+
+    /** Bolum bittiyse siradaki bolume gec (bolum listesi biliniyorsa). */
+    private fun playNextEpisode() {
+        if (advanced) return
+        val n = AutoNext.pending ?: return
+        advanced = true
+        History.add(this, n.label, n.url, n.poster, n.site)
+        History.setLastEpisode(this, n.seriesKey, n.label)
+        History.follow(this, n.seriesKey, n.seriesTitle, n.seriesUrl, n.poster, n.site, n.label)
+        History.setHasNew(this, n.seriesKey, false)
+        AutoNext.pending = Panels.autoNextFor(n.url)
+        Toast.makeText(this, n.label, Toast.LENGTH_SHORT).show()
+        (active ?: web).loadUrl(n.url)
     }
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -225,6 +245,7 @@ class BrowserActivity : Activity() {
                 fsActive = false
                 autoStarted = false
                 uaRetried = false
+                advanced = false
                 toolbar.visibility = View.VISIBLE
                 // Daha once bu sitede VPN acildiysa otomatik baglan.
                 val host = try { android.net.Uri.parse(url).host } catch (e: Exception) { null }

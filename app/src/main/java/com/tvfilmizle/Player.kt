@@ -163,6 +163,12 @@ object Player {
         if (v.getAttribute('data-tvhooked')) continue;
         v.setAttribute('data-tvhooked', '1');
         v.addEventListener('playing', notify);
+        v.addEventListener('ended', function(){
+          try {
+            var b = window.tvBridge || (window.parent && window.parent.tvBridge);
+            if (b && b.videoEnded) b.videoEnded();
+          } catch (e) {}
+        });
       }
     } catch (e) {}
   }

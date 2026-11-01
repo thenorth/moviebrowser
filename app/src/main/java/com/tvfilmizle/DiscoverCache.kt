@@ -11,6 +11,7 @@ object DiscoverCache {
     private const val K = "rows"
     private const val K_TIME = "time"
     private const val K_RUN = "run"
+    private const val K_GENRES = "genres"
     private const val TTL = 5 * 60 * 1000L
 
     fun isFresh(ctx: Context): Boolean =
@@ -66,6 +67,43 @@ object DiscoverCache {
         }
         prefs(ctx).edit().putString(K, arr.toString())
             .putLong(K_TIME, System.currentTimeMillis()).apply()
+    }
+
+    /** Tur cipleri: kategori adi -> (site adi, kategori adresi). */
+    fun loadGenres(ctx: Context): LinkedHashMap<String, MutableList<Pair<String, String>>> {
+        val out = LinkedHashMap<String, MutableList<Pair<String, String>>>()
+        val raw = prefs(ctx).getString(K_GENRES, null) ?: return out
+        try {
+            val o = JSONObject(raw)
+            val genres = o.keys()
+            while (genres.hasNext()) {
+                val g = genres.next()
+                val arr = o.optJSONArray(g) ?: continue
+                val list = ArrayList<Pair<String, String>>()
+                for (i in 0 until arr.length()) {
+                    val e = arr.optJSONObject(i) ?: continue
+                    val site = e.optString("site")
+                    val url = e.optString("url")
+                    if (site.isNotEmpty() && url.isNotEmpty()) list.add(site to url)
+                }
+                if (list.isNotEmpty()) out[g] = list
+            }
+        } catch (e: Exception) {
+            // bozuk kayit
+        }
+        return out
+    }
+
+    fun saveGenres(ctx: Context, genres: Map<String, List<Pair<String, String>>>) {
+        val o = JSONObject()
+        for ((g, list) in genres) {
+            val arr = JSONArray()
+            for ((site, url) in list) {
+                arr.put(JSONObject().put("site", site).put("url", url))
+            }
+            o.put(g, arr)
+        }
+        prefs(ctx).edit().putString(K_GENRES, o.toString()).apply()
     }
 
     fun clear(ctx: Context) {

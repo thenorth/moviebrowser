@@ -50,6 +50,27 @@ object Panels {
     @Volatile
     private var feed: List<Row> = emptyList()
 
+    /** Bolum listeleri: "sonraki bolum" ve otomatik gecis icin. */
+    private val episodeLists = HashMap<String, Pair<Row, List<Pair<String, String>>>>()
+
+    /** Verilen bolumden sonraki bolum (bilinen dizi listesinden). */
+    fun autoNextFor(url: String): AutoNext.Item? {
+        synchronized(episodeLists) {
+            for ((_, entry) in episodeLists) {
+                val (series, list) = entry
+                val i = list.indexOfFirst { it.second == url }
+                if (i < 0) continue
+                if (i + 1 >= list.size) return null
+                val next = list[i + 1]
+                return AutoNext.Item(
+                    next.first, next.second, series.title, series.url,
+                    series.poster, series.site, keyOf(series.title)
+                )
+            }
+        }
+        return null
+    }
+
     @Volatile
     private var warming = false
 
@@ -195,7 +216,6 @@ object Panels {
         val rows = ArrayList<Row>()
         val adapter = PanelFilmAdapter(a, rows)
         grid.adapter = adapter
-        grid.setOnItemClickListener { _, _, pos, _ -> rows.getOrNull(pos)?.let { onOpen(it) } }
 
         fun reload() {
             rows.clear()
@@ -203,7 +223,7 @@ object Panels {
             History.followed(a).forEach {
                 seen.add(it.key)
                 val label = it.label.ifBlank { a.getString(R.string.series_no_ep) }
-                rows.add(Row(it.title, it.url, it.poster, it.site, a.getString(R.string.series_last) + ": " + label))
+                rows.add(Row(it.title, it.url, it.poster, it.site, metaOf(a, it.key, label)))
             }
             // Listem'e eklenen diziler takip edilmese de burada gorunur.
             Watchlist.all(a).forEach { w ->
@@ -212,14 +232,29 @@ object Panels {
                 if (!Tmdb.looksLikeSeries(w.title, w.url)) return@forEach
                 val label = History.lastEpisode(a, k).orEmpty()
                     .ifBlank { a.getString(R.string.series_no_ep) }
-                rows.add(Row(w.title, w.url, w.poster.orEmpty(), w.site, a.getString(R.string.series_last) + ": " + label))
+                rows.add(Row(w.title, w.url, w.poster.orEmpty(), w.site, metaOf(a, k, label)))
             }
             adapter.notifyDataSetChanged()
             count.text = rows.size.toString() + " dizi"
             empty.text = a.getString(R.string.series_empty)
             empty.visibility = if (rows.isEmpty()) View.VISIBLE else View.GONE
         }
+
+        grid.setOnItemClickListener { _, _, pos, _ ->
+            rows.getOrNull(pos)?.let {
+                val k = keyOf(it.title)
+                if (History.hasNew(a, k)) {
+                    History.setHasNew(a, k, false)
+                    reload()
+                }
+                onOpen(it)
+            }
+        }
         reload()
+        if (System.currentTimeMillis() - History.checkedAt(a) > NEW_EP_CHECK_MS) {
+            History.setCheckedAt(a, System.currentTimeMillis())
+            checkNewEpisodes(a) { if (grid.adapter != null) reload() }
+        }
 
         return {
             val pos = grid.selectedItemPosition
@@ -246,6 +281,10 @@ object Panels {
         var siteFilter = ""
         var typeFilter = 0 // 0: hepsi, 1: film, 2: dizi
         var freshOnly = false
+        var genreRows: ArrayList<Row>? = null
+        var genreActive = ""
+        var sortRating = false
+        val genreSites = LinkedHashMap<String, MutableList<Pair<String, String>>>()
         val alts = HashMap<String, MutableList<Row>>()
         val adapter = PanelFilmAdapter(a, shown)
         grid.adapter = adapter
@@ -256,7 +295,8 @@ object Panels {
 
         fun rebuild() {
             shown.clear()
-            for (r in all) {
+            val base = genreRows ?: all
+            for (r in base) {
                 if (siteFilter.isNotEmpty() && !r.site.equals(siteFilter, true)) continue
                 if (freshOnly && !r.fresh) continue
                 val series = r.isSeries || Regex("(?i)bölüm|bolum|sezon|dizi").containsMatchIn(r.title)
@@ -264,16 +304,50 @@ object Panels {
                 if (typeFilter == 2 && !series) continue
                 shown.add(r)
             }
+            if (sortRating) shown.sortByDescending { ratingOf(it.meta) }
             adapter.notifyDataSetChanged()
             count.text = shown.size.toString() + " film"
             feed = ArrayList(all)
             if (shown.isEmpty()) {
                 empty.text = a.getString(
-                    if (all.isEmpty()) R.string.films_loading else R.string.no_results
+                    if (base.isEmpty()) R.string.films_loading else R.string.no_results
                 )
                 empty.visibility = View.VISIBLE
             } else {
                 empty.visibility = View.GONE
+            }
+        }
+
+        /** Tur cipleri: sitelerin kategori sayfalarindan sonuc toplar. */
+        fun loadGenre(genre: String) {
+            val targets = genreSites[genre] ?: return
+            genreActive = genre
+            val list = ArrayList<Row>()
+            genreRows = list
+            sortRating = false
+            siteFilter = ""
+            typeFilter = 0
+            freshOnly = false
+            rebuild()
+            empty.text = a.getString(R.string.films_loading)
+            empty.visibility = View.VISIBLE
+            val left = AtomicInteger(targets.size)
+            for (t in targets) {
+                Thread {
+                    Scraper.load(t.second, 6000) { p ->
+                        a.runOnUiThread {
+                            for (f in p.films) {
+                                val k = keyOf(f.title)
+                                if (k.isEmpty() || list.any { keyOf(it.title) == k }) continue
+                                list.add(Row(f.title, f.url, f.poster, t.first))
+                            }
+                            rebuild()
+                            if (left.decrementAndGet() == 0) {
+                                empty.visibility = if (list.isEmpty()) View.VISIBLE else View.GONE
+                            }
+                        }
+                    }
+                }.start()
             }
         }
 
@@ -304,31 +378,55 @@ object Panels {
             chipRow.removeAllViews()
             chip("↻ " + a.getString(R.string.reload)) { onRefresh() }
             chip(a.getString(R.string.all_sites)) {
+                genreRows = null
+                genreActive = ""
                 siteFilter = ""
                 typeFilter = 0
+                freshOnly = false
                 rebuild()
             }
             chip(a.getString(R.string.films_filter)) {
+                genreRows = null
+                genreActive = ""
                 siteFilter = ""
                 typeFilter = 1
                 rebuild()
             }
             chip(a.getString(R.string.series_filter)) {
+                genreRows = null
+                genreActive = ""
                 siteFilter = ""
                 typeFilter = 2
                 freshOnly = false
                 rebuild()
             }
             chip(a.getString(R.string.today_filter)) {
+                genreRows = null
+                genreActive = ""
                 siteFilter = ""
                 typeFilter = 0
                 freshOnly = true
                 rebuild()
             }
+            chip("★ " + a.getString(R.string.rating_sort)) {
+                sortRating = !sortRating
+                if (sortRating) {
+                    enrich(a, all, 48) { rebuild() }
+                    if (genreRows != null) enrich(a, genreRows!!, 48) { rebuild() }
+                }
+                rebuild()
+            }
+            // Tur filtreleri (Aksiyon, Komedi...) sitelerin kategori menulerinden gelir.
+            val genres = synchronized(genreSites) { genreSites.keys.toList() }
+            for (g in genres) {
+                chip(g) { loadGenre(g) }
+            }
             val names = all.map { it.site }.distinct()
             if (siteFilter.isNotEmpty() && names.none { it.equals(siteFilter, true) }) siteFilter = ""
             names.forEach { name ->
                 chip(name) {
+                    genreRows = null
+                    genreActive = ""
                     siteFilter = if (siteFilter == name) "" else name
                     typeFilter = 0
                     rebuild()
@@ -343,6 +441,7 @@ object Panels {
 
         // Onbellek varsa aninda goster
         all.addAll(DiscoverCache.load(a))
+        genreSites.putAll(DiscoverCache.loadGenres(a))
         rebuild()
         rebuildChips()
         if (DiscoverCache.isFresh(a)) return { addToWatch(a, shown, grid) }
@@ -390,6 +489,22 @@ object Panels {
             Thread {
                 Scraper.load(s.url, 6000) { page ->
                     a.runOnUiThread { absorb(rotated(page.films, run, 8), s.name) }
+                    // Tur cipleri icin kategori adreslerini topla.
+                    var addedGenre = false
+                    synchronized(genreSites) {
+                        for (c in page.categories) {
+                            if (!isGenre(c.first)) continue
+                            val list = genreSites.getOrPut(c.first) { ArrayList() }
+                            if (list.none { it.first == s.name }) {
+                                list.add(s.name to c.second)
+                                addedGenre = true
+                            }
+                        }
+                    }
+                    if (addedGenre) a.runOnUiThread {
+                        rebuildChips()
+                        DiscoverCache.saveGenres(a, synchronized(genreSites) { HashMap(genreSites) })
+                    }
                     val newCat = page.categories.firstOrNull { newRx.containsMatchIn(it.first) }
                     val diziCat = page.categories.firstOrNull { Regex("(?i)dizi").containsMatchIn(it.first) }
                     val others = page.categories.filter { it != newCat && it != diziCat }
@@ -572,15 +687,22 @@ object Panels {
             Scraper.episodes(row.url) { list ->
                 a.runOnUiThread {
                     if (eps.parent == null || list.isEmpty()) return@runOnUiThread
+                    synchronized(episodeLists) { episodeLists[row.url] = row to list }
                     eps.visibility = View.VISIBLE
                     eps.setOnClickListener {
+                        val last = History.lastEpisode(a, seriesKey)
+                        val checked = list.indexOfFirst { it.first == last }
+                        val labels = list.mapIndexed { i, e ->
+                            if (i == checked) "✓ " + e.first else e.first
+                        }.toTypedArray()
                         AlertDialog.Builder(a)
                             .setTitle(R.string.episodes)
-                            .setItems(list.map { it.first }.toTypedArray()) { _, w ->
+                            .setSingleChoiceItems(labels, checked) { _, w ->
                                 val (label, url) = list[w]
                                 History.add(a, label, url, row.poster, row.site)
                                 History.setLastEpisode(a, seriesKey, label)
                                 History.follow(a, seriesKey, row.title, row.url, row.poster, row.site, label)
+                                History.setHasNew(a, seriesKey, false)
                                 open(a, url)
                             }
                             .setNegativeButton(android.R.string.cancel, null)
@@ -597,6 +719,7 @@ object Panels {
                             History.add(a, next.first, next.second, row.poster, row.site)
                             History.setLastEpisode(a, seriesKey, next.first)
                             History.follow(a, seriesKey, row.title, row.url, row.poster, row.site, next.first)
+                            History.setHasNew(a, seriesKey, false)
                             open(a, next.second)
                         }
                     }
@@ -740,7 +863,13 @@ object Panels {
     }
 
     // ---------------------------------------------------------------- Ayarlar
-    fun settings(a: Activity, root: View, onUpdate: (TextView) -> Unit = {}) {
+    fun settings(
+        a: Activity,
+        root: View,
+        onUpdate: (TextView) -> Unit = {},
+        onBackup: () -> Unit = {},
+        onRestore: () -> Unit = {}
+    ) {
         vpnToggle = root.findViewById(R.id.vpn_switch)
         vpnStatus = root.findViewById(R.id.vpn_status)
         val toggle = vpnToggle ?: return
@@ -768,6 +897,8 @@ object Panels {
 
         val updateValue = root.findViewById<TextView>(R.id.update_value)
         root.findViewById<View>(R.id.update_row).setOnClickListener { onUpdate(updateValue) }
+        root.findViewById<View>(R.id.backup_row).setOnClickListener { onBackup() }
+        root.findViewById<View>(R.id.restore_row).setOnClickListener { onRestore() }
 
         val version = try {
             a.packageManager.getPackageInfo(a.packageName, 0).versionName ?: ""
@@ -935,10 +1066,10 @@ object Panels {
     }
 
     // ---------------------------------------------------------------- yardimci
-    /** Kartlarda yil/puan: TMDB'den ilk 24 film icin arka planda. */
-    private fun enrich(a: Activity, rows: ArrayList<Row>, onChange: () -> Unit) {
+    /** Kartlarda yil/puan: TMDB'den ilk N film icin arka planda. */
+    private fun enrich(a: Activity, rows: ArrayList<Row>, limit: Int = 24, onChange: () -> Unit) {
         if (!Tmdb.enabled()) return
-        for (r in rows.take(24)) {
+        for (r in rows.take(limit)) {
             Thread {
                 val info = Tmdb.load(r.title, Tmdb.looksLikeSeries(r.title)) ?: return@Thread
                 val parts = ArrayList<String>()
@@ -957,8 +1088,56 @@ object Panels {
         }
     }
 
+    /** Dizi karti etiketi: "YENI · Kaldigin: <bolum>". */
+    private fun metaOf(a: Activity, key: String, label: String): String {
+        val base = a.getString(R.string.series_last) + ": " + label
+        return if (History.hasNew(a, key)) a.getString(R.string.series_new) + " · " + base else base
+    }
+
+    private const val NEW_EP_CHECK_MS = 30 * 60 * 1000L
+
+    /** Tur (kategori) adi mi? Genre cipleri icin. */
+    private fun isGenre(name: String): Boolean = GENRE_RX.containsMatchIn(name)
+
+    private val GENRE_RX = Regex(
+        "(?i)aksiyon|komedi|dram|korku|gerilim|bilim|animasyon|romantik|suç|suc|macera|" +
+            "fantastik|belgesel|savaş|savas|müzik|muzik|aile|gizem|western|spor"
+    )
+
+    /** Kart meta satirindaki ★ puan. */
+    private fun ratingOf(meta: String): Double =
+        Regex("★\\s*([0-9]+[.,]?[0-9]*)").find(meta)?.groupValues?.get(1)
+            ?.replace(',', '.')?.toDoubleOrNull() ?: 0.0
+
+    /** Takip edilen dizilerde yeni bolum var mi? Panel acilinca 30 dakikada bir. */
+    private fun checkNewEpisodes(a: Activity, onChanged: () -> Unit) {
+        val follows = History.followed(a).take(12)
+        if (follows.isEmpty()) return
+        Thread {
+            var changed = false
+            for (f in follows) {
+                val latch = java.util.concurrent.CountDownLatch(1)
+                var top: String? = null
+                Scraper.episodes(f.url) { list ->
+                    top = list.firstOrNull()?.first
+                    latch.countDown()
+                }
+                latch.await(20, java.util.concurrent.TimeUnit.SECONDS)
+                val newest = top ?: continue
+                val seen = History.newestSeen(a, f.key)
+                History.setNewestSeen(a, f.key, newest)
+                if (seen != null && seen != newest && !History.hasNew(a, f.key)) {
+                    History.setHasNew(a, f.key, true)
+                    changed = true
+                }
+            }
+            if (changed) a.runOnUiThread { onChanged() }
+        }.start()
+    }
+
     /** Baslik normalizasyonu: ayni film farkli sitelerde tekrarlanmasin. */
-    private fun keyOf(title: String): String {        var t = title.lowercase(java.util.Locale("tr"))
+    private fun keyOf(title: String): String {
+        var t = title.lowercase(java.util.Locale("tr"))
         t = t.replace(Regex("\\(\\d{4}\\)"), " ")
         t = t.replace(
             Regex("(?i)\\b(filmi|film|full|hd|izle|türkçe|turkce|dublaj|altyazılı|altyazili|720p|1080p|4k)\\b"),
@@ -1050,6 +1229,8 @@ object Panels {
     }
 
     fun open(a: Activity, url: String) {
+        // Bolum listesi biliniyorsa video bitince sonraki bolume gecilecek.
+        AutoNext.pending = autoNextFor(url)
         a.startActivity(Intent(a, BrowserActivity::class.java).putExtra(BrowserActivity.EXTRA_URL, url))
     }
 

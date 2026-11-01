@@ -91,6 +91,8 @@
     <string name="series_empty">Takip ettiğin dizi yok.\nBir dizinin bölümünü açınca buraya eklenir.</string>
     <string name="series_last">Kaldığın</string>
     <string name="series_no_ep">Bölüm seçilmedi</string>
+    <string name="series_new">YENİ</string>
+    <string name="rating_sort">Puan</string>
     <string name="unfollowed">Takibi bıraktın</string>    <string name="update_check_desc">GitHub\'dan yeni sürümü indir ve kur</string>
     <string name="update_check">Kontrol et</string>
     <string name="update_checking">Kontrol ediliyor…</string>
@@ -111,6 +113,7 @@
     <string name="recent_title">Son izlenenler</string>
     <string name="recent_empty">Henüz film açmadın.</string>
     <string name="resume_badge">DEVAM</string>
+    <string name="resume_chip">DEVAM ET · %1$s</string>
     <string name="watch_filter_hint">Listede ara…</string>
     <string name="detail_hint">Film bu sitede açılır.</string>
     <string name="no_source_hint">Bu film için doğrudan kaynak yok. Listeden veya Keşfet\'ten arayabilirsin.</string>
@@ -164,4 +167,13 @@
     <string name="status_unknown">Test edilmedi</string>
     <string name="remove_site">Siteyi listeden çıkar</string>
     <string name="site_removed">Site listeden çıkarıldı</string>
+    <string name="backup_title">Yedekle</string>
+    <string name="backup_desc">Listem, Dizilerim ve ayarlar tek dosyaya kaydedilir.</string>
+    <string name="backup_save">KAYDET</string>
+    <string name="restore_title">Yedekten geri yükle</string>
+    <string name="restore_desc">Daha önce kaydettiğin yedek dosyasını seç. Mevcut listelerin değişir.</string>
+    <string name="restore_action">SEÇ</string>
+    <string name="backup_done">Yedek kaydedildi</string>
+    <string name="restore_done">Yedek geri yüklendi</string>
+    <string name="backup_failed">Yedek işlemi başarısız</string>
 </resources>
