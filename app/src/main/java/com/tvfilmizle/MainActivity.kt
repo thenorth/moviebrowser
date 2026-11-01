@@ -140,6 +140,7 @@ class MainActivity : Activity() {
         bindSideBar()
         registerDownloadReceiver()
         fill(SiteRepository.cached(this))
+        Panels.warmFeed(this)
         refreshList(false)
         checkForUpdate()
         maybeShowWhatsNew()

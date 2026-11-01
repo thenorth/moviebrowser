@@ -48,6 +48,44 @@ object Panels {
     @Volatile
     private var feed: List<Row> = emptyList()
 
+    @Volatile
+    private var warming = false
+
+    /** Uygulama acilirken akisi arka planda hazirla (benzer filmler bos kalmasin). */
+    fun warmFeed(ctx: Context) {
+        if (warming) return
+        val cached = DiscoverCache.load(ctx)
+        if (cached.isNotEmpty()) feed = cached
+        if (cached.isNotEmpty() && DiscoverCache.isFresh(ctx)) return
+
+        val app = ctx.applicationContext
+        val sites = SiteRepository.cached(app)
+        if (sites.isEmpty()) return
+        warming = true
+        val all = ArrayList<Row>()
+        val seen = HashSet<String>()
+        val done = AtomicInteger(0)
+        for (s in sites) {
+            Thread {
+                Scraper.load(s.url, 6000) { page ->
+                    synchronized(all) {
+                        for (f in page.films.take(8)) {
+                            val key = keyOf(f.title)
+                            if (key.isEmpty() || !seen.add(key)) continue
+                            all.add(Row(f.title, f.url, f.poster, s.name))
+                        }
+                    }
+                    if (done.incrementAndGet() == sites.size) {
+                        synchronized(all) { interleave(all) }
+                        feed = ArrayList(all)
+                        DiscoverCache.save(app, all)
+                        warming = false
+                    }
+                }
+            }.start()
+        }
+    }
+
     // ---------------------------------------------------------------- Listem
     /** Donus: OK'a basili tutulunca cagrilacak islem (listeden cikar). */
     fun watchlist(a: Activity, root: View, onOpen: (Row) -> Unit): () -> Unit {
@@ -365,21 +403,7 @@ object Panels {
             val isSeries = Tmdb.looksLikeSeries(row.title, row.url)
             val tmdb = Tmdb.load(row.title, isSeries)
             val credits = if (tmdb != null) Tmdb.credits(tmdb.id, tmdb.mediaType) else null
-            // Benzer filmler: yalniz elimizde kaynagi (URL) olanlar
-            val similar = if (tmdb != null) {
-                val lib = feed
-                Tmdb.recommendations(tmdb.id, tmdb.mediaType).mapNotNull { s ->
-                    val key = keyOf(s.title)
-                    val hit = lib.firstOrNull { keyOf(it.title) == key } ?: return@mapNotNull null
-                    Row(
-                        hit.title,
-                        hit.url,
-                        hit.poster.ifBlank { s.poster },
-                        hit.site,
-                        s.year
-                    )
-                }
-            } else emptyList<Row>()
+            val similar = if (tmdb != null) buildSimilar(tmdb, row) else emptyList()
             a.runOnUiThread {
                 if (info.parent == null) return@runOnUiThread
                 if (tmdb != null) {
@@ -770,8 +794,7 @@ object Panels {
     }
 
     /** Baslik normalizasyonu: ayni film farkli sitelerde tekrarlanmasin. */
-    private fun keyOf(title: String): String {
-        var t = title.lowercase(java.util.Locale("tr"))
+    private fun keyOf(title: String): String {        var t = title.lowercase(java.util.Locale("tr"))
         t = t.replace(Regex("\\(\\d{4}\\)"), " ")
         t = t.replace(
             Regex("(?i)\\b(filmi|film|full|hd|izle|türkçe|turkce|dublaj|altyazılı|altyazili|720p|1080p|4k)\\b"),
@@ -779,6 +802,51 @@ object Panels {
         )
         t = t.replace(Regex("[^a-z0-9çğıöşü ]"), " ")
         return t.replace(Regex("\\s+"), " ").trim()
+    }
+
+    /** Detaydaki "Benzer filmler" seridi: TMDB onerileri + akistan tamamlanir. */
+    private fun buildSimilar(tmdb: Tmdb.Info, row: Row): List<Row> {
+        val lib = feed
+        if (lib.isEmpty()) return emptyList()
+        val out = ArrayList<Row>()
+        val used = HashSet<String>()
+        used.add(keyOf(row.title))
+
+        for (s in Tmdb.recommendations(tmdb.id, tmdb.mediaType)) {
+            val hit = matchTitle(lib, s.title) ?: continue
+            if (!used.add(keyOf(hit.title))) continue
+            out.add(Row(hit.title, hit.url, hit.poster.ifBlank { s.poster }, hit.site, s.year))
+            if (out.size >= 8) break
+        }
+        if (out.size < 8) {
+            // Ayni siteden, sonra tum sitelerden tamamla (her kartin kaynagi olur)
+            for (r in lib.sortedBy { if (it.site == row.site) 0 else 1 }) {
+                if (!used.add(keyOf(r.title))) continue
+                out.add(r)
+                if (out.size >= 8) break
+            }
+        }
+        return out
+    }
+
+    /** Benzer film eslesmesi: once tam baslik, sonra kelime ortakligi. */
+    private fun matchTitle(lib: List<Row>, title: String): Row? {        val key = keyOf(title)
+        if (key.isEmpty()) return null
+        lib.firstOrNull { keyOf(it.title) == key }?.let { return it }
+        val words = key.split(" ").filter { it.length > 2 }
+        if (words.isEmpty()) return null
+        var best: Row? = null
+        var bestHits = 0
+        for (r in lib) {
+            val k = keyOf(r.title)
+            if (k.isEmpty()) continue
+            val hits = words.count { k.contains(it) }
+            if (hits > bestHits) {
+                bestHits = hits
+                best = r
+            }
+        }
+        return if (bestHits * 10 >= words.size * 7) best else null
     }
 
     /** "3. Sezon 5. Bölüm" -> "S3B5" (dizi bolum takibi icin kisa etiket). */
