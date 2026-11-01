@@ -224,25 +224,81 @@ object Panels {
     }
 
     // ---------------------------------------------------------------- Site durumu
+    data class Check(val code: Int, val ms: Long)
+
+    private var statusCache: Map<String, Check>? = null
+    private var statusTime = 0L
+
     fun status(a: Activity, root: View) {
-        val sites = SiteRepository.cached(a)
-        val codes = HashMap<String, Int>()
-        sites.forEach { codes[it.url] = -1 }
-        val adapter = StatusAdapter(a, sites, codes)
-        root.findViewById<ListView>(R.id.list).adapter = adapter
-        root.findViewById<View>(R.id.btn_test).setOnClickListener {
-            sites.forEach { codes[it.url] = 0 }
-            adapter.notifyDataSetChanged()
-            Thread {
-                for (s in sites) {
-                    val code = ping(s.url)
-                    a.runOnUiThread {
-                        codes[s.url] = code
-                        adapter.notifyDataSetChanged()
-                    }
-                }
-            }.start()
+        val sites = ArrayList(SiteRepository.cached(a))
+        val results = HashMap<String, Check>()
+        val list = root.findViewById<ListView>(R.id.list)
+        val summary = root.findViewById<TextView>(R.id.status_summary)
+        val adapter = StatusAdapter(a, sites, results)
+        list.adapter = adapter
+        list.setOnItemClickListener { _, _, pos, _ ->
+            sites.getOrNull(pos)?.let { open(a, it.url) }
         }
+
+        fun refreshSummary(testing: Boolean, done: Int, total: Int) {
+            if (testing) {
+                summary.text = a.getString(R.string.status_testing_fmt, done, total)
+            } else {
+                val ok = results.values.count { it.code in 200..399 }
+                summary.text = a.getString(R.string.status_summary_fmt, ok, total)
+            }
+        }
+
+        fun sortByState() {
+            sites.sortBy {
+                when (val c = results[it.url]?.code ?: -1) {
+                    in 200..399 -> 0
+                    403, 429, 503 -> 1
+                    -2 -> 2
+                    else -> 3
+                }
+            }
+            adapter.notifyDataSetChanged()
+        }
+
+        fun runTest() {
+            results.clear()
+            sites.forEach { results[it.url] = Check(-2, 0) }
+            adapter.notifyDataSetChanged()
+            refreshSummary(true, 0, sites.size)
+            val done = AtomicInteger(0)
+            val total = sites.size
+            for (s in sites) {
+                Thread {
+                    val t0 = System.currentTimeMillis()
+                    val code = ping(s.url)
+                    val ms = System.currentTimeMillis() - t0
+                    a.runOnUiThread {
+                        results[s.url] = Check(code, ms)
+                        adapter.notifyDataSetChanged()
+                        val d = done.incrementAndGet()
+                        refreshSummary(d < total, d, total)
+                        if (d == total) {
+                            statusCache = HashMap(results)
+                            statusTime = System.currentTimeMillis()
+                            sortByState()
+                            refreshSummary(false, total, total)
+                        }
+                    }
+                }.start()
+            }
+        }
+
+        val cached = statusCache
+        if (cached != null && System.currentTimeMillis() - statusTime < 10 * 60 * 1000L) {
+            results.putAll(cached)
+            sortByState()
+            refreshSummary(false, sites.size, sites.size)
+        } else {
+            runTest()
+        }
+
+        root.findViewById<View>(R.id.btn_test).setOnClickListener { runTest() }
     }
 
     // ---------------------------------------------------------------- Ayarlar
@@ -483,7 +539,7 @@ private class PanelFilmAdapter(private val ctx: Context, private val items: List
 private class StatusAdapter(
     private val ctx: Context,
     private val items: List<Site>,
-    private val codes: Map<String, Int>
+    private val results: Map<String, Panels.Check>
 ) : BaseAdapter() {
 
     private val inflater = LayoutInflater.from(ctx)
@@ -495,31 +551,47 @@ private class StatusAdapter(
     override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
         val view = convertView ?: inflater.inflate(R.layout.item_status, parent, false)
         val site = items[position]
-        val code = codes[site.url] ?: -1
+        val check = results[site.url]
         view.findViewById<TextView>(R.id.status_name).text = site.name
+
+        val host = try {
+            android.net.Uri.parse(site.url).host ?: ""
+        } catch (e: Exception) {
+            ""
+        }
+        view.findViewById<TextView>(R.id.status_url).text =
+            if (host.isNotEmpty() && SiteHealth.isBlocked(ctx, host)) {
+                host + "  ·  " + ctx.getString(R.string.blocked_flag)
+            } else {
+                host
+            }
 
         val dot = view.findViewById<TextView>(R.id.status_dot)
         val text = view.findViewById<TextView>(R.id.status_text)
         when {
-            code == -1 -> {
+            check == null -> {
                 dot.setTextColor(Color.parseColor("#8B98A6"))
                 text.text = ctx.getString(R.string.status_unknown)
             }
-            code == 0 -> {
+            check.code == -2 -> {
+                dot.setTextColor(Color.parseColor("#8B98A6"))
+                text.text = ctx.getString(R.string.status_testing)
+            }
+            check.code == 0 -> {
                 dot.setTextColor(Color.parseColor("#FF6B6B"))
                 text.text = ctx.getString(R.string.status_blocked)
             }
-            code in 200..399 -> {
+            check.code in 200..399 -> {
                 dot.setTextColor(Color.parseColor("#59D986"))
-                text.text = ctx.getString(R.string.status_ok) + " · " + code
+                text.text = ctx.getString(R.string.status_ok) + " · " + check.code + " · " + check.ms + " ms"
             }
-            code == 403 || code == 429 || code == 503 -> {
+            check.code == 403 || check.code == 429 || check.code == 503 -> {
                 dot.setTextColor(Color.parseColor("#FF9F1A"))
-                text.text = ctx.getString(R.string.status_protected) + " · " + code
+                text.text = ctx.getString(R.string.status_protected) + " · " + check.code
             }
             else -> {
                 dot.setTextColor(Color.parseColor("#FF6B6B"))
-                text.text = ctx.getString(R.string.status_error) + " · " + code
+                text.text = ctx.getString(R.string.status_error) + " · " + check.code
             }
         }
         return view

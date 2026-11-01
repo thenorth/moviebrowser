@@ -110,6 +110,9 @@
     <string name="status_title">Site durumu</string>
     <string name="status_sub">Erişilebilirlik testi</string>
     <string name="status_test">TEST ET</string>
+    <string name="status_testing">Test ediliyor…</string>
+    <string name="status_testing_fmt">Test ediliyor… %1$d/%2$d</string>
+    <string name="status_summary_fmt">%1$d/%2$d erişilebilir</string>
     <string name="status_ok">Erişilebilir</string>
     <string name="status_blocked">Ulaşılamıyor</string>
     <string name="status_protected">Korumalı</string>
