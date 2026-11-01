@@ -1,12 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/bg_tv"
-    android:orientation="vertical"
-    android:paddingLeft="38dp"
-    android:paddingTop="26dp"
-    android:paddingRight="38dp">
+    android:fillViewport="true"
+    android:scrollbars="none">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingLeft="38dp"
+        android:paddingTop="26dp"
+        android:paddingRight="38dp"
+        android:paddingBottom="26dp">
 
     <TextView
         android:id="@+id/detail_title"
@@ -171,3 +178,4 @@
             android:orientation="horizontal" />
     </HorizontalScrollView>
 </LinearLayout>
+</ScrollView>
