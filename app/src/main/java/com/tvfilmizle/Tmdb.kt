@@ -68,7 +68,10 @@ object Tmdb {
     private fun clean(raw: String): String {
         var t = raw.substringBefore(" – ").substringBefore(" - ").substringBefore("|")
         t = t.replace(
-            Regex("(?i)\\b(filmi|film|full|hd|izle|türkçe|turkce|dublaj|altyazılı|altyazili)\\b"),
+            Regex(
+                "(?i)\\b(filmi|film|full|hd|izle|dizi|dizisi|bölüm|bolum|sezon|" +
+                    "türkçe|turkce|dublaj|altyazılı|altyazili)\\b"
+            ),
             " "
         )
         return t.replace(Regex("\\s+"), " ").trim()
