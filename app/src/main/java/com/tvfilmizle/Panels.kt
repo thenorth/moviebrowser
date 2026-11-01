@@ -23,7 +23,6 @@ import android.widget.Toast
 import java.net.HttpURLConnection
 import java.net.URL
 import java.util.Locale
-import java.util.concurrent.atomic.AtomicInteger
 
 /** Ana ekranin sagindaki bolum panelleri (menu sabit kalir). */
 object Panels {
@@ -87,23 +86,23 @@ object Panels {
         grid.setOnItemClickListener { _, _, pos, _ -> rows.getOrNull(pos)?.let { open(a, it.url) } }
         empty.text = a.getString(R.string.films_loading)
 
-        val sites = SiteRepository.cached(a).take(6)
-        val collected = java.util.Collections.synchronizedList(ArrayList<Row>())
-        val done = AtomicInteger(0)
-        for (s in sites) {
+        // Tum siteler paralel; hangi site once yanit verirse en uste o girer.
+        val seen = HashSet<String>()
+        for (s in SiteRepository.cached(a)) {
             Thread {
-                Scraper.load(s.url) { page ->
-                    page.films.take(12).forEach { collected.add(Row(it.title, it.url, it.poster, s.name)) }
-                    if (done.incrementAndGet() == sites.size) {
-                        a.runOnUiThread {
-                            val seen = HashSet<String>()
-                            rows.clear()
-                            for (r in collected) {
-                                if (seen.add(r.title.lowercase(Locale("tr")).trim())) rows.add(r)
-                            }
+                Scraper.load(s.url, 6000) { page ->
+                    a.runOnUiThread {
+                        var added = 0
+                        for (f in page.films.take(12)) {
+                            val key = f.title.lowercase(Locale("tr")).trim()
+                            if (key.isEmpty() || !seen.add(key)) continue
+                            rows.add(Row(f.title, f.url, f.poster, s.name))
+                            added++
+                        }
+                        if (added > 0) {
                             adapter.notifyDataSetChanged()
+                            empty.visibility = View.GONE
                             count.text = rows.size.toString() + " film"
-                            empty.visibility = if (rows.isEmpty()) View.VISIBLE else View.GONE
                         }
                     }
                 }
@@ -376,15 +375,15 @@ private class StatusAdapter(
             }
             code in 200..399 -> {
                 dot.setTextColor(Color.parseColor("#59D986"))
-                text.text = ctx.getString(R.string.status_ok) + " Â· " + code
+                text.text = ctx.getString(R.string.status_ok) + " Ã‚Â· " + code
             }
             code == 403 || code == 429 || code == 503 -> {
                 dot.setTextColor(Color.parseColor("#FF9F1A"))
-                text.text = ctx.getString(R.string.status_protected) + " Â· " + code
+                text.text = ctx.getString(R.string.status_protected) + " Ã‚Â· " + code
             }
             else -> {
                 dot.setTextColor(Color.parseColor("#FF6B6B"))
-                text.text = ctx.getString(R.string.status_error) + " Â· " + code
+                text.text = ctx.getString(R.string.status_error) + " Ã‚Â· " + code
             }
         }
         return view

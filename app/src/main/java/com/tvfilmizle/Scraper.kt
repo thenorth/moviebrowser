@@ -19,7 +19,7 @@ object Scraper {
     private const val CATEGORY_RX =
         "(?i)film|dizi|tür|yıl|yeni|popüler|keşfet|aksiyon|komedi|korku|dram"
 
-    fun load(pageUrl: String, done: (Page) -> Unit) {
+    fun load(pageUrl: String, timeoutMs: Int = 12000, done: (Page) -> Unit) {
         Thread {
             val films = ArrayList<Film>()
             val cats = LinkedHashMap<String, String>()
@@ -27,7 +27,7 @@ object Scraper {
                 val doc = Jsoup.connect(pageUrl)
                     .userAgent(UA)
                     .header("Accept-Language", "tr-TR,tr;q=0.9")
-                    .timeout(12000)
+                    .timeout(timeoutMs)
                     .followRedirects(true)
                     .get()
 
