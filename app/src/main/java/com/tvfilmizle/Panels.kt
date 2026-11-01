@@ -22,7 +22,6 @@ import android.widget.TextView
 import android.widget.Toast
 import java.net.HttpURLConnection
 import java.net.URL
-import java.util.Locale
 
 /** Ana ekranin sagindaki bolum panelleri (menu sabit kalir). */
 object Panels {
@@ -93,13 +92,14 @@ object Panels {
                 Scraper.load(s.url, 6000) { page ->
                     a.runOnUiThread {
                         var added = 0
-                        for (f in page.films.take(12)) {
-                            val key = f.title.lowercase(Locale("tr")).trim()
-                            if (key.isEmpty() || !seen.add(key)) continue
+                        // Ayni film farkli sitelerde olabilir; site etiketiyle ayirt edilir.
+                        for (f in page.films.take(8)) {
+                            if (!seen.add(f.url)) continue
                             rows.add(Row(f.title, f.url, f.poster, s.name))
                             added++
                         }
                         if (added > 0) {
+                            interleave(rows)
                             adapter.notifyDataSetChanged()
                             empty.visibility = View.GONE
                             count.text = rows.size.toString() + " film"
@@ -282,6 +282,28 @@ object Panels {
     }
 
     // ---------------------------------------------------------------- yardimci
+    /** Siteleri sirayla karistirir: her siteden birer film, sonra ikinciler... */
+    private fun interleave(rows: MutableList<Row>) {
+        val groups = LinkedHashMap<String, MutableList<Row>>()
+        for (r in rows) groups.getOrPut(r.site) { ArrayList() }.add(r)
+        if (groups.size < 2) return
+        val merged = ArrayList<Row>(rows.size)
+        var i = 0
+        while (true) {
+            var added = false
+            for (g in groups.values) {
+                if (i < g.size) {
+                    merged.add(g[i])
+                    added = true
+                }
+            }
+            if (!added) break
+            i++
+        }
+        rows.clear()
+        rows.addAll(merged)
+    }
+
     fun open(a: Activity, url: String) {
         a.startActivity(Intent(a, BrowserActivity::class.java).putExtra(BrowserActivity.EXTRA_URL, url))
     }
@@ -375,15 +397,15 @@ private class StatusAdapter(
             }
             code in 200..399 -> {
                 dot.setTextColor(Color.parseColor("#59D986"))
-                text.text = ctx.getString(R.string.status_ok) + " Ã‚Â· " + code
+                text.text = ctx.getString(R.string.status_ok) + " Ãƒâ€šÃ‚Â· " + code
             }
             code == 403 || code == 429 || code == 503 -> {
                 dot.setTextColor(Color.parseColor("#FF9F1A"))
-                text.text = ctx.getString(R.string.status_protected) + " Ã‚Â· " + code
+                text.text = ctx.getString(R.string.status_protected) + " Ãƒâ€šÃ‚Â· " + code
             }
             else -> {
                 dot.setTextColor(Color.parseColor("#FF6B6B"))
-                text.text = ctx.getString(R.string.status_error) + " Ã‚Â· " + code
+                text.text = ctx.getString(R.string.status_error) + " Ãƒâ€šÃ‚Â· " + code
             }
         }
         return view
