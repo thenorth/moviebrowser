@@ -314,7 +314,8 @@ class MainActivity : Activity() {
         panel.removeAllViews()
         panel.visibility = View.GONE
         grid.visibility = View.VISIBLE
-        grid.post { grid.requestFocus() }
+        // Diger bolumler gibi once menudeki Ana Sayfa satiri secili gorunur.
+        findViewById<View>(R.id.side_home).requestFocus()
     }
 
     /** Menude OK hem dokunusla hem kumandayla calisir (ilk dokunus sadece odak vermesin). */
