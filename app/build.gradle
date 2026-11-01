@@ -7,12 +7,24 @@ android {
     namespace 'com.tvfilmizle'
     compileSdk 34
 
+    buildFeatures { buildConfig true }
+
     defaultConfig {
         applicationId "com.tvfilmizle"
         minSdk 21
         targetSdk 34
         versionCode 44
         versionName "3.14"
+
+        // TMDB anahtari local.properties / ortam degiskeninden gelir (repoya girmez).
+        def tmdbKey = ""
+        try {
+            def props = new Properties()
+            def f = rootProject.file("local.properties")
+            if (f.exists()) f.withInputStream { props.load(it) }
+            tmdbKey = props.getProperty("TMDB_API_KEY", System.getenv("TMDB_API_KEY") ?: "")
+        } catch (Exception ignored) { }
+        buildConfigField "String", "TMDB_API_KEY", "\"${tmdbKey}\""
     }
 
     buildTypes {

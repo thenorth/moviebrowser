@@ -209,28 +209,46 @@ object Panels {
 
     // --------------------------------------------------------------- Detay
     fun detail(a: Activity, root: View, row: Row, onWatch: () -> Unit, onAdd: () -> Unit) {
-        root.findViewById<TextView>(R.id.detail_title).text = row.title
-        root.findViewById<TextView>(R.id.detail_site).text = row.site
-        val img = root.findViewById<ImageView>(R.id.detail_poster)
-        if (row.poster.isBlank()) {
-            img.setImageDrawable(null)
-        } else {
-            val cached = Images.cached(row.poster)
-            if (cached != null) img.setImageBitmap(cached)
-            else Images.load(a, row.poster) { bmp -> if (bmp != null) img.setImageBitmap(bmp) }
-        }
-
-        // Turkce film ozeti (Vikipedi) arka planda gelir.
+        val titleView = root.findViewById<TextView>(R.id.detail_title)
+        val siteView = root.findViewById<TextView>(R.id.detail_site)
         val info = root.findViewById<TextView>(R.id.detail_info)
+        val img = root.findViewById<ImageView>(R.id.detail_poster)
+
+        titleView.text = row.title
+        siteView.text = row.site
         info.text = a.getString(R.string.info_loading)
+
+        fun loadPoster(url: String) {
+            if (url.isBlank()) {
+                img.setImageDrawable(null)
+                return
+            }
+            val cached = Images.cached(url)
+            if (cached != null) {
+                img.setImageBitmap(cached)
+            } else {
+                img.setImageDrawable(null)
+                Images.load(a, url) { bmp -> if (bmp != null) img.setImageBitmap(bmp) }
+            }
+        }
+        loadPoster(row.poster)
+
+        // Once TMDB (varsa), yoksa Turkce Vikipedi.
         Thread {
-            val text = FilmInfo.load(row.title)
+            val tmdb = Tmdb.load(row.title)
+            val wiki = if (tmdb == null) FilmInfo.load(row.title) else null
             a.runOnUiThread {
                 if (info.parent == null) return@runOnUiThread
-                if (text.isNullOrBlank()) {
-                    info.text = a.getString(R.string.info_none)
+                if (tmdb != null) {
+                    titleView.text =
+                        if (tmdb.year.isEmpty()) tmdb.title else tmdb.title + " (" + tmdb.year + ")"
+                    info.text = tmdb.overview
+                    siteView.text = if (tmdb.rating.isEmpty()) row.site else row.site + " · ★ " + tmdb.rating
+                    if (tmdb.poster.isNotEmpty()) loadPoster(tmdb.poster)
+                } else if (!wiki.isNullOrBlank()) {
+                    info.text = wiki
                 } else {
-                    info.text = text
+                    info.text = a.getString(R.string.info_none)
                 }
             }
         }.start()
