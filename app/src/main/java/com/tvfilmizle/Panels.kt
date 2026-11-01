@@ -304,7 +304,8 @@ object Panels {
         root: View,
         row: Row,
         alts: List<Row> = emptyList(),
-        onWatch: () -> Unit
+        onWatch: () -> Unit,
+        onOpenSimilar: (Row) -> Unit = {}
     ) {
         val titleView = root.findViewById<TextView>(R.id.detail_title)
         val siteView = root.findViewById<TextView>(R.id.detail_site)
@@ -314,6 +315,15 @@ object Panels {
         titleView.text = row.title
         siteView.text = row.site
         info.text = a.getString(R.string.info_loading)
+
+        // Kaynak URL yoksa (benzer filmler) izleme/liste dugmeleri gizlenir.
+        val watchBtn = root.findViewById<View>(R.id.detail_watch)
+        val addBtn = root.findViewById<View>(R.id.detail_add)
+        if (row.url.isBlank()) {
+            watchBtn.visibility = View.GONE
+            addBtn.visibility = View.GONE
+            root.findViewById<TextView>(R.id.detail_hint).text = a.getString(R.string.no_source_hint)
+        }
 
         fun loadPoster(url: String) {
             if (url.isBlank()) {
@@ -357,7 +367,11 @@ object Panels {
                     titleView.text =
                         if (tmdb.year.isEmpty()) tmdb.title else tmdb.title + " (" + tmdb.year + ")"
                     info.text = tmdb.overview
-                    siteView.text = if (tmdb.rating.isEmpty()) row.site else row.site + " · ★ " + tmdb.rating
+                    siteView.text = when {
+                        tmdb.rating.isEmpty() -> row.site
+                        row.site.isEmpty() -> "★ " + tmdb.rating
+                        else -> row.site + " · ★ " + tmdb.rating
+                    }
                     if (tmdb.poster.isNotEmpty()) loadPoster(tmdb.poster)
 
                     // Yonetmen + oyuncular: aciklamanin altinda
@@ -372,7 +386,7 @@ object Panels {
                         castView.visibility = View.VISIBLE
                     }
 
-                    if (similar.isNotEmpty()) showSimilar(a, root, similar)
+                    if (similar.isNotEmpty()) showSimilar(a, root, similar, onOpenSimilar, row.url.isBlank())
                 } else if (!wiki.isNullOrBlank()) {
                     info.text = wiki
                 } else {
@@ -425,11 +439,17 @@ object Panels {
             }
         }
 
-        root.findViewById<View>(R.id.detail_watch).requestFocus()
+        if (row.url.isNotBlank()) root.findViewById<View>(R.id.detail_watch).requestFocus()
     }
 
     /** Benzer filmler: detayin altinda kucuk afis seridi. */
-    private fun showSimilar(a: Activity, root: View, list: List<Tmdb.Similar>) {
+    private fun showSimilar(
+        a: Activity,
+        root: View,
+        list: List<Tmdb.Similar>,
+        onOpen: (Row) -> Unit,
+        focusFirst: Boolean = false
+    ) {
         val row = root.findViewById<LinearLayout>(R.id.detail_similar_row)
         root.findViewById<View>(R.id.detail_similar_title).visibility = View.VISIBLE
         root.findViewById<View>(R.id.detail_similar_scroll).visibility = View.VISIBLE
@@ -468,10 +488,11 @@ object Panels {
                 v.setBackgroundResource(if (has) R.drawable.tool_button_bg else 0)
             }
             card.setOnClickListener {
-                open(a, "https://www.google.com/search?q=" + android.net.Uri.encode(s.title + " film izle"))
+                onOpen(Row(s.title, "", s.poster, "", s.year))
             }
             row.addView(card)
         }
+        if (focusFirst) row.getChildAt(0)?.requestFocus()
     }
 
     // ---------------------------------------------------------------- Site durumu

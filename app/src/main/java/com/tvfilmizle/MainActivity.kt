@@ -249,7 +249,7 @@ class MainActivity : Activity() {
 
     /** Film kartina basinca once detay paneli acilir. */
     private fun openFilm(row: Panels.Row, alts: List<Panels.Row> = emptyList()) {
-        prevSection = section
+        if (section != "detail") prevSection = section
         detailRow = row
         detailAlts = alts
         showSection("detail")
@@ -263,7 +263,7 @@ class MainActivity : Activity() {
         }
         Panels.detail(this, root, row, detailAlts, onWatch = {
             Panels.watch(this, row)
-        })
+        }, onOpenSimilar = { similar -> openFilm(similar) })
     }
 
     /** Site Ä±zgarasÄ±na doner. */
