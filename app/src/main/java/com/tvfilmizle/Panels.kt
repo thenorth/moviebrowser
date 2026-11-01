@@ -9,6 +9,7 @@ import android.net.VpnService
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.InputMethodManager
 import android.webkit.CookieManager
 import android.webkit.WebStorage
 import android.webkit.WebView
@@ -450,7 +451,12 @@ object Panels {
             submit()
             true
         }
-        input.requestFocus()
+        input.setOnFocusChangeListener { v, hasFocus ->
+            if (hasFocus) {
+                val imm = a.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                imm.showSoftInput(v, InputMethodManager.SHOW_IMPLICIT)
+            }
+        }
     }
 
     // ---------------------------------------------------------------- yardimci

@@ -211,16 +211,13 @@ class MainActivity : Activity() {
             }
         }
         if (name == "detail") return
-        if (name == "search" || name == "url") {
-            // Klavye acilsin, imlec alanda olsun.
-            window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE)
-            return
-        }
         // Menu odakli kalir: asagi/yukari ile bolum degistirmek kolay olsun.
         val row = when (name) {
             "discover" -> R.id.side_discover
             "watch" -> R.id.side_watchlist
             "recent" -> R.id.side_recent
+            "search" -> R.id.side_search
+            "url" -> R.id.side_url
             "status" -> R.id.side_status
             else -> R.id.side_settings
         }

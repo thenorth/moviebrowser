@@ -27,7 +27,7 @@
             android:id="@+id/input"
             android:layout_width="480dp"
             android:layout_height="56dp"
-            android:background="@drawable/url_bg"
+            android:background="@drawable/input_bg"
             android:inputType="text"
             android:maxLines="1"
             android:paddingLeft="16dp"
