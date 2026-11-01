@@ -89,6 +89,8 @@
     <string name="recent_title">Son izlenenler</string>
     <string name="recent_empty">Henüz film açmadın.</string>
     <string name="detail_hint">Film bu sitede açılır.</string>
+    <string name="info_loading">Film bilgisi yükleniyor…</string>
+    <string name="info_none">Bu film için Türkçe özet bulunamadı.</string>
     <string name="watch_now">İZLE</string>
     <string name="fav_added">Favorilere eklendi</string>
     <string name="fav_removed">Favorilerden çıkarıldı</string>

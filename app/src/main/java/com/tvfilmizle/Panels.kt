@@ -218,6 +218,22 @@ object Panels {
             if (cached != null) img.setImageBitmap(cached)
             else Images.load(a, row.poster) { bmp -> if (bmp != null) img.setImageBitmap(bmp) }
         }
+
+        // Turkce film ozeti (Vikipedi) arka planda gelir.
+        val info = root.findViewById<TextView>(R.id.detail_info)
+        info.text = a.getString(R.string.info_loading)
+        Thread {
+            val text = FilmInfo.load(row.title)
+            a.runOnUiThread {
+                if (info.parent == null) return@runOnUiThread
+                if (text.isNullOrBlank()) {
+                    info.text = a.getString(R.string.info_none)
+                } else {
+                    info.text = text
+                }
+            }
+        }.start()
+
         root.findViewById<View>(R.id.detail_watch).setOnClickListener { onWatch() }
         root.findViewById<View>(R.id.detail_add).setOnClickListener { onAdd() }
         root.findViewById<View>(R.id.detail_watch).requestFocus()

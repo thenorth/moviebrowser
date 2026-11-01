@@ -105,7 +105,14 @@ object Scraper {
         pageUrl: String
     ) {
         if (title.length !in 2..90) return
+        if (title.contains("|")) return
+        if (title.length > 55 && title.contains("izle", true)) return
         if (!href.startsWith("http") || href == pageUrl) return
+        try {
+            if (java.net.URL(href).path.length <= 1) return
+        } catch (e: Exception) {
+            return
+        }
         if (href.contains("/category/") || href.contains("/kategori/")) return
         if (href.contains("/tag/") || href.contains("/page/")) return
         if (!seen.add(href)) return
