@@ -199,15 +199,36 @@ async function stillAlive(url) {
   return true;
 }
 
+function hostName(host) {
+  const base = host.replace(/^www\./, "").split(".")[0];
+  return base.split(/[-_]+/).filter(Boolean)
+    .map(p => p.charAt(0).toUpperCase() + p.slice(1))
+    .join(" ");
+}
+
+const GENERIC = /^(film izle|hd film izle|full hd film(ler)?|film|izle|dizi izle|yaban(c|ç)i dizi izle|t(ü|u)rk(ç|c)e dublaj( ve altyaz(ı|i)l(ı|i))?( full hd)?( film(ler)?)?|film(ler)? izle|hd film)$/i;
+
+function low(s) {
+  return String(s).toLocaleLowerCase("tr").replace(/i\u0307/g, "i");
+}
+
 function brandFrom(html, host) {
   const m = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
-  let name = m ? cleanTitle(m[1]) : "";
-  if (name) {
-    name = name.split(/\s+[|–-]\s+/)[0].trim();
-    if (name.length > 26) name = name.slice(0, 26).trim();
+  const title = m ? cleanTitle(m[1]) : "";
+  const parts = title.split(/\s*[|–-]\s*/).map(s => s.trim()).filter(Boolean);
+  for (const p of parts) {
+    if (p.length < 3 || p.length > 26) continue;
+    if (GENERIC.test(low(p))) continue;
+    let cand = p;
+    const lp = low(p);
+    if (/\bizle\b/.test(lp)) {
+      // "Dizibox İzle" -> "Dizibox"
+      cand = p.slice(0, lp.lastIndexOf("izle")).trim();
+    }
+    if (cand.length < 3 || cand.length > 26) continue;
+    return cand.charAt(0).toUpperCase() + cand.slice(1);
   }
-  if (!name || name.length < 3) name = host.split(".")[0];
-  return name.charAt(0).toUpperCase() + name.slice(1);
+  return hostName(host);
 }
 
 (async () => {
