@@ -44,6 +44,10 @@ object Panels {
     private var vpnStatus: TextView? = null
     private var vpnUpdating = false
 
+    /** Son Keşfet listesi: benzer film onerileri yalniz kaynagi olanlardan secilir. */
+    @Volatile
+    private var feed: List<Row> = emptyList()
+
     // ---------------------------------------------------------------- Listem
     /** Donus: OK'a basili tutulunca cagrilacak islem (listeden cikar). */
     fun watchlist(a: Activity, root: View, onOpen: (Row) -> Unit): () -> Unit {
@@ -172,6 +176,7 @@ object Panels {
             }
             adapter.notifyDataSetChanged()
             count.text = shown.size.toString() + " film"
+            feed = ArrayList(all)
             if (shown.isEmpty()) {
                 empty.text = a.getString(
                     if (all.isEmpty()) R.string.films_loading else R.string.no_results
@@ -360,7 +365,21 @@ object Panels {
             val isSeries = Tmdb.looksLikeSeries(row.title, row.url)
             val tmdb = Tmdb.load(row.title, isSeries)
             val credits = if (tmdb != null) Tmdb.credits(tmdb.id, tmdb.mediaType) else null
-            val similar = if (tmdb != null) Tmdb.recommendations(tmdb.id, tmdb.mediaType) else emptyList()
+            // Benzer filmler: yalniz elimizde kaynagi (URL) olanlar
+            val similar = if (tmdb != null) {
+                val lib = feed
+                Tmdb.recommendations(tmdb.id, tmdb.mediaType).mapNotNull { s ->
+                    val key = keyOf(s.title)
+                    val hit = lib.firstOrNull { keyOf(it.title) == key } ?: return@mapNotNull null
+                    Row(
+                        hit.title,
+                        hit.url,
+                        hit.poster.ifBlank { s.poster },
+                        hit.site,
+                        s.year
+                    )
+                }
+            } else emptyList<Row>()
             val wiki = if (tmdb == null) FilmInfo.load(row.title) else null
             a.runOnUiThread {
                 if (info.parent == null) return@runOnUiThread
@@ -449,7 +468,7 @@ object Panels {
     private fun showSimilar(
         a: Activity,
         root: View,
-        list: List<Tmdb.Similar>,
+        list: List<Row>,
         onOpen: (Row) -> Unit,
         focusFirst: Boolean = false
     ) {
@@ -478,7 +497,8 @@ object Panels {
             card.addView(img)
 
             val title = TextView(a)
-            title.text = if (s.year.isEmpty()) s.title else s.title + " (" + s.year + ")"
+            val year = s.meta
+            title.text = if (year.isEmpty()) s.title else s.title + " (" + year + ")"
             title.textSize = 9.5f
             title.setTextColor(Color.parseColor("#B8C2CC"))
             title.maxLines = 2
@@ -491,7 +511,7 @@ object Panels {
                 v.setBackgroundResource(if (has) R.drawable.tool_button_bg else 0)
             }
             card.setOnClickListener {
-                onOpen(Row(s.title, "", s.poster, "", s.year))
+                onOpen(s)
             }
             row.addView(card)
         }
