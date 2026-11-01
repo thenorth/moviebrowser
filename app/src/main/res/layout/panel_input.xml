@@ -4,9 +4,9 @@
     android:layout_height="match_parent"
     android:background="@drawable/bg_tv"
     android:orientation="vertical"
-    android:paddingLeft="38dp"
+    android:paddingLeft="26dp"
     android:paddingTop="18dp"
-    android:paddingRight="38dp">
+    android:paddingRight="26dp">
 
     <TextView
         android:id="@+id/title"

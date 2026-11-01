@@ -17,9 +17,9 @@
         android:horizontalSpacing="14dp"
         android:listSelector="@android:color/transparent"
         android:numColumns="5"
-        android:paddingLeft="262dp"
+        android:paddingLeft="274dp"
         android:paddingTop="86dp"
-        android:paddingRight="38dp"
+        android:paddingRight="26dp"
         android:paddingBottom="86dp"
         android:scrollbars="none"
         android:stretchMode="columnWidth"
@@ -202,7 +202,7 @@
             android:orientation="horizontal"
             android:paddingLeft="26dp"
             android:paddingTop="20dp"
-            android:paddingRight="38dp"
+            android:paddingRight="26dp"
             android:paddingBottom="18dp">
 
             <TextView

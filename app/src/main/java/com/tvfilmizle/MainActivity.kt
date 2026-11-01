@@ -214,7 +214,7 @@ class MainActivity : Activity() {
             "status" -> 90
             else -> 56
         }
-        list?.setPadding((38 * d).toInt(), (topDp * d).toInt(), (38 * d).toInt(), (80 * d).toInt())
+        list?.setPadding((26 * d).toInt(), (topDp * d).toInt(), (26 * d).toInt(), (80 * d).toInt())
         // Panelde geri dugmesi ve alt ipucu seridi gereksiz.
         root.findViewById<View>(R.id.btn_back)?.visibility = View.GONE
         if (name == "discover" || name == "watch" || name == "recent" || name == "series") {

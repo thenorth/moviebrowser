@@ -106,7 +106,7 @@ object Panels {
         filter.hint = a.getString(R.string.watch_filter_hint)
         var query = ""
         val d = a.resources.displayMetrics.density
-        grid.setPadding((38 * d).toInt(), (130 * d).toInt(), (38 * d).toInt(), (80 * d).toInt())
+        grid.setPadding((26 * d).toInt(), (130 * d).toInt(), (26 * d).toInt(), (80 * d).toInt())
 
         fun reload() {
             rows.clear()

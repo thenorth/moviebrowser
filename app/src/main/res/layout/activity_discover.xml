@@ -14,9 +14,9 @@
         android:horizontalSpacing="14dp"
         android:listSelector="@android:color/transparent"
         android:numColumns="6"
-        android:paddingLeft="38dp"
+        android:paddingLeft="26dp"
         android:paddingTop="126dp"
-        android:paddingRight="38dp"
+        android:paddingRight="26dp"
         android:paddingBottom="80dp"
         android:scrollbars="none"
         android:stretchMode="columnWidth"
@@ -46,9 +46,9 @@
             android:layout_height="wrap_content"
             android:gravity="center_vertical"
             android:orientation="horizontal"
-            android:paddingLeft="38dp"
+            android:paddingLeft="26dp"
             android:paddingTop="16dp"
-            android:paddingRight="38dp"
+            android:paddingRight="26dp"
             android:paddingBottom="10dp">
 
             <TextView
@@ -92,8 +92,8 @@
             android:id="@+id/filter_scroll"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingLeft="38dp"
-            android:paddingRight="38dp"
+            android:paddingLeft="26dp"
+            android:paddingRight="26dp"
             android:scrollbars="none">
 
             <LinearLayout

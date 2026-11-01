@@ -14,9 +14,9 @@
         android:drawSelectorOnTop="false"
         android:focusable="true"
         android:listSelector="@drawable/row_selector"
-        android:paddingLeft="38dp"
+        android:paddingLeft="26dp"
         android:paddingTop="86dp"
-        android:paddingRight="38dp"
+        android:paddingRight="26dp"
         android:paddingBottom="80dp"
         android:scrollbars="none" />
 
@@ -27,9 +27,9 @@
         android:background="#FA0A0F16"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:paddingLeft="38dp"
+        android:paddingLeft="26dp"
         android:paddingTop="18dp"
-        android:paddingRight="38dp"
+        android:paddingRight="26dp"
         android:paddingBottom="14dp">
 
         <TextView
