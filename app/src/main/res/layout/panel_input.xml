@@ -5,7 +5,7 @@
     android:background="@drawable/bg_tv"
     android:orientation="vertical"
     android:paddingLeft="26dp"
-    android:paddingTop="18dp"
+    android:paddingTop="16dp"
     android:paddingRight="26dp">
 
     <TextView
