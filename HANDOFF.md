@@ -17,7 +17,7 @@ Sonraki oturum için kısa durum. Ayrıntılı geçmiş git log'da.
 - **Bölüm listesi (dizi)**: detayda başlık "bölüm/sezon" içeriyorsa veya URL `/dizi` ise sayfadan bölüm linkleri kazınıp **Bölümler** düğmesiyle liste olarak açılır.
 - **Kurulum izni**: güncelleme APK'sı inince Android 8+ için `REQUEST_INSTALL_PACKAGES` kontrolü; izin yoksa "Bilinmeyen kaynaklar" ayarına yönlendirir.
 - **TMDB meta kartlarda**: Keşfet'te ilk 24 kart için yıl + ★ puan (`site · 2024 · ★ 7.9`), önbelleğe de yazılır.
-- **Oyuncular / Benzer filmler**: detayda TMDB credits ve recommendations; seçince Google'da aratır.
+- **Oyuncular / Benzer filmler**: detayda TMDB credits ve recommendations. Oyuncular açıklamanın altında satır olarak; benzer filmler afiş şeridi ve **yalnız Keşfet'te kaynağı (URL) olanlar** gösterilir.
 - **Diğer kaynaklar**: aynı film başka sitede de varsa detayda "Diğer kaynaklar" düğmesi; seçilen site açılır.
 
 - **Keşfet önbelleği** (`DiscoverCache`): sonuçlar 10 dk taze; sekmeye dönünce anında.
