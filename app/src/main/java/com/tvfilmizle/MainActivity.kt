@@ -245,7 +245,8 @@ class MainActivity : Activity() {
             else -> {
                 if (name == "search") {
                     Panels.input(
-                        this, root, R.string.search_title, R.string.search_hint, R.string.search_action
+                        this, root, R.string.search_title, R.string.search_hint, R.string.search_action,
+                        historyKind = SearchHistory.SEARCH
                     ) { q ->
                         Panels.open(
                             this,
@@ -256,7 +257,8 @@ class MainActivity : Activity() {
                     Panels.input(
                         this, root, R.string.custom_url, R.string.url_hint, R.string.go,
                         initial = "https://",
-                        note = getString(R.string.url_note)
+                        note = getString(R.string.url_note),
+                        historyKind = SearchHistory.URL
                     ) { q ->
                         Panels.open(this, if (q.startsWith("http")) q else "https://$q")
                     }

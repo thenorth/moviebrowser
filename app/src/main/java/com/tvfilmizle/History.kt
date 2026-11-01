@@ -44,6 +44,14 @@ object History {
         prefs(ctx).edit().remove(K).apply()
     }
 
+    /** Dizi basina son izlenen bolum etiketi. */
+    fun lastEpisode(ctx: Context, seriesKey: String): String? =
+        prefs(ctx).getString("series_" + seriesKey, null)
+
+    fun setLastEpisode(ctx: Context, seriesKey: String, label: String) {
+        prefs(ctx).edit().putString("series_" + seriesKey, label).apply()
+    }
+
     private fun save(ctx: Context, items: List<Item>) {
         val arr = JSONArray()
         items.forEach {

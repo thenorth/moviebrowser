@@ -651,7 +651,8 @@ class BrowserActivity : Activity() {
         val items = arrayOf(
             getString(R.string.back), getString(R.string.reload), getString(R.string.home),
             getString(R.string.sites), getString(R.string.options), getString(R.string.play),
-            getString(R.string.fullscreen), getString(R.string.custom_url), getString(R.string.add_watch)
+            getString(R.string.fullscreen), getString(R.string.custom_url), getString(R.string.add_watch),
+            getString(R.string.open_external)
         )
         AlertDialog.Builder(this)
             .setTitle(R.string.menu)
@@ -669,6 +670,7 @@ class BrowserActivity : Activity() {
                         urlBar.selectAll()
                     }
                     8 -> addToWatchlist()
+                    9 -> openExternal()
                 }
             }
             .setNegativeButton(android.R.string.cancel, null)
@@ -676,6 +678,32 @@ class BrowserActivity : Activity() {
     }
 
     // ------------------------------------------------------------ gezinme
+
+    /** Videoyu harici oynaticida (VLC vb.) acar: once akis URL'si, yoksa sayfa URL'si. */
+    private fun openExternal() {
+        val w = active ?: web
+        w.evaluateJavascript(Player.STREAM_JS) { result ->
+            var url = try {
+                JSONTokener(result ?: "null").nextValue() as? String
+            } catch (e: Exception) {
+                null
+            }
+            if (url.isNullOrBlank()) url = w.url
+            if (url.isNullOrBlank()) {
+                Toast.makeText(this, R.string.no_stream, Toast.LENGTH_SHORT).show()
+                return@evaluateJavascript
+            }
+            try {
+                startActivity(
+                    Intent(Intent.ACTION_VIEW, android.net.Uri.parse(url))
+                        .setDataAndType(android.net.Uri.parse(url), "video/*")
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                )
+            } catch (e: Exception) {
+                Toast.makeText(this, R.string.no_external_player, Toast.LENGTH_LONG).show()
+            }
+        }
+    }
 
     private fun goBackInWeb(): Boolean {
         val child = children.lastOrNull()

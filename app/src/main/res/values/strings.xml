@@ -118,6 +118,10 @@
     <string name="films_filter">Filmler</string>
     <string name="series_filter">Diziler</string>
     <string name="episodes">Bölümler</string>
+    <string name="next_episode">Sıradaki bölüm</string>
+    <string name="open_external">Harici oynatıcıda aç</string>
+    <string name="no_stream">Video akışı bulunamadı</string>
+    <string name="no_external_player">Harici oynatıcı bulunamadı (VLC kurun)</string>
     <string name="cast_title">Oyuncular</string>
     <string name="similar_title">Benzer filmler</string>
     <string name="other_sources">Diğer kaynaklar</string>

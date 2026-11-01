@@ -37,7 +37,8 @@ object Panels {
         val url: String,
         val poster: String,
         val site: String,
-        val meta: String = ""
+        val meta: String = "",
+        val isSeries: Boolean = false
     )
 
     private var vpnToggle: Switch? = null
@@ -208,7 +209,7 @@ object Panels {
             shown.clear()
             for (r in all) {
                 if (siteFilter.isNotEmpty() && !r.site.equals(siteFilter, true)) continue
-                val series = Regex("(?i)bölüm|bolum|sezon|dizi").containsMatchIn(r.title)
+                val series = r.isSeries || Regex("(?i)bölüm|bolum|sezon|dizi").containsMatchIn(r.title)
                 if (typeFilter == 1 && series) continue
                 if (typeFilter == 2 && !series) continue
                 shown.add(r)
@@ -296,7 +297,7 @@ object Panels {
         val done = AtomicInteger(0)
         val run = DiscoverCache.nextRun(a)
 
-        fun absorb(films: List<Scraper.Film>, siteName: String) {
+        fun absorb(films: List<Scraper.Film>, siteName: String, series: Boolean = false) {
             var added = 0
             for (f in films) {
                 // Ayni film/dizi baska sitede de olabilir: baslik anahtariyla tekille.
@@ -306,11 +307,11 @@ object Panels {
                 if (existing != null) {
                     if (existing.site != siteName) {
                         alts.getOrPut(existing.title) { ArrayList() }
-                            .add(Row(f.title, f.url, f.poster, siteName))
+                            .add(Row(f.title, f.url, f.poster, siteName, isSeries = series))
                     }
                     continue
                 }
-                all.add(Row(f.title, f.url, f.poster, siteName))
+                all.add(Row(f.title, f.url, f.poster, siteName, isSeries = series))
                 added++
             }
             if (added > 0) {
@@ -332,17 +333,28 @@ object Panels {
             Thread {
                 Scraper.load(s.url, 6000) { page ->
                     a.runOnUiThread { absorb(rotated(page.films, run, 8), s.name) }
-                    // Ana sayfa + "Yeni Filmler / Son Eklenenler" kategorisi
-                    val cat = page.categories.firstOrNull { newRx.containsMatchIn(it.first) }
-                    if (cat != null) {
-                        Scraper.load(cat.second, 5000) { p2 ->
+                    val newCat = page.categories.firstOrNull { newRx.containsMatchIn(it.first) }
+                    val diziCat = page.categories.firstOrNull { Regex("(?i)dizi").containsMatchIn(it.first) }
+                    val others = page.categories.filter { it != newCat && it != diziCat }
+                    val extraCat = if (others.isNotEmpty()) others[run % others.size] else null
+
+                    val jobs = ArrayList<Pair<String, Boolean>>() // url, series
+                    newCat?.let { jobs.add(it.second to false) }
+                    diziCat?.let { jobs.add(it.second to true) }
+                    extraCat?.let { jobs.add(it.second to false) }
+
+                    if (jobs.isEmpty()) {
+                        a.runOnUiThread { finishSite() }
+                        return@load
+                    }
+                    val left = AtomicInteger(jobs.size)
+                    for (j in jobs) {
+                        Scraper.load(j.first, 5000) { p2 ->
                             a.runOnUiThread {
-                                absorb(rotated(p2.films, run, 8), s.name)
-                                finishSite()
+                                absorb(rotated(p2.films, run, 6), s.name, j.second)
+                                if (left.decrementAndGet() == 0) finishSite()
                             }
                         }
-                    } else {
-                        a.runOnUiThread { finishSite() }
                     }
                 }
             }.start()
@@ -481,9 +493,12 @@ object Panels {
             refreshAdd()
         }
 
-        // Dizi ise bolum listesi
+        // Dizi ise bolum listesi + "siradaki bolum"
+        val seriesKey = keyOf(row.title)
         val eps = root.findViewById<TextView>(R.id.detail_eps)
         eps.visibility = View.GONE
+        val nextBtn = root.findViewById<TextView>(R.id.detail_next)
+        nextBtn.visibility = View.GONE
         if (Regex("(?i)bölüm|bolum|sezon").containsMatchIn(row.title) || row.url.contains("/dizi", true)) {
             Scraper.episodes(row.url) { list ->
                 a.runOnUiThread {
@@ -495,10 +510,24 @@ object Panels {
                             .setItems(list.map { it.first }.toTypedArray()) { _, w ->
                                 val (label, url) = list[w]
                                 History.add(a, label, url, row.poster, row.site)
+                                History.setLastEpisode(a, seriesKey, label)
                                 open(a, url)
                             }
                             .setNegativeButton(android.R.string.cancel, null)
                             .show()
+                    }
+
+                    val last = History.lastEpisode(a, seriesKey)
+                    val idx = list.indexOfFirst { it.first == last }
+                    if (idx >= 0 && idx + 1 < list.size) {
+                        val next = list[idx + 1]
+                        nextBtn.visibility = View.VISIBLE
+                        nextBtn.text = a.getString(R.string.next_episode) + " · " + next.first
+                        nextBtn.setOnClickListener {
+                            History.add(a, next.first, next.second, row.poster, row.site)
+                            History.setLastEpisode(a, seriesKey, next.first)
+                            open(a, next.second)
+                        }
                     }
                 }
             }
@@ -761,6 +790,7 @@ object Panels {
         actionRes: Int,
         initial: String = "",
         note: String = "",
+        historyKind: String? = null,
         onSubmit: (String) -> Unit
     ) {
         root.findViewById<TextView>(R.id.title).text = a.getString(titleRes)
@@ -780,7 +810,10 @@ object Panels {
         val submit = {
             val q = input.text.toString().trim()
             // Sadece "https://" yaziliysa gonderilmesin
-            if (q.isNotEmpty() && q != "https://" && q != "http://") onSubmit(q)
+            if (q.isNotEmpty() && q != "https://" && q != "http://") {
+                if (historyKind != null) SearchHistory.add(a, historyKind, q)
+                onSubmit(q)
+            }
         }
         action.setOnClickListener { submit() }
         input.setOnEditorActionListener { _, _, _ ->
@@ -791,6 +824,41 @@ object Panels {
             if (hasFocus) {
                 val imm = a.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
                 imm.showSoftInput(v, InputMethodManager.SHOW_IMPLICIT)
+            }
+        }
+
+        // Son aramalar / adresler
+        if (historyKind != null) {
+            val row = root.findViewById<LinearLayout>(R.id.recent_row)
+            val items = SearchHistory.all(a, historyKind)
+            if (items.isNotEmpty()) {
+                row.visibility = View.VISIBLE
+                val d = a.resources.displayMetrics.density
+                for (t in items) {
+                    val chip = TextView(a)
+                    chip.text = t
+                    chip.textSize = 11f
+                    chip.setTextColor(Color.parseColor("#B8C2CC"))
+                    chip.gravity = android.view.Gravity.CENTER
+                    chip.setBackgroundResource(R.drawable.tool_button_bg)
+                    chip.isFocusable = true
+                    chip.isClickable = true
+                    chip.maxWidth = (260 * d).toInt()
+                    chip.maxLines = 1
+                    chip.ellipsize = android.text.TextUtils.TruncateAt.END
+                    val lp = LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                        (32 * d).toInt()
+                    )
+                    lp.rightMargin = (8 * d).toInt()
+                    chip.layoutParams = lp
+                    chip.setPadding((12 * d).toInt(), 0, (12 * d).toInt(), 0)
+                    chip.setOnClickListener {
+                        input.setText(t)
+                        input.setSelection(t.length)
+                    }
+                    row.addView(chip)
+                }
             }
         }
     }
@@ -840,16 +908,8 @@ object Panels {
         for (s in Tmdb.recommendations(tmdb.id, tmdb.mediaType)) {
             val hit = matchTitle(lib, s.title) ?: continue
             if (!used.add(keyOf(hit.title))) continue
-            out.add(Row(hit.title, hit.url, hit.poster.ifBlank { s.poster }, hit.site, s.year))
+            out.add(Row(hit.title, hit.url, hit.poster.ifBlank { s.poster }, hit.site, s.year, hit.isSeries))
             if (out.size >= 8) break
-        }
-        if (out.size < 8) {
-            // Ayni siteden, sonra tum sitelerden tamamla (her kartin kaynagi olur)
-            for (r in lib.sortedBy { if (it.site == row.site) 0 else 1 }) {
-                if (!used.add(keyOf(r.title))) continue
-                out.add(r)
-                if (out.size >= 8) break
-            }
         }
         return out
     }

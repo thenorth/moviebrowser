@@ -119,6 +119,29 @@ object Player {
 })()
 """
 
+    /** Sayfadaki video akis URL'si (harici oynatici icin). */
+    const val STREAM_JS = """
+(function(){
+  try {
+    var v = document.querySelector('video');
+    if (v) {
+      if (v.currentSrc) return v.currentSrc;
+      if (v.src) return v.src;
+      var s = v.querySelector('source');
+      if (s && s.src) return s.src;
+    }
+    var all = document.querySelectorAll('video source, video');
+    for (var i = 0; i < all.length; i++) { if (all[i].src) return all[i].src; }
+    var frames = document.querySelectorAll('iframe');
+    for (var j = 0; j < frames.length; j++) {
+      var src = frames[j].src || '';
+      if (/\.m3u8|\.mp4/i.test(src)) return src;
+    }
+  } catch (e) {}
+  return '';
+})()
+"""
+
     /**
      * Sayfa acilinca oynatıcıyi isaretler ve video oynamaya baslayinca kopruye haber verir
      * (otomatik tam ekran icin).
