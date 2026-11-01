@@ -16,7 +16,8 @@ android {
         versionCode 44
         versionName "3.14"
 
-        // TMDB anahtari local.properties / ortam degiskeninden gelir (repoya girmez).
+        // TMDB anahtari local.properties / ortam degiskeninden gelir (repoya girmez),
+        // APK'da duz metin durmamasi icin XOR+Base64 ile saklanir.
         def tmdbKey = ""
         try {
             def props = new Properties()
@@ -24,7 +25,15 @@ android {
             if (f.exists()) f.withInputStream { props.load(it) }
             tmdbKey = props.getProperty("TMDB_API_KEY", System.getenv("TMDB_API_KEY") ?: "")
         } catch (Exception ignored) { }
-        buildConfigField "String", "TMDB_API_KEY", "\"${tmdbKey}\""
+        def tmdbObf = ""
+        if (tmdbKey) {
+            byte[] bytes = tmdbKey.getBytes("UTF-8")
+            for (int i = 0; i < bytes.length; i++) {
+                bytes[i] = (byte) (((int) bytes[i]) ^ 0x5A)
+            }
+            tmdbObf = java.util.Base64.getEncoder().encodeToString(bytes)
+        }
+        buildConfigField "String", "TMDB_KEY_OBF", "\"${tmdbObf}\""
     }
 
     buildTypes {

@@ -21,10 +21,24 @@ object Tmdb {
 
     private val cache = HashMap<String, Info?>()
 
-    fun enabled(): Boolean = BuildConfig.TMDB_API_KEY.isNotBlank()
+    /** Anahtar APK'da duz metin durmaz: BuildConfig'de XOR+Base64 saklanir. */
+    private val apiKey: String by lazy {
+        val obf = BuildConfig.TMDB_KEY_OBF
+        if (obf.isBlank()) return@lazy ""
+        try {
+            val raw = android.util.Base64.decode(obf, android.util.Base64.NO_WRAP)
+            val out = ByteArray(raw.size)
+            for (i in raw.indices) out[i] = ((raw[i].toInt() and 0xFF) xor 0x5A).toByte()
+            String(out, Charsets.UTF_8)
+        } catch (e: Exception) {
+            ""
+        }
+    }
+
+    fun enabled(): Boolean = apiKey.isNotBlank()
 
     fun load(rawTitle: String): Info? {
-        val key = BuildConfig.TMDB_API_KEY
+        val key = apiKey
         if (key.isBlank()) return null
         val title = clean(rawTitle)
         if (title.isEmpty()) return null
