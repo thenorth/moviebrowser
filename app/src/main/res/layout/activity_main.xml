@@ -31,7 +31,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_marginStart="248dp"
-        android:layout_marginTop="92dp"
+        android:layout_marginTop="84dp"
         android:visibility="gone" />
 
     <!-- Solda sabit menu -->
