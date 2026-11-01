@@ -7,7 +7,7 @@ import org.json.JSONObject
 /** Kesfet sonuclari: 10 dk taze sayilir, sekmeye donunce aninda acilir. */
 object DiscoverCache {
 
-    private const val P = "discover_cache"
+    private const val P = "discover_cache2"
     private const val K = "rows"
     private const val K_TIME = "time"
     private const val TTL = 10 * 60 * 1000L

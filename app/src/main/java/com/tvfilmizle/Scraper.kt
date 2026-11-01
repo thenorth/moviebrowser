@@ -82,6 +82,33 @@ object Scraper {
         ""
     }
 
+    /** Dizi sayfasindaki bolum/sezon linkleri. */
+    fun episodes(pageUrl: String, done: (List<Pair<String, String>>) -> Unit) {
+        Thread {
+            val out = LinkedHashMap<String, String>()
+            try {
+                val doc = Jsoup.connect(pageUrl)
+                    .userAgent(UA)
+                    .header("Accept-Language", "tr-TR,tr;q=0.9")
+                    .timeout(12000)
+                    .get()
+                val rx = Regex("(?i)bölüm|bolum|sezon")
+                for (a in doc.select("a[href]")) {
+                    val t = a.text().replace(Regex("\\s+"), " ").trim()
+                    if (t.length !in 3..60) continue
+                    if (!rx.containsMatchIn(t)) continue
+                    val href = a.absUrl("href")
+                    if (!href.startsWith("http")) continue
+                    out.putIfAbsent(t, href)
+                    if (out.size >= 60) break
+                }
+            } catch (e: Exception) {
+                // sayfa korumali / erisilemiyor
+            }
+            done(out.entries.map { it.key to it.value })
+        }.start()
+    }
+
     /** Gorselin poster adresini secer; logo/platform gorsellerini eler. */
     private fun posterOf(img: org.jsoup.nodes.Element): String? {
         var p = img.attr("data-src")

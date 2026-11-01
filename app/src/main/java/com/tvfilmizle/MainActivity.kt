@@ -62,6 +62,21 @@ class MainActivity : Activity() {
             if (id != apkDownloadId) return
             val dm = getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
             val uri = dm.getUriForDownloadedFile(id) ?: return
+            // Android 8+: bilinmeyen kaynaklardan kurulum izni gerekiyor.
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !packageManager.canRequestPackageInstalls()) {
+                Toast.makeText(this@MainActivity, R.string.update_allow_install, Toast.LENGTH_LONG).show()
+                try {
+                    startActivity(
+                        Intent(
+                            android.provider.Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
+                            android.net.Uri.parse("package:" + packageName)
+                        )
+                    )
+                } catch (e: Exception) {
+                    // ayar ekrani yok
+                }
+                return
+            }
             try {
                 startActivity(
                     Intent(Intent.ACTION_VIEW)
@@ -297,7 +312,7 @@ class MainActivity : Activity() {
         val isOk = event.keyCode == KeyEvent.KEYCODE_DPAD_CENTER || event.keyCode == KeyEvent.KEYCODE_ENTER
         val longAction: (() -> Unit)? = when {
             panelLongPress != null && inside(currentFocus, panel) -> panelLongPress
-            grid.hasFocus() && grid.visibility == View.VISIBLE -> ({ toggleFavorite() })
+            grid.hasFocus() && grid.visibility == View.VISIBLE -> ({ favoriteMenu() })
             else -> null
         }
         if (isOk && longAction != null) {
@@ -428,20 +443,44 @@ class MainActivity : Activity() {
         }
     }
 
-    /** Site kartinda OK'a basili tut = favoriye ekle/cikar. */
-    private fun toggleFavorite() {
+    /** Site kartinda OK'a basili tut = favori menusu (ekle/cikar, yukari/asagi tasi). */
+    private fun favoriteMenu() {
         val pos = if (grid.selectedItemPosition < 0) 0 else grid.selectedItemPosition
         val site = entries.getOrNull(pos) ?: return
-        val added = Favorites.toggle(this, site.url)
-        Toast.makeText(this, if (added) R.string.fav_added else R.string.fav_removed, Toast.LENGTH_SHORT).show()
-        val list = entries.toList()
-        fill(list)
+        val fav = Favorites.has(this, site.url)
+        val actions = ArrayList<String>()
+        actions.add(getString(if (fav) R.string.fav_remove else R.string.fav_add))
+        if (fav) {
+            actions.add(getString(R.string.move_up))
+            actions.add(getString(R.string.move_down))
+        }
+        AlertDialog.Builder(this)
+            .setTitle(site.name)
+            .setItems(actions.toTypedArray()) { _, which ->
+                when {
+                    !fav -> {
+                        Favorites.toggle(this, site.url)
+                        Toast.makeText(this, R.string.fav_added, Toast.LENGTH_SHORT).show()
+                    }
+                    which == 0 -> {
+                        Favorites.toggle(this, site.url)
+                        Toast.makeText(this, R.string.fav_removed, Toast.LENGTH_SHORT).show()
+                    }
+                    which == 1 -> Favorites.move(this, site.url, true)
+                    else -> Favorites.move(this, site.url, false)
+                }
+                val list = entries.toList()
+                fill(list)
+            }
+            .show()
     }
 
     private fun fill(sites: List<Site>) {
         entries.clear()
-        val favs = Favorites.all(this)
-        entries.addAll(sites.sortedBy { if (favs.contains(it.url)) 0 else 1 })
+        val order = Favorites.order(this)
+        val rank = HashMap<String, Int>()
+        order.forEachIndexed { i, url -> rank[url] = i }
+        entries.addAll(sites.sortedBy { rank[it.url] ?: 1000 })
         adapter.notifyDataSetChanged()
         grid.setSelection(0)
         grid.post {

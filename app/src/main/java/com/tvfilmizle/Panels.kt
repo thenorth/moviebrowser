@@ -49,13 +49,33 @@ object Panels {
         grid.adapter = adapter
         grid.setOnItemClickListener { _, _, pos, _ -> rows.getOrNull(pos)?.let { onOpen(it) } }
 
+        // Arama alani
+        val filter = root.findViewById<EditText>(R.id.filter_input)
+        filter.visibility = View.VISIBLE
+        filter.hint = a.getString(R.string.watch_filter_hint)
+        var query = ""
+        val d = a.resources.displayMetrics.density
+        grid.setPadding((38 * d).toInt(), (130 * d).toInt(), (38 * d).toInt(), (80 * d).toInt())
+
         fun reload() {
             rows.clear()
-            Watchlist.all(a).forEach { rows.add(Row(it.title, it.url, it.poster ?: "", it.site)) }
+            Watchlist.all(a)
+                .map { Row(it.title, it.url, it.poster ?: "", it.site) }
+                .filter { query.isEmpty() || it.title.lowercase(java.util.Locale("tr")).contains(query) }
+                .forEach { rows.add(it) }
             adapter.notifyDataSetChanged()
             count.text = rows.size.toString() + " film"
+            empty.text = a.getString(R.string.watch_empty)
             empty.visibility = if (rows.isEmpty()) View.VISIBLE else View.GONE
         }
+        filter.addTextChangedListener(object : android.text.TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = Unit
+            override fun afterTextChanged(s: android.text.Editable?) {
+                query = s?.toString()?.trim()?.lowercase(java.util.Locale("tr")) ?: ""
+                reload()
+            }
+        })
         reload()
 
         return {
@@ -91,9 +111,15 @@ object Panels {
             rows.clear()
             History.all(a).forEach {
                 val ep = episodeOf(it.title)
-                rows.add(Row(it.title, it.url, it.poster, if (ep.isEmpty()) it.site else it.site + " · " + ep))
+                val label = if (ep.isEmpty()) it.site else it.site + " · " + ep
+                rows.add(Row(it.title, it.url, it.poster, label))
             }
             adapter.notifyDataSetChanged()
+            // Ilk kart: kaldigin yerden devam.
+            if (rows.isNotEmpty()) {
+                val first = rows[0]
+                rows[0] = first.copy(site = "▶ " + a.getString(R.string.resume_badge) + " · " + first.site)
+            }
             count.text = rows.size.toString() + " film"
             empty.text = a.getString(R.string.recent_empty)
             empty.visibility = if (rows.isEmpty()) View.VISIBLE else View.GONE
@@ -119,7 +145,8 @@ object Panels {
         val chipRow = root.findViewById<LinearLayout>(R.id.filter_chips)
         val all = ArrayList<Row>()
         val shown = ArrayList<Row>()
-        var filter = ""
+        var siteFilter = ""
+        var typeFilter = 0 // 0: hepsi, 1: film, 2: dizi
         val adapter = PanelFilmAdapter(a, shown)
         grid.adapter = adapter
 
@@ -127,16 +154,29 @@ object Panels {
 
         fun rebuild() {
             shown.clear()
-            if (filter.isEmpty()) shown.addAll(all) else shown.addAll(all.filter { it.site == filter })
+            for (r in all) {
+                if (siteFilter.isNotEmpty() && r.site != siteFilter) continue
+                val series = Regex("(?i)bölüm|bolum|sezon").containsMatchIn(r.title)
+                if (typeFilter == 1 && series) continue
+                if (typeFilter == 2 && !series) continue
+                shown.add(r)
+            }
             adapter.notifyDataSetChanged()
             count.text = shown.size.toString() + " film"
-            empty.visibility = if (shown.isEmpty()) View.VISIBLE else View.GONE
+            if (shown.isEmpty()) {
+                empty.text = a.getString(
+                    if (all.isEmpty()) R.string.films_loading else R.string.no_results
+                )
+                empty.visibility = View.VISIBLE
+            } else {
+                empty.visibility = View.GONE
+            }
         }
 
-        // Site filtreleri
+        // Filtre cipleri: tur (film/dizi) + siteler
         chipRow.removeAllViews()
         val d = a.resources.displayMetrics.density
-        fun chip(name: String, site: String) {
+        fun chip(name: String, onClick: () -> Unit) {
             val chip = TextView(a)
             chip.text = name
             chip.textSize = 12f
@@ -152,14 +192,30 @@ object Panels {
             lp.rightMargin = (8 * d).toInt()
             chip.layoutParams = lp
             chip.setPadding((14 * d).toInt(), 0, (14 * d).toInt(), 0)
-            chip.setOnClickListener {
-                filter = site
-                rebuild()
-            }
+            chip.setOnClickListener { onClick() }
             chipRow.addView(chip)
         }
-        chip(a.getString(R.string.all_sites), "")
-        SiteRepository.cached(a).forEach { chip(it.name, it.name) }
+        chip(a.getString(R.string.all_sites)) {
+            siteFilter = ""
+            typeFilter = 0
+            rebuild()
+        }
+        chip(a.getString(R.string.films_filter)) {
+            siteFilter = ""
+            typeFilter = 1
+            rebuild()
+        }
+        chip(a.getString(R.string.series_filter)) {
+            siteFilter = ""
+            typeFilter = 2
+            rebuild()
+        }
+        SiteRepository.cached(a).forEach { s ->
+            chip(s.name) {
+                siteFilter = if (siteFilter == s.name) "" else s.name
+                rebuild()
+            }
+        }
 
         // Onbellek varsa aninda goster
         all.addAll(DiscoverCache.load(a))
@@ -178,7 +234,9 @@ object Panels {
                     a.runOnUiThread {
                         var added = 0
                         for (f in page.films.take(8)) {
-                            if (!seen.add(f.url)) continue
+                            // Ayni film/dizi baska sitede de olabilir: baslik anahtariyla tekille.
+                            val key = keyOf(f.title)
+                            if (key.isEmpty() || !seen.add(key)) continue
                             all.add(Row(f.title, f.url, f.poster, s.name))
                             added++
                         }
@@ -272,6 +330,29 @@ object Panels {
                 Toast.makeText(a, R.string.added_watch, Toast.LENGTH_SHORT).show()
             }
             refreshAdd()
+        }
+
+        // Dizi ise bolum listesi
+        val eps = root.findViewById<TextView>(R.id.detail_eps)
+        eps.visibility = View.GONE
+        if (Regex("(?i)bölüm|bolum|sezon").containsMatchIn(row.title) || row.url.contains("/dizi", true)) {
+            Scraper.episodes(row.url) { list ->
+                a.runOnUiThread {
+                    if (eps.parent == null || list.isEmpty()) return@runOnUiThread
+                    eps.visibility = View.VISIBLE
+                    eps.setOnClickListener {
+                        AlertDialog.Builder(a)
+                            .setTitle(R.string.episodes)
+                            .setItems(list.map { it.first }.toTypedArray()) { _, w ->
+                                val (label, url) = list[w]
+                                History.add(a, label, url, row.poster, row.site)
+                                open(a, url)
+                            }
+                            .setNegativeButton(android.R.string.cancel, null)
+                            .show()
+                    }
+                }
+            }
         }
 
         root.findViewById<View>(R.id.detail_watch).requestFocus()
@@ -497,6 +578,18 @@ object Panels {
     }
 
     // ---------------------------------------------------------------- yardimci
+    /** Baslik normalizasyonu: ayni film farkli sitelerde tekrarlanmasin. */
+    private fun keyOf(title: String): String {
+        var t = title.lowercase(java.util.Locale("tr"))
+        t = t.replace(Regex("\\(\\d{4}\\)"), " ")
+        t = t.replace(
+            Regex("(?i)\\b(filmi|film|full|hd|izle|türkçe|turkce|dublaj|altyazılı|altyazili|720p|1080p|4k)\\b"),
+            " "
+        )
+        t = t.replace(Regex("[^a-z0-9çğıöşü ]"), " ")
+        return t.replace(Regex("\\s+"), " ").trim()
+    }
+
     /** "3. Sezon 5. Bölüm" -> "S3B5" (dizi bolum takibi icin kisa etiket). */
     private val EP_RX = Regex("(?i)(\\d+)\\s*\\.?\\s*sezon\\D{0,12}?(\\d+)\\s*\\.?\\s*b[oö]l[uü]m")
 
