@@ -1,5 +1,5 @@
 {
-  "version": 7,
+  "version": 8,
   "updated": "2026-11-01",
   "sites": [
     {
@@ -9,14 +9,6 @@
     {
       "name": "Film Makinesi",
       "url": "https://filmmakinesi.to/"
-    },
-    {
-      "name": "Film Dozu",
-      "url": "https://filmdozu.website/"
-    },
-    {
-      "name": "HD Film Izle",
-      "url": "https://www.hdfilmizle.to/"
     },
     {
       "name": "U Film Izle",
@@ -45,14 +37,6 @@
     {
       "name": "FilmIzzle",
       "url": "https://filmizzle.com/"
-    },
-    {
-      "name": "HD Film İzle",
-      "url": "https://film-izle.com.tr/"
-    },
-    {
-      "name": "HD Film ve Dizi İzle",
-      "url": "https://filmcenneti.org/"
     },
     {
       "name": "Dizipod",
