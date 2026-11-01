@@ -69,7 +69,7 @@
             android:layout_marginStart="18dp"
             android:text="@string/watchlist"
             android:textColor="@color/text"
-            android:textSize="23sp"
+            android:textSize="24sp"
             android:textStyle="bold" />
 
         <View

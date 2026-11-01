@@ -5,7 +5,7 @@
     android:background="@drawable/row_bg"
     android:gravity="center_vertical"
     android:orientation="horizontal"
-    android:paddingLeft="16dp"
+    android:paddingLeft="0dp"
     android:paddingRight="16dp">
 
     <TextView

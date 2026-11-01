@@ -9,9 +9,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:paddingLeft="48dp"
-        android:paddingTop="30dp"
-        android:paddingRight="48dp"
+        android:paddingLeft="38dp"
+        android:paddingTop="18dp"
+        android:paddingRight="38dp"
         android:paddingBottom="34dp">
 
         <LinearLayout
@@ -25,7 +25,7 @@
                 android:layout_height="wrap_content"
                 android:text="@string/settings"
                 android:textColor="@color/text"
-                android:textSize="26sp"
+                android:textSize="24sp"
                 android:textStyle="bold" />
 
             <View
