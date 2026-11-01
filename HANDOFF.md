@@ -12,7 +12,7 @@ Sonraki oturum için kısa durum. Ayrıntılı geçmiş git log'da.
 ## Bu turda eklenenler (v3.14+)
 - **Listem'de arama** (`filter_input`): panelin üstünde arama alanı; yazdıkça liste süzülür.
 - **Son izlenenlerde "DEVAM" rozeti**: ilk kart "▶ DEVAM · <site>" etiketiyle gelir.
-- **Keşfet tür filtresi**: `Tümü / Filmler / Diziler` + site çipleri; sonuç yoksa "Sonuç yok.".
+- **Keşfet tür filtresi**: `Tümü / Filmler / Diziler` + site çipleri; sonuç yoksa "Sonuç yok.". **Site çipleri yalnız sonuç dönen siteler için** oluşturulur (boş sekmeler yok); dizi tespiti `bölüm/sezon/dizi` kelimelerine bakar.
 - **Favori düzeni**: site kartında uzun OK → menü (Favorilere ekle/çıkar, Yukarı/Aşağı taşı); sıra `Favorites.order` ile kalıcı.
 - **Bölüm listesi (dizi)**: detayda başlık "bölüm/sezon" içeriyorsa veya URL `/dizi` ise sayfadan bölüm linkleri kazınıp **Bölümler** düğmesiyle liste olarak açılır.
 - **Kurulum izni**: güncelleme APK'sı inince Android 8+ için `REQUEST_INSTALL_PACKAGES` kontrolü; izin yoksa "Bilinmeyen kaynaklar" ayarına yönlendirir.

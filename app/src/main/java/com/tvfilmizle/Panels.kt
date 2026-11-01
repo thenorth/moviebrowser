@@ -164,8 +164,8 @@ object Panels {
         fun rebuild() {
             shown.clear()
             for (r in all) {
-                if (siteFilter.isNotEmpty() && r.site != siteFilter) continue
-                val series = Regex("(?i)bölüm|bolum|sezon").containsMatchIn(r.title)
+                if (siteFilter.isNotEmpty() && !r.site.equals(siteFilter, true)) continue
+                val series = Regex("(?i)bölüm|bolum|sezon|dizi").containsMatchIn(r.title)
                 if (typeFilter == 1 && series) continue
                 if (typeFilter == 2 && !series) continue
                 shown.add(r)
@@ -182,9 +182,10 @@ object Panels {
             }
         }
 
-        // Filtre cipleri: tur (film/dizi) + siteler
+        // Filtre cipleri: tur (film/dizi) + sadece sonucu olan siteler
         chipRow.removeAllViews()
         val d = a.resources.displayMetrics.density
+        var chipKey = ""
         fun chip(name: String, onClick: () -> Unit) {
             val chip = TextView(a)
             chip.text = name
@@ -204,31 +205,43 @@ object Panels {
             chip.setOnClickListener { onClick() }
             chipRow.addView(chip)
         }
-        chip(a.getString(R.string.all_sites)) {
-            siteFilter = ""
-            typeFilter = 0
-            rebuild()
-        }
-        chip(a.getString(R.string.films_filter)) {
-            siteFilter = ""
-            typeFilter = 1
-            rebuild()
-        }
-        chip(a.getString(R.string.series_filter)) {
-            siteFilter = ""
-            typeFilter = 2
-            rebuild()
-        }
-        SiteRepository.cached(a).forEach { s ->
-            chip(s.name) {
-                siteFilter = if (siteFilter == s.name) "" else s.name
+        fun rebuildChips() {
+            chipRow.removeAllViews()
+            chip(a.getString(R.string.all_sites)) {
+                siteFilter = ""
+                typeFilter = 0
                 rebuild()
             }
+            chip(a.getString(R.string.films_filter)) {
+                siteFilter = ""
+                typeFilter = 1
+                rebuild()
+            }
+            chip(a.getString(R.string.series_filter)) {
+                siteFilter = ""
+                typeFilter = 2
+                rebuild()
+            }
+            val names = all.map { it.site }.distinct()
+            if (siteFilter.isNotEmpty() && names.none { it.equals(siteFilter, true) }) siteFilter = ""
+            names.forEach { name ->
+                chip(name) {
+                    siteFilter = if (siteFilter == name) "" else name
+                    typeFilter = 0
+                    rebuild()
+                }
+            }
+            chipKey = names.joinToString("|")
+        }
+        fun maybeRefreshChips() {
+            val key = all.map { it.site }.distinct().joinToString("|")
+            if (key != chipKey) rebuildChips()
         }
 
         // Onbellek varsa aninda goster
         all.addAll(DiscoverCache.load(a))
         rebuild()
+        rebuildChips()
         if (DiscoverCache.isFresh(a)) return { addToWatch(a, shown, grid) }
 
         empty.text = a.getString(R.string.films_loading)
@@ -258,6 +271,7 @@ object Panels {
                         }
                         if (added > 0) {
                             interleave(all)
+                            maybeRefreshChips()
                             rebuild()
                         }
                         if (done.incrementAndGet() == sites.size) {
