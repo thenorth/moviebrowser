@@ -15,7 +15,7 @@
         android:listSelector="@android:color/transparent"
         android:numColumns="6"
         android:paddingLeft="38dp"
-        android:paddingTop="92dp"
+        android:paddingTop="126dp"
         android:paddingRight="38dp"
         android:paddingBottom="80dp"
         android:scrollbars="none"
@@ -32,70 +32,77 @@
         android:textColor="@color/text_dim"
         android:textSize="15sp" />
 
+    <!-- Sabit ust bar: baslik + filtre cipleri (icerik altindan kayar) -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="top"
-        android:background="@drawable/header_fade"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:paddingLeft="38dp"
-        android:paddingTop="16dp"
-        android:paddingRight="38dp"
-        android:paddingBottom="14dp">
-
-        <TextView
-            android:id="@+id/btn_back"
-            android:layout_width="wrap_content"
-            android:layout_height="40dp"
-            android:background="@drawable/tool_button_bg"
-            android:clickable="true"
-            android:focusable="true"
-            android:gravity="center"
-            android:paddingLeft="18dp"
-            android:paddingRight="18dp"
-            android:text="@string/back_button"
-            android:textColor="@color/tool_button_text"
-            android:textSize="12sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/discover"
-            android:textColor="@color/text"
-            android:textSize="24sp"
-            android:textStyle="bold" />
-
-        <View
-            android:layout_width="0dp"
-            android:layout_height="1dp"
-            android:layout_weight="1" />
-
-        <TextView
-            android:id="@+id/count"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textColor="@color/text_dim"
-            android:textSize="12sp" />
-    </LinearLayout>
-
-    <HorizontalScrollView
-        android:id="@+id/filter_scroll"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="top"
-        android:layout_marginTop="82dp"
-        android:paddingLeft="38dp"
-        android:paddingRight="38dp"
-        android:scrollbars="none">
+        android:background="#FA0A0F16"
+        android:orientation="vertical"
+        android:paddingBottom="8dp">
 
         <LinearLayout
-            android:id="@+id/filter_chips"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal" />
-    </HorizontalScrollView>
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingLeft="38dp"
+            android:paddingTop="16dp"
+            android:paddingRight="38dp"
+            android:paddingBottom="10dp">
+
+            <TextView
+                android:id="@+id/btn_back"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:background="@drawable/tool_button_bg"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:paddingLeft="18dp"
+                android:paddingRight="18dp"
+                android:text="@string/back_button"
+                android:textColor="@color/tool_button_text"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:visibility="gone" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/discover"
+                android:textColor="@color/text"
+                android:textSize="24sp"
+                android:textStyle="bold" />
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="1" />
+
+            <TextView
+                android:id="@+id/count"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/text_dim"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <HorizontalScrollView
+            android:id="@+id/filter_scroll"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingLeft="38dp"
+            android:paddingRight="38dp"
+            android:scrollbars="none">
+
+            <LinearLayout
+                android:id="@+id/filter_chips"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal" />
+        </HorizontalScrollView>
+    </LinearLayout>
 
     <LinearLayout
         android:layout_width="match_parent"

@@ -181,7 +181,7 @@ class MainActivity : Activity() {
             "status", "watch", "recent" -> root.findViewById<View>(R.id.list)
             else -> null
         }
-        val topDp = if (name == "discover") 120 else 56
+        val topDp = if (name == "discover") 130 else 56
         list?.setPadding((38 * d).toInt(), (topDp * d).toInt(), (38 * d).toInt(), (80 * d).toInt())
         // Panelde geri dugmesi ve alt ipucu seridi gereksiz.
         root.findViewById<View>(R.id.btn_back)?.visibility = View.GONE
