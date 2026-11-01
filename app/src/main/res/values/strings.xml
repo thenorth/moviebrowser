@@ -113,7 +113,6 @@
     <string name="recent_title">Son izlenenler</string>
     <string name="recent_empty">Henüz film açmadın.</string>
     <string name="resume_badge">DEVAM</string>
-    <string name="resume_chip">DEVAM ET · %1$s</string>
     <string name="watch_filter_hint">Listede ara…</string>
     <string name="detail_hint">Film bu sitede açılır.</string>
     <string name="no_source_hint">Bu film için doğrudan kaynak yok. Listeden veya Keşfet\'ten arayabilirsin.</string>

@@ -465,7 +465,6 @@ class MainActivity : Activity() {
         super.onResume()
         SleepTimer.attach(this)
         handler.post(tick)
-        updateResumeChip()
         // Listem tarayicidan donuste tazelensin.
         if (section == "watch") {
             showSection("watch")
@@ -473,22 +472,6 @@ class MainActivity : Activity() {
         }
         val age = System.currentTimeMillis() - SiteRepository.lastUpdate(this)
         if (!refreshing && age > 5 * 60 * 1000L) refreshList(false)
-    }
-
-    /** Ust banttaki "Devam et" kisayolu: en son izlenen film/dizi. */
-    private fun updateResumeChip() {
-        val chip = findViewById<TextView>(R.id.btn_resume)
-        val last = History.all(this).firstOrNull()
-        if (last == null) {
-            chip.visibility = View.GONE
-            return
-        }
-        chip.text = getString(R.string.resume_chip, last.title)
-        chip.visibility = View.VISIBLE
-        chip.setOnClickListener {
-            chip.visibility = View.GONE
-            openFilm(Panels.Row(last.title, last.url, last.poster, last.site))
-        }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
