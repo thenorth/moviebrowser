@@ -6,6 +6,8 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.net.VpnService
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -74,16 +76,23 @@ object Panels {
     @Volatile
     private var warming = false
 
-    /** Uygulama acilirken akisi arka planda hazirla (benzer filmler bos kalmasin). */
-    fun warmFeed(ctx: Context) {
+    /** Uygulama acilirken akisi arka planda hazirla (benzer filmler / arama bos kalmasin). */
+    fun warmFeed(ctx: Context, onDone: (() -> Unit)? = null) {
+        if (onDone != null) synchronized(warmWaiters) { warmWaiters.add(onDone) }
         if (warming) return
         val cached = DiscoverCache.load(ctx)
         if (cached.isNotEmpty()) feed = cached
-        if (cached.isNotEmpty() && DiscoverCache.isFresh(ctx)) return
+        if (cached.isNotEmpty() && DiscoverCache.isFresh(ctx)) {
+            notifyWarm()
+            return
+        }
 
         val app = ctx.applicationContext
         val sites = SiteRepository.cached(app)
-        if (sites.isEmpty()) return
+        if (sites.isEmpty()) {
+            notifyWarm()
+            return
+        }
         warming = true
         val run = DiscoverCache.runIndex(app)
         val all = ArrayList<Row>()
@@ -104,10 +113,21 @@ object Panels {
                         feed = ArrayList(all)
                         DiscoverCache.save(app, all)
                         warming = false
+                        notifyWarm()
                     }
                 }
             }.start()
         }
+    }
+
+    private val warmWaiters = ArrayList<() -> Unit>()
+
+    /** Bekleyenlere ana is parcaciginda haber ver. */
+    private fun notifyWarm() {
+        if (warmWaiters.isEmpty()) return
+        val list = ArrayList(warmWaiters)
+        warmWaiters.clear()
+        android.os.Handler(android.os.Looper.getMainLooper()).post { for (cb in list) cb() }
     }
 
     // ---------------------------------------------------------------- Listem
@@ -982,6 +1002,90 @@ object Panels {
             .show()
     }
 
+    // ---------------------------------------------------------------- Arama
+    /** Uygulama ici arama: Kesfet akisi, Listem, Dizilerim ve son izlenenler. */
+    fun search(a: Activity, root: View, onOpen: (Row) -> Unit, onWeb: (String) -> Unit) {
+        val input = root.findViewById<EditText>(R.id.search_input)
+        val grid = root.findViewById<GridView>(R.id.list)
+        val empty = root.findViewById<TextView>(R.id.empty)
+        val count = root.findViewById<TextView>(R.id.count)
+        val web = root.findViewById<TextView>(R.id.search_web)
+        val shown = ArrayList<Row>()
+        val adapter = PanelFilmAdapter(a, shown)
+        grid.adapter = adapter
+        grid.setOnItemClickListener { _, _, pos, _ -> shown.getOrNull(pos)?.let { onOpen(it) } }
+
+        // Kaynaklar: ayni baslik tek kez (ilk gelen kazanir).
+        val source = LinkedHashMap<String, Row>()
+        fun buildSource() {
+            source.clear()
+            fun addAll(list: List<Row>) {
+                for (r in list) {
+                    val k = keyOf(r.title)
+                    if (k.isNotEmpty() && r.url.isNotEmpty()) source.putIfAbsent(k, r)
+                }
+            }
+            addAll(feed)
+            addAll(DiscoverCache.load(a))
+            addAll(Watchlist.all(a).map { Row(it.title, it.url, it.poster.orEmpty(), it.site) })
+            addAll(History.followed(a).map { Row(it.title, it.url, it.poster, it.site) })
+            addAll(History.all(a).map { Row(it.title, it.url, it.poster, it.site) })
+        }
+
+        fun refresh() {
+            val q = input.text.toString().trim().lowercase(java.util.Locale("tr"))
+            shown.clear()
+            if (q.isNotEmpty()) {
+                val hits = source.values.filter {
+                    it.title.lowercase(java.util.Locale("tr")).contains(q)
+                }
+                shown.addAll(
+                    hits.sortedBy {
+                        if (it.title.lowercase(java.util.Locale("tr")).startsWith(q)) 0 else 1
+                    }.take(40)
+                )
+            }
+            adapter.notifyDataSetChanged()
+            count.text = if (q.isEmpty()) "" else a.getString(R.string.search_count, shown.size)
+            empty.text = a.getString(if (q.isEmpty()) R.string.search_start else R.string.search_empty)
+            empty.visibility = if (shown.isEmpty()) View.VISIBLE else View.GONE
+        }
+
+        input.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, st: Int, c: Int, af: Int) = Unit
+            override fun onTextChanged(s: CharSequence?, st: Int, b: Int, c: Int) = Unit
+            override fun afterTextChanged(s: Editable?) = refresh()
+        })
+        input.setOnFocusChangeListener { v, has ->
+            if (has) {
+                val imm = a.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                imm.showSoftInput(v, InputMethodManager.SHOW_IMPLICIT)
+            }
+        }
+        input.setOnEditorActionListener { _, _, _ ->
+            val q = input.text.toString().trim()
+            if (q.isNotEmpty()) {
+                if (shown.isEmpty()) onWeb(q) else grid.requestFocus()
+            }
+            true
+        }
+        web.setOnClickListener {
+            val q = input.text.toString().trim()
+            if (q.isNotEmpty()) onWeb(q)
+        }
+        buildSource()
+        refresh()
+        // Onbellek bossa (Kesfet hic acilmadiysa) arka planda sitelerden topla.
+        if (source.isEmpty()) {
+            empty.text = a.getString(R.string.search_loading)
+            empty.visibility = View.VISIBLE
+            warmFeed(a) {
+                buildSource()
+                refresh()
+            }
+        }
+    }
+
     // ---------------------------------------------------------------- Arama / adres
     /** Panel icindeki tek satirlik giris alani. */
     fun input(
@@ -993,11 +1097,19 @@ object Panels {
         initial: String = "",
         note: String = "",
         historyKind: String? = null,
+        iconRes: Int = 0,
+        onText: ((String) -> Unit)? = null,
         onSubmit: (String) -> Unit
     ) {
         root.findViewById<TextView>(R.id.title).text = a.getString(titleRes)
         val input = root.findViewById<EditText>(R.id.input)
         input.hint = a.getString(hintRes)
+        if (iconRes != 0) {
+            root.findViewById<ImageView>(R.id.input_icon)?.apply {
+                setImageResource(iconRes)
+                visibility = View.VISIBLE
+            }
+        }
         if (initial.isNotEmpty()) {
             input.setText(initial)
             input.setSelection(initial.length)
@@ -1006,6 +1118,13 @@ object Panels {
         if (note.isNotEmpty()) {
             noteView.text = note
             noteView.visibility = View.VISIBLE
+        }
+        if (onText != null) {
+            input.addTextChangedListener(object : TextWatcher {
+                override fun beforeTextChanged(s: CharSequence?, st: Int, c: Int, af: Int) = Unit
+                override fun onTextChanged(s: CharSequence?, st: Int, b: Int, c: Int) = Unit
+                override fun afterTextChanged(s: Editable?) = onText(s?.toString().orEmpty())
+            })
         }
         val action = root.findViewById<TextView>(R.id.action)
         action.setText(actionRes)

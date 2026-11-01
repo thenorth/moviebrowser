@@ -51,7 +51,7 @@ object DiscoverCache {
         return out
     }
 
-    fun save(ctx: Context, rows: List<Panels.Row>) {
+    fun save(ctx: Context, rows: List<Panels.Row>, fresh: Boolean = true) {
         val arr = JSONArray()
         rows.forEach {
             arr.put(
@@ -66,7 +66,7 @@ object DiscoverCache {
             )
         }
         prefs(ctx).edit().putString(K, arr.toString())
-            .putLong(K_TIME, System.currentTimeMillis()).apply()
+            .putLong(K_TIME, if (fresh) System.currentTimeMillis() else 0L).apply()
     }
 
     /** Tur cipleri: kategori adi -> (site adi, kategori adresi). */

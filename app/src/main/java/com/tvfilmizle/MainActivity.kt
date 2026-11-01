@@ -198,6 +198,7 @@ class MainActivity : Activity() {
             "status" -> R.layout.activity_status
             "settings" -> R.layout.activity_settings
             "detail" -> R.layout.panel_detail
+            "search" -> R.layout.panel_search
             else -> R.layout.panel_input
         }
         val root = layoutInflater.inflate(layout, panel, false)
@@ -206,12 +207,13 @@ class MainActivity : Activity() {
         val d = resources.displayMetrics.density
         val list = when (name) {
             "discover" -> root.findViewById<View>(R.id.grid)
-            "status", "watch", "recent", "series" -> root.findViewById<View>(R.id.list)
+            "status", "watch", "recent", "series", "search" -> root.findViewById<View>(R.id.list)
             else -> null
         }
         val topDp = when (name) {
             "discover" -> 130
             "status" -> 90
+            "search" -> 176
             else -> 56
         }
         list?.setPadding((26 * d).toInt(), (topDp * d).toInt(), (26 * d).toInt(), (80 * d).toInt())
@@ -251,21 +253,37 @@ class MainActivity : Activity() {
             }
             else -> {
                 if (name == "search") {
-                    Panels.input(
-                        this, root, R.string.search_title, R.string.search_hint, R.string.search_action,
-                        historyKind = SearchHistory.SEARCH
-                    ) { q ->
-                        Panels.open(
-                            this,
-                            "https://www.google.com/search?q=" + android.net.Uri.encode(q + " film izle")
-                        )
-                    }
+                    Panels.search(
+                        this, root,
+                        onOpen = { row -> openFilm(row) },
+                        onWeb = { q ->
+                            Panels.open(
+                                this,
+                                "https://www.google.com/search?q=" +
+                                    android.net.Uri.encode(q + " film izle")
+                            )
+                        }
+                    )
                 } else {
                     Panels.input(
                         this, root, R.string.custom_url, R.string.url_hint, R.string.go,
                         initial = "https://",
                         note = getString(R.string.url_note),
-                        historyKind = SearchHistory.URL
+                        historyKind = SearchHistory.URL,
+                        iconRes = R.drawable.ic_tb_sites,
+                        onText = { raw ->
+                            val host = Scraper.hostOf(if (raw.startsWith("http")) raw else "https://$raw")
+                            val noteView = root.findViewById<TextView>(R.id.input_note)
+                            noteView.text = if (host.isBlank()) {
+                                getString(R.string.url_note)
+                            } else if (SiteRepository.cached(this).any {
+                                    Scraper.hostOf(it.url).equals(host, true)
+                                }) {
+                                getString(R.string.site_exists, host)
+                            } else {
+                                getString(R.string.site_preview, siteNameOf(host), host)
+                            }
+                        }
                     ) { q -> addAddressAndOpen(q) }
                 }
                 null
@@ -517,12 +535,14 @@ class MainActivity : Activity() {
     private fun addAddressAndOpen(raw: String) {
         val full = if (raw.startsWith("http")) raw else "https://$raw"
         val host = Scraper.hostOf(full)
-        val name = host.removePrefix("www.").substringBefore(".")
-            .replaceFirstChar { it.uppercase() }
-        UserSites.add(this, name.ifBlank { full }, full)
+        UserSites.add(this, siteNameOf(host).ifBlank { full }, full)
         fill(SiteRepository.cached(this))
         Panels.open(this, full)
     }
+
+    /** Alan adindan site adi: filmperdesi.org -> Filmperdesi. */
+    private fun siteNameOf(host: String): String =
+        host.removePrefix("www.").substringBefore(".").replaceFirstChar { it.uppercase() }
 
     /** Site kartinda OK'a basili tut = favori menusu (ekle/cikar, yukari/asagi tasi). */
     private fun favoriteMenu() {
