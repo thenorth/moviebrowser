@@ -242,13 +242,6 @@ class MainActivity : Activity() {
         }
         Panels.detail(this, root, row, onWatch = {
             Panels.watch(this, row)
-        }, onAdd = {
-            if (Watchlist.has(this, row.url)) {
-                Toast.makeText(this, R.string.in_watch, Toast.LENGTH_SHORT).show()
-            } else {
-                Watchlist.add(this, Watchlist.Item(row.title, row.url, row.site, row.poster))
-                Toast.makeText(this, R.string.added_watch, Toast.LENGTH_SHORT).show()
-            }
         })
     }
 

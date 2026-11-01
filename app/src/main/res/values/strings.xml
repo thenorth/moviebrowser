@@ -103,6 +103,7 @@
     <string name="remove">SİL</string>
     <string name="remove_confirm">Listeden çıkarılsın mı?</string>
     <string name="add_watch">Listeme ekle</string>
+    <string name="remove_watch">Listemden çıkar</string>
     <string name="added_watch">Listeme eklendi</string>
     <string name="in_watch">Zaten listende</string>
     <string name="search_title">Film ara</string>

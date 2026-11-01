@@ -208,7 +208,7 @@ object Panels {
     }
 
     // --------------------------------------------------------------- Detay
-    fun detail(a: Activity, root: View, row: Row, onWatch: () -> Unit, onAdd: () -> Unit) {
+    fun detail(a: Activity, root: View, row: Row, onWatch: () -> Unit) {
         val titleView = root.findViewById<TextView>(R.id.detail_title)
         val siteView = root.findViewById<TextView>(R.id.detail_site)
         val info = root.findViewById<TextView>(R.id.detail_info)
@@ -254,7 +254,26 @@ object Panels {
         }.start()
 
         root.findViewById<View>(R.id.detail_watch).setOnClickListener { onWatch() }
-        root.findViewById<View>(R.id.detail_add).setOnClickListener { onAdd() }
+
+        // Listeme ekle / Listemden cikar (duruma gore)
+        val add = root.findViewById<TextView>(R.id.detail_add)
+        fun refreshAdd() {
+            add.setText(
+                if (Watchlist.has(a, row.url)) R.string.remove_watch else R.string.add_watch
+            )
+        }
+        refreshAdd()
+        add.setOnClickListener {
+            if (Watchlist.has(a, row.url)) {
+                Watchlist.remove(a, row.url)
+                Toast.makeText(a, R.string.removed_watch, Toast.LENGTH_SHORT).show()
+            } else {
+                Watchlist.add(a, Watchlist.Item(row.title, row.url, row.site, row.poster))
+                Toast.makeText(a, R.string.added_watch, Toast.LENGTH_SHORT).show()
+            }
+            refreshAdd()
+        }
+
         root.findViewById<View>(R.id.detail_watch).requestFocus()
     }
 
