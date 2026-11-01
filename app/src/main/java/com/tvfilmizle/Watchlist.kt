@@ -4,6 +4,17 @@ import android.content.Context
 import org.json.JSONArray
 import org.json.JSONObject
 
+/** Eski "▶ DEVAM" etiketi site alanina karismis kayitlari temizler. */
+internal fun cleanSite(s: String): String {
+    var x = s
+    while (x.contains("▶")) {
+        val cut = x.indexOf("▶")
+        val sep = x.indexOf("·", cut)
+        x = if (sep < 0) x.substring(0, cut) else x.substring(sep + 1)
+    }
+    return x.trim()
+}
+
 /** Tarayicidan/izgaradan eklenen film listesi (baslik + url + site + afis). */
 object Watchlist {
 
@@ -27,7 +38,7 @@ object Watchlist {
                     Item(
                         o.optString("title"),
                         o.optString("url"),
-                        o.optString("site"),
+                        cleanSite(o.optString("site")),
                         o.optString("poster").ifBlank { null }
                     )
                 )

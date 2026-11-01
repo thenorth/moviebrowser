@@ -20,7 +20,7 @@ object History {
             val arr = JSONArray(raw)
             for (i in 0 until arr.length()) {
                 val o = arr.getJSONObject(i)
-                out.add(Item(o.optString("title"), o.optString("url"), o.optString("poster"), o.optString("site")))
+                out.add(Item(o.optString("title"), o.optString("url"), o.optString("poster"), cleanSite(o.optString("site"))))
             }
         } catch (e: Exception) {
             // bozuk kayit
@@ -75,7 +75,7 @@ object History {
                         o.optString("title"),
                         o.optString("url"),
                         o.optString("poster"),
-                        o.optString("site"),
+                        cleanSite(o.optString("site")),
                         o.optString("label")
                     )
                 )

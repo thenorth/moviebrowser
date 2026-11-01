@@ -160,17 +160,16 @@ object Panels {
 
         fun reload() {
             rows.clear()
-            History.all(a).forEach {
+            History.all(a).forEachIndexed { idx, it ->
                 val ep = episodeOf(it.title)
-                val label = if (ep.isEmpty()) it.site else it.site + " · " + ep
-                rows.add(Row(it.title, it.url, it.poster, label))
+                val meta = when {
+                    idx == 0 && ep.isEmpty() -> "▶ DEVAM"
+                    idx == 0 -> "▶ DEVAM · " + ep
+                    else -> ep
+                }
+                rows.add(Row(it.title, it.url, it.poster, it.site, meta))
             }
             adapter.notifyDataSetChanged()
-            // Ilk kart: kaldigin yerden devam.
-            if (rows.isNotEmpty()) {
-                val first = rows[0]
-                rows[0] = first.copy(site = "▶ " + a.getString(R.string.resume_badge) + " · " + first.site)
-            }
             count.text = rows.size.toString() + " film"
             empty.text = a.getString(R.string.recent_empty)
             empty.visibility = if (rows.isEmpty()) View.VISIBLE else View.GONE
@@ -200,8 +199,20 @@ object Panels {
 
         fun reload() {
             rows.clear()
+            val seen = HashSet<String>()
             History.followed(a).forEach {
-                rows.add(Row(it.title, it.url, it.poster, a.getString(R.string.series_last) + ": " + it.label))
+                seen.add(it.key)
+                val label = it.label.ifBlank { a.getString(R.string.series_no_ep) }
+                rows.add(Row(it.title, it.url, it.poster, it.site, a.getString(R.string.series_last) + ": " + label))
+            }
+            // Listem'e eklenen diziler takip edilmese de burada gorunur.
+            Watchlist.all(a).forEach { w ->
+                val k = keyOf(w.title)
+                if (k.isEmpty() || !seen.add(k)) return@forEach
+                if (!Tmdb.looksLikeSeries(w.title, w.url)) return@forEach
+                val label = History.lastEpisode(a, k).orEmpty()
+                    .ifBlank { a.getString(R.string.series_no_ep) }
+                rows.add(Row(w.title, w.url, w.poster.orEmpty(), w.site, a.getString(R.string.series_last) + ": " + label))
             }
             adapter.notifyDataSetChanged()
             count.text = rows.size.toString() + " dizi"
@@ -215,6 +226,8 @@ object Panels {
             val item = rows.getOrNull(if (pos < 0) 0 else pos)
             if (item != null) {
                 History.unfollow(a, keyOf(item.title))
+                // Listem'den de cikar; yoksa panelde yeniden belirir.
+                if (item.url.isNotEmpty()) Watchlist.remove(a, item.url)
                 Toast.makeText(a, R.string.unfollowed, Toast.LENGTH_SHORT).show()
                 reload()
             }
@@ -415,6 +428,10 @@ object Panels {
             Toast.makeText(a, R.string.in_watch, Toast.LENGTH_SHORT).show()
         } else {
             Watchlist.add(a, Watchlist.Item(r.title, r.url, r.site, r.poster))
+            if (r.isSeries || Tmdb.looksLikeSeries(r.title, r.url)) {
+                val k = keyOf(r.title)
+                History.follow(a, k, r.title, r.url, r.poster, r.site, History.lastEpisode(a, k) ?: "")
+            }
             Toast.makeText(a, R.string.added_watch, Toast.LENGTH_SHORT).show()
         }
     }
@@ -532,6 +549,14 @@ object Panels {
                 Toast.makeText(a, R.string.removed_watch, Toast.LENGTH_SHORT).show()
             } else {
                 Watchlist.add(a, Watchlist.Item(row.title, row.url, row.site, row.poster))
+                // Dizi ise Dizilerim'e de ekle
+                if (row.isSeries || Tmdb.looksLikeSeries(row.title, row.url)) {
+                    val k = keyOf(row.title)
+                    History.follow(
+                        a, k, row.title, row.url, row.poster, row.site,
+                        History.lastEpisode(a, k) ?: ""
+                    )
+                }
                 Toast.makeText(a, R.string.added_watch, Toast.LENGTH_SHORT).show()
             }
             refreshAdd()

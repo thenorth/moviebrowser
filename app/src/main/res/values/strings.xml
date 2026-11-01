@@ -90,6 +90,7 @@
     <string name="series_panel">Dizilerim</string>
     <string name="series_empty">Takip ettiğin dizi yok.\nBir dizinin bölümünü açınca buraya eklenir.</string>
     <string name="series_last">Kaldığın</string>
+    <string name="series_no_ep">Bölüm seçilmedi</string>
     <string name="unfollowed">Takibi bıraktın</string>    <string name="update_check_desc">GitHub\'dan yeni sürümü indir ve kur</string>
     <string name="update_check">Kontrol et</string>
     <string name="update_checking">Kontrol ediliyor…</string>
