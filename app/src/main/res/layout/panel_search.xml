@@ -17,7 +17,7 @@
         android:listSelector="@android:color/transparent"
         android:numColumns="5"
         android:paddingLeft="26dp"
-        android:paddingTop="176dp"
+        android:paddingTop="214dp"
         android:paddingRight="26dp"
         android:paddingBottom="80dp"
         android:scrollbars="none"
@@ -97,10 +97,26 @@
                 android:textSize="17sp" />
 
             <TextView
-                android:id="@+id/search_web"
+                android:id="@+id/search_sites"
                 android:layout_width="wrap_content"
                 android:layout_height="56dp"
                 android:layout_marginStart="12dp"
+                android:background="@drawable/tool_button_bg"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:paddingLeft="22dp"
+                android:paddingRight="22dp"
+                android:text="@string/search_sites"
+                android:textColor="@color/tool_button_text"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/search_web"
+                android:layout_width="wrap_content"
+                android:layout_height="56dp"
+                android:layout_marginStart="10dp"
                 android:background="@drawable/tool_button_bg"
                 android:clickable="true"
                 android:focusable="true"
@@ -112,6 +128,16 @@
                 android:textSize="12sp"
                 android:textStyle="bold" />
         </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/search_chips"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingLeft="26dp"
+            android:paddingRight="26dp" />
 
         <TextView
             android:id="@+id/empty"

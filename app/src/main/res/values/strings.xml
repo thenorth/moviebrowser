@@ -177,9 +177,11 @@
     <string name="backup_failed">Yedek işlemi başarısız</string>
     <string name="search_web">Google\'da ara</string>
     <string name="search_count">%1$d sonuç</string>
-    <string name="search_empty">Eşleşen film/dizi yok. Google\'da arayabilirsin.</string>
+    <string name="search_empty">Eşleşen yok. “Sitelerde ara” ile tüm sitelerde arayabilirsin.</string>
     <string name="search_start">Yazdıkça Keşfet, Listem, Dizilerim ve son izlenenlerde arar.</string>
     <string name="search_loading">Film listesi hazırlanıyor…</string>
+    <string name="search_sites">Sitelerde ara</string>
+    <string name="search_searching">Sitelerde aranıyor: %1$d/%2$d</string>
     <string name="site_preview">Eklenecek: %1$s · %2$s</string>
     <string name="site_exists">Listede var: %1$s</string>
 </resources>

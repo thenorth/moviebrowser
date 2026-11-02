@@ -213,7 +213,7 @@ class MainActivity : Activity() {
         val topDp = when (name) {
             "discover" -> 130
             "status" -> 90
-            "search" -> 176
+            "search" -> 214
             else -> 56
         }
         list?.setPadding((26 * d).toInt(), (topDp * d).toInt(), (26 * d).toInt(), (80 * d).toInt())

@@ -83,8 +83,7 @@ object Scraper {
     }
 
     /** Dizi sayfasindaki bolum/sezon linkleri. */
-    fun episodes(pageUrl: String, done: (List<Pair<String, String>>) -> Unit) {
-        Thread {
+    fun episodes(pageUrl: String, done: (List<Pair<String, String>>) -> Unit) {        Thread {
             val out = LinkedHashMap<String, String>()
             try {
                 val doc = Jsoup.connect(pageUrl)

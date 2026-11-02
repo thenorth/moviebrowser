@@ -1003,20 +1003,30 @@ object Panels {
     }
 
     // ---------------------------------------------------------------- Arama
-    /** Uygulama ici arama: Kesfet akisi, Listem, Dizilerim ve son izlenenler. */
+    /** Uygulama ici arama + sitelerin kendi arama sayfalari. */
     fun search(a: Activity, root: View, onOpen: (Row) -> Unit, onWeb: (String) -> Unit) {
         val input = root.findViewById<EditText>(R.id.search_input)
         val grid = root.findViewById<GridView>(R.id.list)
         val empty = root.findViewById<TextView>(R.id.empty)
         val count = root.findViewById<TextView>(R.id.count)
         val web = root.findViewById<TextView>(R.id.search_web)
+        val sitesBtn = root.findViewById<TextView>(R.id.search_sites)
+        val chipRow = root.findViewById<LinearLayout>(R.id.search_chips)
         val shown = ArrayList<Row>()
         val adapter = PanelFilmAdapter(a, shown)
         grid.adapter = adapter
         grid.setOnItemClickListener { _, _, pos, _ -> shown.getOrNull(pos)?.let { onOpen(it) } }
 
-        // Kaynaklar: ayni baslik tek kez (ilk gelen kazanir).
+        var typeFilter = 0 // 0: hepsi, 1: film, 2: dizi
+        var searching = false
+        var liveDone = 0
+        var liveTotal = 0
+
+        // Yerel kaynaklar: ayni baslik tek kez (ilk gelen kazanir).
         val source = LinkedHashMap<String, Row>()
+        // Sitelerden gelen sonuclar (oturum boyunca kalir).
+        val live = LinkedHashMap<String, Row>()
+
         fun buildSource() {
             source.clear()
             fun addAll(list: List<Row>) {
@@ -1032,24 +1042,159 @@ object Panels {
             addAll(History.all(a).map { Row(it.title, it.url, it.poster, it.site) })
         }
 
+        fun isSeriesRow(r: Row): Boolean =
+            r.isSeries || Regex("(?i)bölüm|bolum|sezon|dizi").containsMatchIn(r.title)
+
         fun refresh() {
-            val q = input.text.toString().trim().lowercase(java.util.Locale("tr"))
+            val q = fold(input.text.toString().trim())
+            val pool = LinkedHashMap<String, Row>()
+            pool.putAll(source)
+            pool.putAll(live)
             shown.clear()
             if (q.isNotEmpty()) {
-                val hits = source.values.filter {
-                    it.title.lowercase(java.util.Locale("tr")).contains(q)
+                val hits = pool.values.filter {
+                    fold(it.title).contains(q)
+                }.filter {
+                    when (typeFilter) {
+                        1 -> !isSeriesRow(it)
+                        2 -> isSeriesRow(it)
+                        else -> true
+                    }
                 }
                 shown.addAll(
                     hits.sortedBy {
-                        if (it.title.lowercase(java.util.Locale("tr")).startsWith(q)) 0 else 1
-                    }.take(40)
+                        if (fold(it.title).startsWith(q)) 0 else 1
+                    }.take(60)
                 )
             }
             adapter.notifyDataSetChanged()
-            count.text = if (q.isEmpty()) "" else a.getString(R.string.search_count, shown.size)
-            empty.text = a.getString(if (q.isEmpty()) R.string.search_start else R.string.search_empty)
+            count.text = when {
+                q.isEmpty() -> ""
+                searching -> a.getString(R.string.search_searching, liveDone, liveTotal)
+                else -> a.getString(R.string.search_count, shown.size)
+            }
+            empty.text = a.getString(
+                when {
+                    q.isEmpty() -> R.string.search_start
+                    searching && shown.isEmpty() -> R.string.search_loading
+                    else -> R.string.search_empty
+                }
+            )
             empty.visibility = if (shown.isEmpty()) View.VISIBLE else View.GONE
         }
+
+        var searchOne: ((Site, String) -> Unit)? = null
+
+        // Sitelerin kendi arama sayfalarinda ara.
+        fun searchSites() {
+            val q = input.text.toString().trim()
+            if (q.isEmpty() || searching) return
+            val sites = SiteRepository.cached(a)
+            if (sites.isEmpty()) return
+            searching = true
+            liveDone = 0
+            liveTotal = sites.size
+            refresh()
+            val query = fold(q)
+            for (s in sites) {
+                Thread {
+                    try {
+                        searchOne?.invoke(s, q)
+                    } catch (e: Exception) {
+                        a.runOnUiThread {
+                            liveDone++
+                            if (liveDone >= liveTotal) searching = false
+                            refresh()
+                        }
+                    }
+                }.start()
+            }
+        }
+
+        /** Tek sitede arama formunu bulup sonuclari toplar (arka plan is parcacigi). */
+        searchOne = { s, q ->
+                    val query = fold(q)
+                    val host = Scraper.hostOf(s.url)
+                    val enc = android.net.Uri.encode(q)
+                    var found: List<Scraper.Film> = emptyList()
+                    var used: String? = null
+
+                    fun tryTemplate(t: String): Boolean {
+                        val url = t.replace("%s", enc)
+                        val latch = java.util.concurrent.CountDownLatch(1)
+                        var result: List<Scraper.Film> = emptyList()
+                        Scraper.load(url, 5000) { p ->
+                            result = p.films
+                            latch.countDown()
+                        }
+                        latch.await(6, java.util.concurrent.TimeUnit.SECONDS)
+                        // Sonuc gercekten sorguyla ilgili mi?
+                        if (result.none { fold(keyOf(it.title)).contains(query) }) return false
+                        found = result
+                        used = t
+                        return true
+                    }
+
+                    val remembered = SiteSearch.template(a, host)
+                    var ok = remembered != null && tryTemplate(remembered)
+                    if (!ok) {
+                        // Arama formunu bul (ilk seferde), yoksa yaygin kaliblar.
+                        val form = SiteSearch.formTemplate(s.url)
+                        if (form != null) ok = tryTemplate(form)
+                        if (!ok) {
+                            for (t in SiteSearch.generic(s.url)) {
+                                if (t == remembered || t == form) continue
+                                if (tryTemplate(t)) {
+                                    ok = true
+                                    break
+                                }
+                            }
+                        }
+                    }
+                    if (ok) SiteSearch.saveTemplate(a, host, used!!)
+                    a.runOnUiThread {
+                        for (f in found) {
+                            val k = keyOf(f.title)
+                            if (k.isEmpty() || live.containsKey(k)) continue
+                            // Arama sayfasindaki alakasiz onerileri ele.
+                            if (!fold(k).contains(keyOf(query))) continue
+                            live[k] = Row(f.title, f.url, f.poster, s.name)
+                        }
+                        liveDone++
+                        if (liveDone >= liveTotal) searching = false
+                        refresh()
+                    }
+        }
+
+        fun setType(value: Int) {
+            typeFilter = value
+            refresh()
+        }
+
+        // Filtre cipleri
+        val d = a.resources.displayMetrics.density
+        fun chip(name: String, onClick: () -> Unit) {
+            val chip = TextView(a)
+            chip.text = name
+            chip.textSize = 12f
+            chip.setTextColor(Color.parseColor("#F2F6FA"))
+            chip.gravity = android.view.Gravity.CENTER
+            chip.setBackgroundResource(R.drawable.tool_button_bg)
+            chip.isFocusable = true
+            chip.isClickable = true
+            val lp = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                (34 * d).toInt()
+            )
+            lp.rightMargin = (8 * d).toInt()
+            chip.layoutParams = lp
+            chip.setPadding((14 * d).toInt(), 0, (14 * d).toInt(), 0)
+            chip.setOnClickListener { onClick() }
+            chipRow.addView(chip)
+        }
+        chip(a.getString(R.string.all_sites)) { setType(0) }
+        chip(a.getString(R.string.films_filter)) { setType(1) }
+        chip(a.getString(R.string.series_filter)) { setType(2) }
 
         input.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, st: Int, c: Int, af: Int) = Unit
@@ -1064,15 +1209,15 @@ object Panels {
         }
         input.setOnEditorActionListener { _, _, _ ->
             val q = input.text.toString().trim()
-            if (q.isNotEmpty()) {
-                if (shown.isEmpty()) onWeb(q) else grid.requestFocus()
-            }
+            if (q.isNotEmpty()) searchSites()
             true
         }
+        sitesBtn.setOnClickListener { searchSites() }
         web.setOnClickListener {
             val q = input.text.toString().trim()
             if (q.isNotEmpty()) onWeb(q)
         }
+
         buildSource()
         refresh()
         // Onbellek bossa (Kesfet hic acilmadiysa) arka planda sitelerden topla.
@@ -1206,6 +1351,11 @@ object Panels {
             }.start()
         }
     }
+
+    /** Arama icin Turkce karakterleri sadelestir: "ask" -> "aşk" eslesir. */
+    private fun fold(s: String): String = s.lowercase(java.util.Locale("tr"))
+        .replace("ı", "i").replace("ş", "s").replace("ç", "c")
+        .replace("ğ", "g").replace("ö", "o").replace("ü", "u")
 
     /** Dizi karti etiketi: "YENI · Kaldigin: <bolum>". */
     private fun metaOf(a: Activity, key: String, label: String): String {
