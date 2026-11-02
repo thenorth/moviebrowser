@@ -54,6 +54,19 @@ object Player {
   }
 
   // 4) Oynatıcı henüz yüklenmedi: oynatıcı alanındaki "oynat" tetikleyicisine bas
+  // Bu site icin daha once ise yarayan oynat ogesi
+  if (window.__tvPlayHint) {
+    try {
+      var ph = document.querySelector(window.__tvPlayHint);
+      if (ph) {
+        var phr = ph.getBoundingClientRect();
+        if (phr.width > 20 && phr.height > 20 && phr.top < window.innerHeight) {
+          return JSON.stringify({ kind: 'tap', nx: (phr.left + phr.width / 2) / window.innerWidth, ny: (phr.top + phr.height / 2) / window.innerHeight, sel: window.__tvPlayHint });
+        }
+      }
+    } catch (e) {}
+  }
+
   var scope = document.querySelector('.video-player-container-here, .player-container, ' +
               '[class*=player-container], #player, .player') || document;
   var triggers = ['.play-that-video', '.vjs-big-play-button', '[class*=play-button]',
@@ -73,7 +86,7 @@ object Player {
     var nx3 = (pr.left + pr.width / 2) / window.innerWidth;
     var ny3 = (pr.top + pr.height / 2) / window.innerHeight;
     if (nx3 >= 0 && nx3 <= 1 && ny3 >= 0 && ny3 <= 1) {
-      return JSON.stringify({ kind: 'tap', nx: nx3, ny: ny3 });
+      return JSON.stringify({ kind: 'tap', nx: nx3, ny: ny3, sel: (el2.id ? ('#' + el2.id) : '') });
     }
     try { el2.click(); } catch (e) {}
     return 'started';

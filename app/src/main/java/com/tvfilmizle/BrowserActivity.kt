@@ -67,6 +67,7 @@ class BrowserActivity : Activity() {
     private var active: WebView? = null
     private var advanced = false
     private var autoPlay = false
+    private var pendingFsSelector = ""
     private var customView: View? = null
     private var customCallback: WebChromeClient.CustomViewCallback? = null
     private var homeUrl = ""
@@ -402,6 +403,7 @@ class BrowserActivity : Activity() {
     private fun enterFullscreen(retries: Int = 3) {
         if (fsActive || isFinishing || customView != null) return
         val w = active ?: web
+        w.evaluateJavascript("window.__tvFsHint=" + org.json.JSONObject.quote(PlayerProfile.fullscreen(this, hostOfPage(w)) ?: ""), null)
         w.evaluateJavascript(Fullscreen.ENTER_JS) { result ->
             val state = result?.trim()?.trim('"') ?: "none"
             if (state.startsWith("{")) {
@@ -409,6 +411,7 @@ class BrowserActivity : Activity() {
                 try {
                     val o = org.json.JSONObject(state)
                     if (o.optString("kind") == "tapfs") {
+                        pendingFsSelector = o.optString("sel")
                         tapWeb(o.optDouble("nx", 0.96).toFloat(), o.optDouble("ny", 0.96).toFloat())
                         w.postDelayed({ afterPlayerFullscreenTap(w) }, 1600)
                         return@evaluateJavascript
@@ -429,9 +432,13 @@ class BrowserActivity : Activity() {
 
     /** Player'ın kendi tam ekran düğmesine basıldı: ekranı doldurduysa bitir, değilse kendimiz kaplarız. */
     private fun afterPlayerFullscreenTap(w: WebView) {
-        if (isFinishing || customView != null) return
+        if (isFinishing || customView != null) {
+            rememberFs(w)
+            return
+        }
         w.evaluateJavascript(Fullscreen.FILLED_JS) { r ->
             if (r?.contains("full") == true) {
+                rememberFs(w)
                 fsActive = true
                 toolbar.visibility = View.GONE
                 hideSystemBars()
@@ -440,6 +447,19 @@ class BrowserActivity : Activity() {
                 enterFullscreen(2)
             }
         }
+    }
+
+    private fun hostOfPage(w: WebView): String = try {
+        android.net.Uri.parse(w.url ?: "").host ?: ""
+    } catch (e: Exception) {
+        ""
+    }
+
+    /** Bu sitede ise yarayan tam ekran secicisini hatirla. */
+    private fun rememberFs(w: WebView) {
+        if (pendingFsSelector.isEmpty()) return
+        PlayerProfile.saveFullscreen(this, hostOfPage(w), pendingFsSelector)
+        pendingFsSelector = ""
     }
 
     /** Yukleme hatasi: sebep + tek tusla VPN. */
@@ -495,6 +515,7 @@ class BrowserActivity : Activity() {
             showSystemBars()
             return
         }
+        w.evaluateJavascript("window.__tvFsHint=" + org.json.JSONObject.quote(PlayerProfile.fullscreen(this, hostOfPage(w)) ?: ""), null)
         w.evaluateJavascript(Fullscreen.ENTER_JS) { result ->
             val state = result?.trim()?.trim('"') ?: "none"
             if (state == "none") {
@@ -503,7 +524,8 @@ class BrowserActivity : Activity() {
                 // Oynaticinin kendi tam ekrani; olmazsa 1.6 sn sonra kendimiz kaplariz.
                 try {
                     val o = org.json.JSONObject(state)
-                    if (o.optString("kind") == "tapfs") {                        tapWeb(o.optDouble("nx", 0.96).toFloat(), o.optDouble("ny", 0.96).toFloat())
+                    if (o.optString("kind") == "tapfs") {                        pendingFsSelector = o.optString("sel")
+                        tapWeb(o.optDouble("nx", 0.96).toFloat(), o.optDouble("ny", 0.96).toFloat())
                         w.postDelayed({ afterPlayerFullscreenTap(w) }, 1600)
                         return@evaluateJavascript
                     }
@@ -672,6 +694,10 @@ class BrowserActivity : Activity() {
 
     private fun togglePlay() {
         val w = active ?: web
+        w.evaluateJavascript(
+            "window.__tvPlayHint=" + org.json.JSONObject.quote(PlayerProfile.play(this, hostOfPage(w)) ?: ""),
+            null
+        )
         w.evaluateJavascript(Player.TOGGLE_JS) { result ->
             val value = try { JSONTokener(result ?: "null").nextValue() } catch (e: Exception) { null }
             if (value !is String) return@evaluateJavascript
@@ -690,6 +716,11 @@ class BrowserActivity : Activity() {
                 value.startsWith("{") -> {
                     try {
                         val o = JSONObject(value)
+                        // Bu sitede ise yarayan oynat ogesini hatirla.
+                        val sel = o.optString("sel")
+                        if (sel.isNotEmpty() && Regex("(?i)play|oynat|cover|poster").containsMatchIn(sel)) {
+                            PlayerProfile.savePlay(this, hostOfPage(w), sel)
+                        }
                         tapWeb(o.optDouble("nx", 0.5).toFloat(), o.optDouble("ny", 0.45).toFloat())
                     } catch (e: Exception) {
                     }

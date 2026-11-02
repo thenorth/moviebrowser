@@ -40,6 +40,50 @@ object Fullscreen {
 (function(){
   if (window.__tvFsEl) return 'in';
 
+  // Oge icin tek anlamli CSS secici (site basina hatirlanir).
+  function selOf(e){
+    if (!e || !e.tagName) return '';
+    if (e.id) return '#' + e.id;
+    var parts = [];
+    var cn = (typeof e.className === 'string') ? e.className.trim().split(/\s+/) : [];
+    for (var ci = 0; ci < cn.length && parts.length < 2; ci++) {
+      if (/^[A-Za-z_-][\w-]*$/.test(cn[ci])) parts.push(cn[ci]);
+    }
+    var s = e.tagName.toLowerCase();
+    for (var pi = 0; pi < parts.length; pi++) s += '.' + parts[pi];
+    try {
+      if (document.querySelectorAll(s).length === 1) return s;
+      var par = e.parentElement;
+      if (par) {
+        var idx = 1;
+        for (var k = 0; k < par.children.length; k++) {
+          if (par.children[k] === e) break;
+          if (par.children[k].tagName === e.tagName) idx++;
+        }
+        return s + ':nth-of-type(' + idx + ')';
+      }
+    } catch (err) {}
+    return s;
+  }
+
+  // Bu site icin daha once calisan tam ekran dugmesi
+  if (!window.__tvFsForce && window.__tvFsHint) {
+    try {
+      var hintEl = document.querySelector(window.__tvFsHint);
+      if (hintEl) {
+        var hr = hintEl.getBoundingClientRect();
+        if (hr.width >= 10 && hr.width <= 220 && hr.height >= 10 && hr.height <= 220) {
+          return JSON.stringify({
+            kind: 'tapfs',
+            nx: (hr.left + hr.width / 2) / window.innerWidth,
+            ny: (hr.top + hr.height / 2) / window.innerHeight,
+            sel: window.__tvFsHint
+          });
+        }
+      }
+    } catch (e) {}
+  }
+
   function scoreFrame(f){
     var r = f.getBoundingClientRect();
     if (r.width < 160 || r.height < 100) return 0;
@@ -217,7 +261,8 @@ object Fullscreen {
       return JSON.stringify({
         kind: 'tapfs',
         nx: (fr1.left + fr1.width / 2) / window.innerWidth,
-        ny: (fr1.top + fr1.height / 2) / window.innerHeight
+        ny: (fr1.top + fr1.height / 2) / window.innerHeight,
+        sel: selOf(fsBtn)
       });
     }
   }
