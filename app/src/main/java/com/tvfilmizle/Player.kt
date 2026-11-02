@@ -73,6 +73,26 @@ object Player {
     return 'started';
   }
 
+  // 5) Oynat dugmesi bir div/resim uzerinde: en buyuk afis/kaplama alanina dokun.
+  var bestEl = null, bestArea = 0;
+  var cand = document.querySelectorAll('img, [class*=poster], [class*=cover], [class*=thumb], [class*=player]');
+  for (var k = 0; k < cand.length; k++) {
+    var ce = cand[k];
+    var cr = ce.getBoundingClientRect();
+    if (cr.width < 160 || cr.height < 120) continue;
+    var ccs = getComputedStyle(ce);
+    if (ccs.visibility === 'hidden' || ccs.display === 'none') continue;
+    if (cr.top >= window.innerHeight) continue;
+    var area = cr.width * cr.height;
+    if (area > bestArea) { bestArea = area; bestEl = ce; }
+  }
+  if (bestEl && bestArea > window.innerWidth * window.innerHeight * 0.12) {
+    var br = bestEl.getBoundingClientRect();
+    var nx2 = (br.left + br.width / 2) / window.innerWidth;
+    var ny2 = (br.top + br.height / 2) / window.innerHeight;
+    return JSON.stringify({ kind: 'tap', nx: nx2, ny: ny2 });
+  }
+
   return 'none';
 })()
 """
