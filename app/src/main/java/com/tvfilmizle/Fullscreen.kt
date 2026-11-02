@@ -25,8 +25,7 @@ object Fullscreen {
     var cs = getComputedStyle(f);
     if (cs.visibility === 'hidden' || cs.display === 'none') return 0;
     if (parseFloat(cs.opacity) < 0.1) return 0;
-    var src = f.src || '';
-    if (!src) return 0;
+    var src = f.src || '' ;
     if (/doubleclick|googlesyndication|adsterra|popads|exoclick|propeller|adsystem|adservice/i.test(src)) return 0;
     var s = r.width * r.height;
     if (/video|embed|player|rapidrame|sibnet|stream|watch|movie|episode/i.test(src)) s = s * 2;
@@ -47,8 +46,7 @@ object Fullscreen {
     var cs = getComputedStyle(f);
     if (cs.visibility === 'hidden' || cs.display === 'none') return 0;
     if (parseFloat(cs.opacity) < 0.1) return 0;
-    var src = f.src || '';
-    if (!src) return 0;
+    var src = f.src || '' ;
     if (/doubleclick|googlesyndication|adsterra|popads|exoclick|propeller|adsystem|adservice/i.test(src)) return 0;
     var s = r.width * r.height;
     if (/video|embed|player|rapidrame|sibnet|stream|watch|movie|episode/i.test(src)) s = s * 2;
@@ -122,6 +120,38 @@ object Fullscreen {
       }
     }
 
+    // Zincirdeki kardesleri gizle: player disinda kalan bantlar (yardim/indir, menu) kalmasin.
+    var depth = 0;
+    var up2 = el;
+    while (up2 && up2.parentElement && up2 !== document.body) {
+      depth++;
+      if (depth >= 2) {
+        var sibs = up2.parentElement.children;
+        for (var si = 0; si < sibs.length; si++) {
+          if (sibs[si] === up2) continue;
+          fix(sibs[si], 'display', 'none');
+        }
+      }
+      up2 = up2.parentElement;
+    }
+
+    // Oynaticinin icinde kalan "Yardim / Indir" gibi ust bantlari gizle.
+    var words = /^(yardım|yardim|indir|download|help)$/i;
+    var scan = document.querySelectorAll('a,button,span,div');
+    for (var s3 = 0; s3 < scan.length; s3++) {
+      var se = scan[s3];
+      if (se === el || se.contains(el) || el.contains(se)) continue;
+      if (se.children.length > 1) continue;
+      if (!words.test((se.textContent || '').trim())) continue;
+      var bar = se;
+      for (var up = 0; up < 4 && bar.parentElement; up++) {
+        bar = bar.parentElement;
+        var bbr = bar.getBoundingClientRect();
+        if (bbr.width > window.innerWidth * 0.5 && bbr.height > 10 && bbr.height < 160) break;
+      }
+      fix(bar, 'display', 'none');
+    }
+
     var prev = el.getAttribute('style');
     el.setAttribute('data-tvfs-prev', prev === null ? '' : prev);
     el.style.cssText = (el.style.cssText || '') +
@@ -133,6 +163,31 @@ object Fullscreen {
     document.documentElement.style.overflow = 'hidden';
     if (document.body) document.body.style.overflow = 'hidden';
     return kind;
+  }
+
+  // 0) Oynaticinin kendi tam ekran dugmesi varsa onu kullan (kendi bantlarini gizler).
+  if (!window.__tvFsForce) {
+    var fsBtn = null;
+    var fsSel = '.vjs-fullscreen-control, [class*=fullscreen], [class*=full-screen], ' +
+                '[class*=fs-button], [id*=fullscreen], [aria-label*=fullscreen i], ' +
+                '[title*=fullscreen i], [title*="tam ekran" i]';
+    var fsList = document.querySelectorAll(fsSel);
+    for (var fi = 0; fi < fsList.length; fi++) {
+      var fr0 = fsList[fi].getBoundingClientRect();
+      if (fr0.width < 12 || fr0.width > 200 || fr0.height < 12 || fr0.height > 200) continue;
+      var fcs = getComputedStyle(fsList[fi]);
+      if (fcs.visibility === 'hidden' || fcs.display === 'none' || parseFloat(fcs.opacity) < 0.1) continue;
+      fsBtn = fsList[fi];
+      break;
+    }
+    if (fsBtn) {
+      var fr1 = fsBtn.getBoundingClientRect();
+      return JSON.stringify({
+        kind: 'tapfs',
+        nx: (fr1.left + fr1.width / 2) / window.innerWidth,
+        ny: (fr1.top + fr1.height / 2) / window.innerHeight
+      });
+    }
   }
 
   // 1) Ust belgede gercek bir video varsa once onu dene
@@ -152,7 +207,16 @@ object Fullscreen {
     var s = scoreFrame(ifr[i]);
     if (s > bestScore) { bestScore = s; best = ifr[i]; }
   }
-  if (best && bestScore > 20000) return apply(best, 'iframe');
+  if (best && bestScore > 20000) {
+    // Oynatici kendi tam ekran dugmesiyle acilsin: kendi ust bantlarini gizler.
+    if (!window.__tvFsForce) {
+      var br2 = best.getBoundingClientRect();
+      var fx = (br2.left + br2.width - 26) / window.innerWidth;
+      var fy = (br2.top + br2.height - 22) / window.innerHeight;
+      return JSON.stringify({ kind: 'tapfs', nx: fx, ny: fy });
+    }
+    return apply(best, 'iframe');
+  }
 
   return 'none';
 })()

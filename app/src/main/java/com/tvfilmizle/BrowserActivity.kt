@@ -400,11 +400,28 @@ class BrowserActivity : Activity() {
     // ------------------------------------------------------------ tam ekran
 
     private fun enterFullscreen(retries: Int = 3) {
-        if (fsActive || isFinishing) return
+        if (fsActive || isFinishing || customView != null) return
         val w = active ?: web
         w.evaluateJavascript(Fullscreen.ENTER_JS) { result ->
             val state = result?.trim()?.trim('"') ?: "none"
-            if (state != "none") {
+            if (state.startsWith("{")) {
+                // Oynaticinin kendi tam ekran dugmesine dokun; olmazsa kendimiz kaplariz.
+                try {
+                    val o = org.json.JSONObject(state)
+                    if (o.optString("kind") == "tapfs") {
+                        tapWeb(o.optDouble("nx", 0.96).toFloat(), o.optDouble("ny", 0.96).toFloat())
+                        w.postDelayed({
+                            if (customView == null && !isFinishing) {
+                                w.evaluateJavascript("window.__tvFsForce=true", null)
+                                enterFullscreen(2)
+                            }
+                        }, 1600)
+                        return@evaluateJavascript
+                    }
+                } catch (e: Exception) {
+                }
+            }
+            if (state == "video" || state == "iframe" || state == "native") {
                 fsActive = true
                 toolbar.visibility = View.GONE
                 hideSystemBars()
@@ -472,11 +489,30 @@ class BrowserActivity : Activity() {
             val state = result?.trim()?.trim('"') ?: "none"
             if (state == "none") {
                 Toast.makeText(this, R.string.no_player, Toast.LENGTH_SHORT).show()
-            } else {
+            } else if (state.startsWith("{")) {
+                // Oynaticinin kendi tam ekrani; olmazsa 1.6 sn sonra kendimiz kaplariz.
+                try {
+                    val o = org.json.JSONObject(state)
+                    if (o.optString("kind") == "tapfs") {
+                        tapWeb(o.optDouble("nx", 0.96).toFloat(), o.optDouble("ny", 0.96).toFloat())
+                        w.postDelayed({
+                            if (customView == null && !isFinishing) {
+                                w.evaluateJavascript("window.__tvFsForce=true", null)
+                                enterFullscreen(2)
+                            }
+                        }, 1600)
+                        return@evaluateJavascript
+                    }
+                } catch (e: Exception) {
+                }
+                Toast.makeText(this, R.string.no_player, Toast.LENGTH_SHORT).show()
+            } else if (state == "video" || state == "iframe" || state == "native") {
                 fsActive = true
                 toolbar.visibility = View.GONE
                 hideSystemBars()
                 Toast.makeText(this, R.string.cinema_hint, Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(this, R.string.no_player, Toast.LENGTH_SHORT).show()
             }
         }
     }
