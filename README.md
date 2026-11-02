@@ -119,7 +119,5 @@ erişilemeyen alan adları.
 | `Backup.kt` | JSON yedekle / geri yükle |
 | `SiteRepository.kt` + `sites.json` | Uzak site listesi |
 
-> Not: Proje yolu Türkçe karakter içeriyorsa Windows'ta AGP uyarı verir; `gradle.properties`
-> içindeki `android.overridePathCheck=true` bunu susturur.
 
 
