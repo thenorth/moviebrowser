@@ -410,12 +410,7 @@ class BrowserActivity : Activity() {
                     val o = org.json.JSONObject(state)
                     if (o.optString("kind") == "tapfs") {
                         tapWeb(o.optDouble("nx", 0.96).toFloat(), o.optDouble("ny", 0.96).toFloat())
-                        w.postDelayed({
-                            if (customView == null && !isFinishing) {
-                                w.evaluateJavascript("window.__tvFsForce=true", null)
-                                enterFullscreen(2)
-                            }
-                        }, 1600)
+                        w.postDelayed({ afterPlayerFullscreenTap(w) }, 1600)
                         return@evaluateJavascript
                     }
                 } catch (e: Exception) {
@@ -428,6 +423,21 @@ class BrowserActivity : Activity() {
             } else if (retries > 0) {
                 // Oynatıcı yeni açılmış olabilir: kısa sonra bir kez daha dene.
                 w.postDelayed({ enterFullscreen(retries - 1) }, 1500)
+            }
+        }
+    }
+
+    /** Player'ın kendi tam ekran düğmesine basıldı: ekranı doldurduysa bitir, değilse kendimiz kaplarız. */
+    private fun afterPlayerFullscreenTap(w: WebView) {
+        if (isFinishing || customView != null) return
+        w.evaluateJavascript(Fullscreen.FILLED_JS) { r ->
+            if (r?.contains("full") == true) {
+                fsActive = true
+                toolbar.visibility = View.GONE
+                hideSystemBars()
+            } else if (!isFinishing && customView == null) {
+                w.evaluateJavascript("window.__tvFsForce=true", null)
+                enterFullscreen(2)
             }
         }
     }
@@ -494,12 +504,7 @@ class BrowserActivity : Activity() {
                 try {
                     val o = org.json.JSONObject(state)
                     if (o.optString("kind") == "tapfs") {                        tapWeb(o.optDouble("nx", 0.96).toFloat(), o.optDouble("ny", 0.96).toFloat())
-                        w.postDelayed({
-                            if (customView == null && !isFinishing) {
-                                w.evaluateJavascript("window.__tvFsForce=true", null)
-                                enterFullscreen(2)
-                            }
-                        }, 1600)
+                        w.postDelayed({ afterPlayerFullscreenTap(w) }, 1600)
                         return@evaluateJavascript
                     }
                 } catch (e: Exception) {

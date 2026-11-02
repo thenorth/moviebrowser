@@ -165,14 +165,20 @@ object Fullscreen {
     return kind;
   }
 
-  // 0) Oynatici kabi (video + kendi kontrolleri): kabi kapla, sayfa susleri gizlenir.
-  var box = document.querySelector(
+  // Oynatici kabi: oynatma alanini iceren EN KUCUK kap (sayfa susleri disarida kalir).
+  var boxes = document.querySelectorAll(
     '.video-player-container-here, .hdmv-play-container, [class*=player-container], ' +
     '#player, .video-player, .player-wrap');
-  if (box) {
-    var bx = box.getBoundingClientRect();
-    if (bx.width > 200 && bx.height > 150 && bx.top < window.innerHeight) return apply(box, 'box');
+  var box = null, boxArea = 1e12;
+  for (var bi = 0; bi < boxes.length; bi++) {
+    var be = boxes[bi];
+    if (!be.querySelector('video, iframe, img, canvas')) continue;
+    var br0 = be.getBoundingClientRect();
+    if (br0.width < 200 || br0.height < 150) continue;
+    var ba = br0.width * br0.height;
+    if (ba < boxArea) { boxArea = ba; box = be; }
   }
+  if (box) return apply(box, 'box');
 
   // 6) Oynatici kapagi (afis + oynat simgesi): gercek dokunusla baslat.
   if (!window.__tvFsForce) {
@@ -196,7 +202,7 @@ object Fullscreen {
     var fsSel = '.vjs-fullscreen-control, [class*=fullscreen], [class*=full-screen], ' +
                 '[class*=fs-button], [id*=fullscreen], [aria-label*=fullscreen i], ' +
                 '[title*=fullscreen i], [title*="tam ekran" i]';
-    var fsList = document.querySelectorAll(fsSel);
+    var fsList = (box || document).querySelectorAll(fsSel);
     for (var fi = 0; fi < fsList.length; fi++) {
       var fr0 = fsList[fi].getBoundingClientRect();
       if (fr0.width < 12 || fr0.width > 200 || fr0.height < 12 || fr0.height > 200) continue;
@@ -216,7 +222,10 @@ object Fullscreen {
     }
   }
 
-  // 1) Ust belgede gercek bir video varsa once onu dene
+  // 1) Oynaticinin kendi tam ekran dugmesi bulunamadiysa: kabi kapla.
+  if (box) return apply(box, 'box');
+
+  // 2) Ust belgede gercek bir video varsa once onu dene
   var vids = document.querySelectorAll('video');
   for (var v = 0; v < vids.length; v++) {
     var vr = vids[v].getBoundingClientRect();
@@ -248,6 +257,17 @@ object Fullscreen {
   }
 
   return 'none';
+})()
+"""
+
+  /** Oynatma alani ekrani doldurdu mu? (sitelerin kendi tam ekrani CSS ile de olabilir) */
+    const val FILLED_JS = """
+(function(){
+  var t = document.querySelector('video') ||
+          document.querySelector('.video-player-container-here, .hdmv-play-container, [class*=player-container], #player');
+  if (!t) return 'none';
+  var r = t.getBoundingClientRect();
+  return (r.width >= window.innerWidth * 0.9 && r.height >= window.innerHeight * 0.75) ? 'full' : 'win';
 })()
 """
 
