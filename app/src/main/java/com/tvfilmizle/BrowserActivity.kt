@@ -402,6 +402,7 @@ class BrowserActivity : Activity() {
             if (state != "none") {
                 fsActive = true
                 toolbar.visibility = View.GONE
+                hideSystemBars()
             } else if (retries > 0) {
                 // Oynatıcı yeni açılmış olabilir: kısa sonra bir kez daha dene.
                 w.postDelayed({ enterFullscreen(retries - 1) }, 1500)
@@ -459,6 +460,7 @@ class BrowserActivity : Activity() {
             w.evaluateJavascript(Fullscreen.EXIT_JS, null)
             fsActive = false
             toolbar.visibility = View.VISIBLE
+            showSystemBars()
             return
         }
         w.evaluateJavascript(Fullscreen.ENTER_JS) { result ->
@@ -468,6 +470,7 @@ class BrowserActivity : Activity() {
             } else {
                 fsActive = true
                 toolbar.visibility = View.GONE
+                hideSystemBars()
                 Toast.makeText(this, R.string.cinema_hint, Toast.LENGTH_SHORT).show()
             }
         }
@@ -494,6 +497,7 @@ class BrowserActivity : Activity() {
         fsContainer.visibility = View.GONE
         web.visibility = View.VISIBLE
         toolbar.visibility = if (fsActive) View.GONE else View.VISIBLE
+        showSystemBars()
     }
 
     private fun hideSystemBars() {
@@ -761,6 +765,12 @@ class BrowserActivity : Activity() {
     }
 
     override fun onBackPressed() {
+        // Site oynaticisinin kendi tam ekrani acikken once onu kapat.
+        if (customView != null) {
+            hideFullscreen()
+            customCallback?.onCustomViewHidden()
+            return
+        }
         if (fsActive) {
             toggleFullscreen()
             return

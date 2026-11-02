@@ -79,6 +79,49 @@ object Fullscreen {
   function apply(el, kind){
     if (!el) return 'none';
     neutralize(el);
+    window.__tvFsFixes = window.__tvFsFixes || [];
+    window.__tvFsSeen = [];
+    function fix(node, prop, val){
+      if (!node || !node.style) return;
+      if (window.__tvFsSeen.indexOf(node) >= 0) return;
+      window.__tvFsSeen.push(node);
+      window.__tvFsFixes.push([node, node.getAttribute('style')]);
+      node.style.setProperty(prop, val, 'important');
+    }
+
+    // Oynatıcıyı kapatan kirpma/katman sorunlarini kaldir.
+    var n = el.parentElement;
+    while (n && n !== document.documentElement) {
+      var cs2 = getComputedStyle(n);
+      if (cs2.overflow !== 'visible') fix(n, 'overflow', 'visible');
+      n = n.parentElement;
+    }
+
+    // Sayfa basligi / menu / indir-yardim bantlari oynaticinin ustunde kalmasin.
+    var rx = /(header|navbar|menu|topbar|top-bar|breadcrumb|download|help|social)/i;
+    var all = document.querySelectorAll('body *');
+    for (var i2 = 0; i2 < all.length; i2++) {
+      var e2 = all[i2];
+      if (e2 === el || e2.contains(el)) continue;
+      var idc = ((e2.id || '') + ' ' + (e2.className || '')).toString().toLowerCase();
+      if (!rx.test(idc)) continue;
+      var rr = e2.getBoundingClientRect();
+      if (rr.width * rr.height > window.innerWidth * window.innerHeight * 0.5) continue;
+      fix(e2, 'display', 'none');
+    }
+
+    // Oynaticinin zincirinde olmayan govde bolumleri de gizlensin.
+    if (document.body) {
+      var chain = [];
+      var c = el;
+      while (c) { chain.push(c); c = c.parentElement; }
+      for (var j = 0; j < document.body.children.length; j++) {
+        var ch = document.body.children[j];
+        if (chain.indexOf(ch) >= 0 || ch.contains(el)) continue;
+        fix(ch, 'display', 'none');
+      }
+    }
+
     var prev = el.getAttribute('style');
     el.setAttribute('data-tvfs-prev', prev === null ? '' : prev);
     el.style.cssText = (el.style.cssText || '') +
