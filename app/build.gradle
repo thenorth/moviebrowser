@@ -13,8 +13,8 @@ android {
         applicationId "com.tvfilmizle"
         minSdk 21
         targetSdk 34
-        versionCode 44
-        versionName "3.14"
+        versionCode 45
+        versionName "1.0.0"
 
         // TMDB anahtari local.properties / ortam degiskeninden gelir (repoya girmez),
         // APK'da duz metin durmamasi icin XOR+Base64 ile saklanir.
