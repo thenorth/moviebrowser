@@ -1426,6 +1426,13 @@ object Panels {
         Regex("★\\s*([0-9]+[.,]?[0-9]*)").find(meta)?.groupValues?.get(1)
             ?.replace(',', '.')?.toDoubleOrNull() ?: 0.0
 
+    /** Uygulama acilirken: takip edilen dizilerde yeni bolum var mi? (rozetler hazir olsun) */
+    fun checkNewEpisodesInBackground(a: Activity) {
+        if (System.currentTimeMillis() - History.checkedAt(a) <= NEW_EP_CHECK_MS) return
+        History.setCheckedAt(a, System.currentTimeMillis())
+        checkNewEpisodes(a) {}
+    }
+
     /** Takip edilen dizilerde yeni bolum var mi? Panel acilinca 30 dakikada bir. */
     private fun checkNewEpisodes(a: Activity, onChanged: () -> Unit) {
         val follows = History.followed(a).take(12)

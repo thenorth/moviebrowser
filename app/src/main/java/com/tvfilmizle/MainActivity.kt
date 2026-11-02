@@ -141,6 +141,7 @@ class MainActivity : Activity() {
         registerDownloadReceiver()
         fill(SiteRepository.cached(this))
         Panels.warmFeed(this)
+        Panels.checkNewEpisodesInBackground(this)
         refreshList(false)
         checkForUpdate()
         maybeShowWhatsNew()

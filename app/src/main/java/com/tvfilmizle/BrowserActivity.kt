@@ -11,6 +11,8 @@ import android.net.Uri
 import android.net.VpnService
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.os.Environment
 import android.os.Message
 import android.view.KeyEvent
@@ -36,6 +38,7 @@ import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.ProgressBar
+import android.widget.TextView
 import android.widget.Toast
 import org.json.JSONArray
 import org.json.JSONObject
@@ -48,6 +51,7 @@ class BrowserActivity : Activity() {
     companion object {
         const val EXTRA_URL = "url"
         const val EXTRA_PLAY = "play"
+        private const val QUALITY_JS = "(function(){var v=document.querySelector('video');if(!v||!v.videoHeight)return '';return v.videoWidth+'x'+v.videoHeight;})()"
         private const val UA =
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
         private const val REQ_VPN = 7
@@ -66,6 +70,10 @@ class BrowserActivity : Activity() {
     private val children = mutableListOf<WebView>()
     private var active: WebView? = null
     private var advanced = false
+    private lateinit var qualityBadge: TextView
+    @Volatile
+    private var pageUrl = ""
+    private val qualityHandler = Handler(Looper.getMainLooper())
     private var autoPlay = false
     private var pendingFsSelector = ""
     private var customView: View? = null
@@ -128,6 +136,8 @@ class BrowserActivity : Activity() {
         toolbar = findViewById(R.id.toolbar)
         progress = findViewById(R.id.progress)
         urlBar = findViewById(R.id.url_bar)
+        qualityBadge = findViewById(R.id.quality_badge)
+        qualityHandler.postDelayed(qualityTick, 3000)
 
         CookieManager.getInstance().setAcceptCookie(true)
 
@@ -230,7 +240,7 @@ class BrowserActivity : Activity() {
                 return WebResourceResponse("text/plain", "utf-8", ByteArrayInputStream(ByteArray(0)))
             }
             // HLS ana listesi: dusuk cozunurlukleri at (en az 1080p).
-            Quality.rewrite(request.url.toString(), view.url)?.let { return it }
+            Quality.rewrite(request.url.toString(), pageUrl)?.let { return it }
             return null
         }
 
@@ -246,6 +256,7 @@ class BrowserActivity : Activity() {
                 removeChild(view)
                 return
             }
+            pageUrl = url
             if (view === active) {
                 urlBar.setText(url)
                 fsActive = false
@@ -901,6 +912,35 @@ class BrowserActivity : Activity() {
         SleepTimer.attach(this)
         web.onResume()
         children.forEach { it.onResume() }
+    }
+
+    /** Oynatilan videonun cozunurlugunu kucuk rozette gosterir. */
+    private val qualityTick = object : Runnable {
+        override fun run() {
+            val w = active ?: web
+            w.evaluateJavascript(QUALITY_JS) { r ->
+                if (isFinishing) return@evaluateJavascript
+                val h = Regex("x(\\d+)\"").find(r ?: "")?.groupValues?.get(1)?.toIntOrNull() ?: 0
+                if (h <= 0) {
+                    // Iframe oynaticilarda video gorunmez: HLS listesinden bilinen kaliteyi goster.
+                    val q = Quality.lastHeight
+                    if (q > 0) {
+                        qualityBadge.visibility = View.VISIBLE
+                        qualityBadge.text = q.toString() + "p"
+                        qualityBadge.setTextColor(Color.parseColor("#B8C2CC"))
+                    } else {
+                        qualityBadge.visibility = View.GONE
+                    }
+                } else {
+                    qualityBadge.visibility = View.VISIBLE
+                    qualityBadge.text = h.toString() + "p"
+                    qualityBadge.setTextColor(
+                        if (h >= 1080) Color.parseColor("#B8C2CC") else Color.parseColor("#FF9F1A")
+                    )
+                }
+            }
+            qualityHandler.postDelayed(this, 4000)
+        }
     }
 
     override fun onDestroy() {

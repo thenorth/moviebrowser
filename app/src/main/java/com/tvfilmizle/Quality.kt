@@ -16,6 +16,11 @@ object Quality {
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
     private const val MIN_HEIGHT = 1080
 
+    /** Son suzulen listenin en dusuk izin verilen yuksekligi (rozet icin). */
+    @Volatile
+    var lastHeight = 0
+        private set
+
     private val cache = object : LinkedHashMap<String, String>(16, 0.75f, true) {
         override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, String>?) = size > 30
     }
@@ -81,6 +86,7 @@ object Quality {
         val heights = variants.map { heightOf(it.first) }
         val max = heights.maxOrNull() ?: 0
         val target = if (max >= MIN_HEIGHT) MIN_HEIGHT else max
+        lastHeight = target
         val keep = variants.filterIndexed { idx, _ -> heights[idx] >= target }
         if (keep.isEmpty() || keep.size == variants.size) return text
 
