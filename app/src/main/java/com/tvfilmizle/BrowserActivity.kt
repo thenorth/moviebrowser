@@ -394,7 +394,7 @@ class BrowserActivity : Activity() {
 
     // ------------------------------------------------------------ tam ekran
 
-    private fun enterFullscreen(retries: Int = 1) {
+    private fun enterFullscreen(retries: Int = 3) {
         if (fsActive || isFinishing) return
         val w = active ?: web
         w.evaluateJavascript(Fullscreen.ENTER_JS) { result ->
