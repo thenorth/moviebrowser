@@ -153,7 +153,7 @@
     <string name="search_hint">Film adı yaz</string>
     <string name="search_action">Ara</string>
     <string name="search_sub">Google\'da film ara</string>
-    <string name="status_title">Site durumu</string>
+    <string name="status_title">Site Durumu Kontrol</string>
     <string name="status_sub">Erişilebilirlik testi</string>
     <string name="status_test">TEST ET</string>
     <string name="status_testing">Test ediliyor…</string>
