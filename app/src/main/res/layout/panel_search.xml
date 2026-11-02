@@ -136,7 +136,7 @@
             android:layout_marginTop="10dp"
             android:gravity="center_vertical"
             android:orientation="horizontal"
-            android:paddingLeft="26dp"
+            android:paddingLeft="54dp"
             android:paddingRight="26dp" />
 
         <TextView
@@ -144,7 +144,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            android:paddingLeft="26dp"
+            android:paddingLeft="54dp"
             android:paddingRight="26dp"
             android:textColor="@color/text_dim"
             android:textSize="11sp"
