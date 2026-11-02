@@ -229,6 +229,8 @@ class BrowserActivity : Activity() {
             if (AdBlock.isBlocked(request.url.toString())) {
                 return WebResourceResponse("text/plain", "utf-8", ByteArrayInputStream(ByteArray(0)))
             }
+            // HLS ana listesi: dusuk cozunurlukleri at (en az 1080p).
+            Quality.rewrite(request.url.toString(), view.url)?.let { return it }
             return null
         }
 
