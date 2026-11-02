@@ -94,17 +94,19 @@
 
         <EditText
             android:id="@+id/filter_input"
-            android:layout_width="360dp"
-            android:layout_height="44dp"
+            android:layout_width="480dp"
+            android:layout_height="56dp"
             android:layout_marginStart="26dp"
             android:background="@drawable/input_bg"
+            android:drawablePadding="10dp"
+            android:drawableStart="@drawable/ic_search"
             android:inputType="text"
             android:maxLines="1"
-            android:paddingLeft="14dp"
-            android:paddingRight="14dp"
+            android:paddingLeft="18dp"
+            android:paddingRight="18dp"
             android:singleLine="true"
             android:textColor="@color/text"
-            android:textSize="14sp"
+            android:textSize="17sp"
             android:visibility="gone" />
     </LinearLayout>
 

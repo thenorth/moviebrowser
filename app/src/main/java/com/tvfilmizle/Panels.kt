@@ -1242,19 +1242,12 @@ object Panels {
         initial: String = "",
         note: String = "",
         historyKind: String? = null,
-        iconRes: Int = 0,
         onText: ((String) -> Unit)? = null,
         onSubmit: (String) -> Unit
     ) {
         root.findViewById<TextView>(R.id.title).text = a.getString(titleRes)
         val input = root.findViewById<EditText>(R.id.input)
         input.hint = a.getString(hintRes)
-        if (iconRes != 0) {
-            root.findViewById<ImageView>(R.id.input_icon)?.apply {
-                setImageResource(iconRes)
-                visibility = View.VISIBLE
-            }
-        }
         if (initial.isNotEmpty()) {
             input.setText(initial)
             input.setSelection(initial.length)
@@ -1303,7 +1296,7 @@ object Panels {
                 for (t in items) {
                     val chip = TextView(a)
                     chip.text = t
-                    chip.textSize = 11f
+                    chip.textSize = 12f
                     chip.setTextColor(Color.parseColor("#B8C2CC"))
                     chip.gravity = android.view.Gravity.CENTER
                     chip.setBackgroundResource(R.drawable.tool_button_bg)
@@ -1314,11 +1307,11 @@ object Panels {
                     chip.ellipsize = android.text.TextUtils.TruncateAt.END
                     val lp = LinearLayout.LayoutParams(
                         LinearLayout.LayoutParams.WRAP_CONTENT,
-                        (32 * d).toInt()
+                        (34 * d).toInt()
                     )
                     lp.rightMargin = (8 * d).toInt()
                     chip.layoutParams = lp
-                    chip.setPadding((12 * d).toInt(), 0, (12 * d).toInt(), 0)
+                    chip.setPadding((14 * d).toInt(), 0, (14 * d).toInt(), 0)
                     chip.setOnClickListener {
                         input.setText(t)
                         input.setSelection(t.length)

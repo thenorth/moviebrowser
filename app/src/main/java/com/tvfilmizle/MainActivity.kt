@@ -270,7 +270,6 @@ class MainActivity : Activity() {
                         initial = "https://",
                         note = getString(R.string.url_note),
                         historyKind = SearchHistory.URL,
-                        iconRes = R.drawable.ic_tb_sites,
                         onText = { raw ->
                             val host = Scraper.hostOf(if (raw.startsWith("http")) raw else "https://$raw")
                             val noteView = root.findViewById<TextView>(R.id.input_note)
