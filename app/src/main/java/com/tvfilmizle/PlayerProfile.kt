@@ -26,6 +26,11 @@ object PlayerProfile {
         prefs(ctx).edit().putString("play_$host", selector).apply()
     }
 
+    /** Ogrenilmis tum oynatici secicilerini sil. */
+    fun clearAll(ctx: Context) {
+        prefs(ctx).edit().clear().apply()
+    }
+
     private fun prefs(ctx: Context) =
         ctx.applicationContext.getSharedPreferences(P, Context.MODE_PRIVATE)
 }

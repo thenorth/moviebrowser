@@ -184,4 +184,10 @@
     <string name="search_searching">Sitelerde aranıyor: %1$d/%2$d</string>
     <string name="site_preview">Eklenecek: %1$s · %2$s</string>
     <string name="site_exists">Listede var: %1$s</string>
+    <string name="reset_players_title">Oynatıcı profillerini sıfırla</string>
+    <string name="reset_players_desc">Siteler için öğrenilen tam ekran/oynat seçimlerini siler. Sorun çıkarsa kullan.</string>
+    <string name="reset_action">SIFIRLA</string>
+    <string name="reset_players_done">Oynatıcı profilleri sıfırlandı</string>
+    <string name="random_film">Rastgele</string>
+    <string name="fastest_hint">En hızlı: %1$s</string>
 </resources>

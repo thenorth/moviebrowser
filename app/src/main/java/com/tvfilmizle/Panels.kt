@@ -428,6 +428,13 @@ object Panels {
                 freshOnly = true
                 rebuild()
             }
+            chip("🎲 " + a.getString(R.string.random_film)) {
+                val pool = if (shown.isNotEmpty()) shown else all
+                if (pool.isNotEmpty()) {
+                    val pick = pool[(Math.random() * pool.size).toInt()]
+                    onOpen(pick, alts[pick.title] ?: emptyList())
+                }
+            }
             chip("★ " + a.getString(R.string.rating_sort)) {
                 sortRating = !sortRating
                 if (sortRating) {
@@ -617,11 +624,23 @@ object Panels {
         if (alts.isNotEmpty()) {
             val btn = root.findViewById<TextView>(R.id.detail_sources)
             btn.visibility = View.VISIBLE
+            primeAltSpeeds(a, alts) {
+                val fastest = alts.minByOrNull { siteMsOf(a, it.site) ?: Long.MAX_VALUE }
+                val ms = fastest?.let { siteMsOf(a, it.site) }
+                if (fastest != null && ms != null) {
+                    btn.text = a.getString(R.string.other_sources) + " ⚡ " + fastest.site
+                }
+            }
             btn.setOnClickListener {
+                val sorted = alts.sortedBy { siteMsOf(a, it.site) ?: Long.MAX_VALUE }
+                val labels = sorted.map {
+                    val ms = siteMsOf(a, it.site)
+                    if (ms == null) it.site else it.site + " · " + ms + " ms"
+                }.toTypedArray()
                 AlertDialog.Builder(a)
                     .setTitle(R.string.other_sources)
-                    .setItems(alts.map { it.site }.toTypedArray()) { _, w ->
-                        watch(a, alts[w])
+                    .setItems(labels) { _, w ->
+                        watch(a, sorted[w], play = true)
                     }
                     .setNegativeButton(android.R.string.cancel, null)
                     .show()
@@ -888,7 +907,8 @@ object Panels {
         root: View,
         onUpdate: (TextView) -> Unit = {},
         onBackup: () -> Unit = {},
-        onRestore: () -> Unit = {}
+        onRestore: () -> Unit = {},
+        onResetPlayers: () -> Unit = {}
     ) {
         vpnToggle = root.findViewById(R.id.vpn_switch)
         vpnStatus = root.findViewById(R.id.vpn_status)
@@ -919,6 +939,7 @@ object Panels {
         root.findViewById<View>(R.id.update_row).setOnClickListener { onUpdate(updateValue) }
         root.findViewById<View>(R.id.backup_row).setOnClickListener { onBackup() }
         root.findViewById<View>(R.id.restore_row).setOnClickListener { onRestore() }
+        root.findViewById<View>(R.id.reset_players_row).setOnClickListener { onResetPlayers() }
 
         val version = try {
             a.packageManager.getPackageInfo(a.packageName, 0).versionName ?: ""
@@ -1323,6 +1344,40 @@ object Panels {
     }
 
     // ---------------------------------------------------------------- yardimci
+    /** Alternatif kaynaklarin hizini arka planda olcup durum onbellegine yazar. */
+    private val statusCacheLock = Any()
+    @Volatile
+    private var primingSpeeds = false
+
+    private fun siteRoot(a: Activity, name: String): String =
+        SiteRepository.cached(a).firstOrNull { it.name.equals(name, true) }?.url ?: ""
+
+    private fun siteMsOf(a: Activity, name: String): Long? {
+        val root = siteRoot(a, name)
+        if (root.isEmpty()) return null
+        return synchronized(statusCacheLock) { statusCache?.get(root)?.ms }
+    }
+
+    private fun primeAltSpeeds(a: Activity, alts: List<Row>, onReady: () -> Unit) {
+        val pending = alts.filter { siteMsOf(a, it.site) == null }.take(4)
+        if (pending.isEmpty() || primingSpeeds) return
+        primingSpeeds = true
+        Thread {
+            for (alt in pending) {
+                val root = siteRoot(a, alt.site)
+                if (root.isEmpty()) continue
+                val t0 = System.currentTimeMillis()
+                val code = ping(root)
+                val ms = System.currentTimeMillis() - t0
+                synchronized(statusCacheLock) {
+                    statusCache = (statusCache ?: emptyMap()) + (root to Check(code, ms))
+                }
+            }
+            primingSpeeds = false
+            a.runOnUiThread { onReady() }
+        }.start()
+    }
+
     /** Kartlarda yil/puan: TMDB'den ilk N film icin arka planda. */
     private fun enrich(a: Activity, rows: ArrayList<Row>, limit: Int = 24, onChange: () -> Unit) {
         if (!Tmdb.enabled()) return
@@ -1506,8 +1561,7 @@ object Panels {
         open(a, row.url, play)
     }
 
-    private fun ping(url: String): Int = try {
-        val c = URL(url).openConnection() as HttpURLConnection
+    private fun ping(url: String): Int = try {        val c = URL(url).openConnection() as HttpURLConnection
         c.connectTimeout = 8000
         c.readTimeout = 8000
         c.requestMethod = "GET"

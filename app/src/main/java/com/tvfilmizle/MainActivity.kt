@@ -243,7 +243,11 @@ class MainActivity : Activity() {
                     this, root,
                     onUpdate = { v -> checkUpdateManually(v) },
                     onBackup = { Backup.save(this) },
-                    onRestore = { Backup.load(this) }
+                    onRestore = { Backup.load(this) },
+                    onResetPlayers = {
+                        PlayerProfile.clearAll(this)
+                        Toast.makeText(this, R.string.reset_players_done, Toast.LENGTH_SHORT).show()
+                    }
                 )
                 null
             }
@@ -403,6 +407,27 @@ class MainActivity : Activity() {
         }
 
         if (event.action == KeyEvent.ACTION_DOWN) {
+            // Renkli kumanda tuslari: hizli bolum erisimi (yazi alaninda degilken).
+            if (currentFocus !is android.widget.EditText) {
+                when (event.keyCode) {
+                    KeyEvent.KEYCODE_PROG_RED -> {
+                        showSection("discover")
+                        return true
+                    }
+                    KeyEvent.KEYCODE_PROG_GREEN -> {
+                        showSection("watch")
+                        return true
+                    }
+                    KeyEvent.KEYCODE_PROG_YELLOW -> {
+                        showSection("series")
+                        return true
+                    }
+                    KeyEvent.KEYCODE_PROG_BLUE -> {
+                        showSection("search")
+                        return true
+                    }
+                }
+            }
             val side = findViewById<View>(R.id.side_bar)
             val focused = currentFocus
             if (event.keyCode == KeyEvent.KEYCODE_DPAD_LEFT) {
