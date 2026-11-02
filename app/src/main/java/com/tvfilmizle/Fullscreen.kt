@@ -165,6 +165,31 @@ object Fullscreen {
     return kind;
   }
 
+  // 0) Oynatici kabi (video + kendi kontrolleri): kabi kapla, sayfa susleri gizlenir.
+  var box = document.querySelector(
+    '.video-player-container-here, .hdmv-play-container, [class*=player-container], ' +
+    '#player, .video-player, .player-wrap');
+  if (box) {
+    var bx = box.getBoundingClientRect();
+    if (bx.width > 200 && bx.height > 150 && bx.top < window.innerHeight) return apply(box, 'box');
+  }
+
+  // 6) Oynatici kapagi (afis + oynat simgesi): gercek dokunusla baslat.
+  if (!window.__tvFsForce) {
+    var cov = document.querySelector('.play-that-video, .play-icon, .vjs-big-play-button, ' +
+      '[class*=play-button], [class*=playButton], .player-cover, .poster-play');
+    if (cov) {
+      var cr2 = cov.getBoundingClientRect();
+      if (cr2.width > 40 && cr2.height > 40 && cr2.top < window.innerHeight) {
+        return JSON.stringify({
+          kind: 'tapfs',
+          nx: (cr2.left + cr2.width / 2) / window.innerWidth,
+          ny: (cr2.top + cr2.height / 2) / window.innerHeight
+        });
+      }
+    }
+  }
+
   // 0) Oynaticinin kendi tam ekran dugmesi varsa onu kullan (kendi bantlarini gizler).
   if (!window.__tvFsForce) {
     var fsBtn = null;
@@ -175,6 +200,7 @@ object Fullscreen {
     for (var fi = 0; fi < fsList.length; fi++) {
       var fr0 = fsList[fi].getBoundingClientRect();
       if (fr0.width < 12 || fr0.width > 200 || fr0.height < 12 || fr0.height > 200) continue;
+      if (fr0.top < 0 || fr0.bottom > window.innerHeight) continue;
       var fcs = getComputedStyle(fsList[fi]);
       if (fcs.visibility === 'hidden' || fcs.display === 'none' || parseFloat(fcs.opacity) < 0.1) continue;
       fsBtn = fsList[fi];
@@ -211,9 +237,12 @@ object Fullscreen {
     // Oynatici kendi tam ekran dugmesiyle acilsin: kendi ust bantlarini gizler.
     if (!window.__tvFsForce) {
       var br2 = best.getBoundingClientRect();
-      var fx = (br2.left + br2.width - 26) / window.innerWidth;
-      var fy = (br2.top + br2.height - 22) / window.innerHeight;
-      return JSON.stringify({ kind: 'tapfs', nx: fx, ny: fy });
+      // Dugme ekranda gorunmuyorsa (oynatici sayfa altinda) dogrudan kaplama yap.
+      if (br2.top >= 0 && br2.bottom <= window.innerHeight) {
+        var fx = (br2.left + br2.width - 26) / window.innerWidth;
+        var fy = (br2.top + br2.height - 22) / window.innerHeight;
+        return JSON.stringify({ kind: 'tapfs', nx: fx, ny: fy });
+      }
     }
     return apply(best, 'iframe');
   }

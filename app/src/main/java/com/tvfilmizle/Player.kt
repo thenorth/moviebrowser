@@ -69,6 +69,12 @@ object Player {
       var href = el2.getAttribute('href') || '';
       if (href && href.indexOf('javascript:') !== 0 && href.charAt(0) !== '#') continue;
     }
+    // Sentetik click her oynaticida ise yaramaz: gercek dokunus gonder.
+    var nx3 = (pr.left + pr.width / 2) / window.innerWidth;
+    var ny3 = (pr.top + pr.height / 2) / window.innerHeight;
+    if (nx3 >= 0 && nx3 <= 1 && ny3 >= 0 && ny3 <= 1) {
+      return JSON.stringify({ kind: 'tap', nx: nx3, ny: ny3 });
+    }
     try { el2.click(); } catch (e) {}
     return 'started';
   }
@@ -93,7 +99,8 @@ object Player {
     return JSON.stringify({ kind: 'tap', nx: nx2, ny: ny2 });
   }
 
-  return 'none';
+  // 6) Hicbir sey bulunamadi: ortaya dokun (bazi oynaticilar dokunusla acilir).
+  return JSON.stringify({ kind: 'tap', nx: 0.5, ny: 0.45 });
 })()
 """
 

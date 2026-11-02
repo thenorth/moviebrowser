@@ -421,7 +421,7 @@ class BrowserActivity : Activity() {
                 } catch (e: Exception) {
                 }
             }
-            if (state == "video" || state == "iframe" || state == "native") {
+            if (state == "video" || state == "iframe" || state == "native" || state == "box") {
                 fsActive = true
                 toolbar.visibility = View.GONE
                 hideSystemBars()
@@ -493,8 +493,7 @@ class BrowserActivity : Activity() {
                 // Oynaticinin kendi tam ekrani; olmazsa 1.6 sn sonra kendimiz kaplariz.
                 try {
                     val o = org.json.JSONObject(state)
-                    if (o.optString("kind") == "tapfs") {
-                        tapWeb(o.optDouble("nx", 0.96).toFloat(), o.optDouble("ny", 0.96).toFloat())
+                    if (o.optString("kind") == "tapfs") {                        tapWeb(o.optDouble("nx", 0.96).toFloat(), o.optDouble("ny", 0.96).toFloat())
                         w.postDelayed({
                             if (customView == null && !isFinishing) {
                                 w.evaluateJavascript("window.__tvFsForce=true", null)
@@ -506,7 +505,7 @@ class BrowserActivity : Activity() {
                 } catch (e: Exception) {
                 }
                 Toast.makeText(this, R.string.no_player, Toast.LENGTH_SHORT).show()
-            } else if (state == "video" || state == "iframe" || state == "native") {
+            } else if (state == "video" || state == "iframe" || state == "native" || state == "box") {
                 fsActive = true
                 toolbar.visibility = View.GONE
                 hideSystemBars()
