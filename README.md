@@ -81,31 +81,7 @@ adb connect <TV-IP>:5555
 adb install -r moviebrowser.apk
 ```
 
-## Derleme
-
-```bash
-gradlew assembleDebug      # app/build/outputs/apk/debug/app-debug.apk
-gradlew test               # birim testleri (reklam engelleme, HLS kalite)
-```
-
-TMDB anahtarı repoda **tutmaz**: `local.properties` içine `TMDB_API_KEY=...` yazın; derlemede
-`BuildConfig.TMDB_KEY_OBF` olarak (XOR + Base64) gömülür.
-
 ## Site listesini güncelleme
-
-`sites.json`:
-
-```json
-{
-  "version": 8,
-  "updated": "2026-11-02",
-  "sites": [
-    { "name": "Site Adı", "url": "https://ornek.com/" }
-  ]
-}
-```
-
-GitHub'dan düzenleyip commit edin — uygulama sonraki açılışta çeker. Zorlamak için **Listeyi güncelle**.
 
 Kaynak sırası (bazı ISS'ler `raw.githubusercontent.com`'u engeller):
 1. `raw.githubusercontent.com`
@@ -146,6 +122,4 @@ erişilemeyen alan adları.
 > Not: Proje yolu Türkçe karakter içeriyorsa Windows'ta AGP uyarı verir; `gradle.properties`
 > içindeki `android.overridePathCheck=true` bunu susturur.
 
-## Geliştirme notları
 
-Yapılanlar ve açık işler: [`HANDOFF.md`](HANDOFF.md).
