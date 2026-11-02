@@ -723,7 +723,7 @@ object Panels {
                                 History.setLastEpisode(a, seriesKey, label)
                                 History.follow(a, seriesKey, row.title, row.url, row.poster, row.site, label)
                                 History.setHasNew(a, seriesKey, false)
-                                open(a, url)
+                                open(a, url, play = true)
                             }
                             .setNegativeButton(android.R.string.cancel, null)
                             .show()
@@ -740,7 +740,7 @@ object Panels {
                             History.setLastEpisode(a, seriesKey, next.first)
                             History.follow(a, seriesKey, row.title, row.url, row.poster, row.site, next.first)
                             History.setHasNew(a, seriesKey, false)
-                            open(a, next.second)
+                            open(a, next.second, play = true)
                         }
                     }
                 }
@@ -1490,16 +1490,20 @@ object Panels {
         rows.addAll(merged)
     }
 
-    fun open(a: Activity, url: String) {
+    fun open(a: Activity, url: String, play: Boolean = false) {
         // Bolum listesi biliniyorsa video bitince sonraki bolume gecilecek.
         AutoNext.pending = autoNextFor(url)
-        a.startActivity(Intent(a, BrowserActivity::class.java).putExtra(BrowserActivity.EXTRA_URL, url))
+        a.startActivity(
+            Intent(a, BrowserActivity::class.java)
+                .putExtra(BrowserActivity.EXTRA_URL, url)
+                .putExtra(BrowserActivity.EXTRA_PLAY, play)
+        )
     }
 
     /** Panellerden film acarken gecmise yaz. */
-    fun watch(a: Activity, row: Row) {
+    fun watch(a: Activity, row: Row, play: Boolean = false) {
         if (row.title.isNotEmpty()) History.add(a, row.title, row.url, row.poster, row.site)
-        open(a, row.url)
+        open(a, row.url, play)
     }
 
     private fun ping(url: String): Int = try {

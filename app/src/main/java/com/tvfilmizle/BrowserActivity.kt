@@ -47,6 +47,7 @@ class BrowserActivity : Activity() {
 
     companion object {
         const val EXTRA_URL = "url"
+        const val EXTRA_PLAY = "play"
         private const val UA =
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
         private const val REQ_VPN = 7
@@ -65,6 +66,7 @@ class BrowserActivity : Activity() {
     private val children = mutableListOf<WebView>()
     private var active: WebView? = null
     private var advanced = false
+    private var autoPlay = false
     private var customView: View? = null
     private var customCallback: WebChromeClient.CustomViewCallback? = null
     private var homeUrl = ""
@@ -91,7 +93,7 @@ class BrowserActivity : Activity() {
         @JavascriptInterface
         fun playerStarted() {
             runOnUiThread {
-                if (Prefs.autoFullscreen(this@BrowserActivity) && !fsActive) enterFullscreen()
+                if ((autoPlay || Prefs.autoFullscreen(this@BrowserActivity)) && !fsActive) enterFullscreen()
             }
         }
 
@@ -135,6 +137,7 @@ class BrowserActivity : Activity() {
         )
         active = web
 
+        autoPlay = intent.getBooleanExtra(EXTRA_PLAY, false)
         homeUrl = intent.getStringExtra(EXTRA_URL)
             ?: SiteRepository.cached(this).firstOrNull()?.url
             ?: Sites.DEFAULT.first().url
@@ -273,6 +276,8 @@ class BrowserActivity : Activity() {
             view.postDelayed({ view.evaluateJavascript(Fullscreen.SCAN_JS, null) }, 3000)
             view.postDelayed({ view.evaluateJavascript(Player.ANALYZE_JS, null) }, 3000)
             if (view === active && !urlBar.hasFocus()) view.requestFocus()
+            // "İzle" ile gelindiyse oynatıcıyı kendiliğinden başlat.
+            if (view === active && autoPlay) scheduleAutoStart(2600)
 
             // Bot dogrulamasi takildiysa bir kez varsayilan kimlikle dene.
             if (Prefs.desktopUa(this@BrowserActivity) && !uaRetried) {
@@ -668,6 +673,11 @@ class BrowserActivity : Activity() {
             val value = try { JSONTokener(result ?: "null").nextValue() as? String } catch (e: Exception) { null }
             // Ayni kaynakli video/dugme yoksa oynatıcı iframe icindedir: merkezdeki buyuk oynat dugmesine dokun.
             if (value == "none") tapWeb(0.5f, 0.5f)
+            // "Izle" ile gelindiyse oynatici hazir olunca tam ekrana gec.
+            if (autoPlay) {
+                val delay = if (value == "none") 2000L else 600L
+                w.postDelayed({ enterFullscreen(6) }, delay)
+            }
         }
     }
 

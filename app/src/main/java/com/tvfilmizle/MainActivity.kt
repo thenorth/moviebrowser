@@ -322,7 +322,7 @@ class MainActivity : Activity() {
             return
         }
         Panels.detail(this, root, row, detailAlts, onWatch = {
-            Panels.watch(this, row)
+            Panels.watch(this, row, play = true)
         }, onOpenSimilar = { similar -> openFilm(similar) })
     }
 
