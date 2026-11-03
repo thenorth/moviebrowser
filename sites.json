@@ -1,6 +1,6 @@
 {
-  "version": 8,
-  "updated": "2026-11-01",
+  "version": 9,
+  "updated": "2026-11-03",
   "sites": [
     {
       "name": "HD Film Cehennemi",
@@ -61,6 +61,14 @@
     {
       "name": "Dizibox",
       "url": "https://diziboxizle.com/"
+    },
+    {
+      "name": "Filminifullhdizle",
+      "url": "https://filminifullhdizle.com/"
+    },
+    {
+      "name": "HD Film ve Dizi",
+      "url": "https://filmcenneti.org/"
     }
   ]
 }
