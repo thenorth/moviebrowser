@@ -1,6 +1,6 @@
 {
-  "version": 11,
-  "updated": "2026-11-05",
+  "version": 12,
+  "updated": "2026-11-08",
   "sites": [
     {
       "name": "HD Film Cehennemi",
@@ -75,12 +75,12 @@
       "url": "https://film-izle.com.tr/"
     },
     {
-      "name": "JetFilmizle",
-      "url": "https://jetfilmizle.app/"
-    },
-    {
       "name": "Roxporno",
       "url": "https://roxporno.com/"
+    },
+    {
+      "name": "HDFilmcehennemi",
+      "url": "https://hdfilmcehennemi4.co/"
     }
   ]
 }
