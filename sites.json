@@ -1,6 +1,6 @@
 {
-  "version": 12,
-  "updated": "2026-11-08",
+  "version": 13,
+  "updated": "2026-11-12",
   "sites": [
     {
       "name": "HD Film Cehennemi",
@@ -81,6 +81,10 @@
     {
       "name": "HDFilmcehennemi",
       "url": "https://hdfilmcehennemi4.co/"
+    },
+    {
+      "name": "Filmizleyim",
+      "url": "https://filmizleyim.com/"
     }
   ]
 }
