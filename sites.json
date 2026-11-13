@@ -1,6 +1,6 @@
 {
-  "version": 13,
-  "updated": "2026-11-12",
+  "version": 14,
+  "updated": "2026-11-13",
   "sites": [
     {
       "name": "HD Film Cehennemi",
@@ -85,6 +85,26 @@
     {
       "name": "Filmizleyim",
       "url": "https://filmizleyim.com/"
+    },
+    {
+      "name": "Anihub",
+      "url": "https://anihub.com.tr/"
+    },
+    {
+      "name": "EkstraFilm",
+      "url": "https://ekstrafilm.com/"
+    },
+    {
+      "name": "Full HD Film",
+      "url": "https://rfilmizle.com/"
+    },
+    {
+      "name": "HD Film Kedisi",
+      "url": "https://hdfilmkedisi.com/"
+    },
+    {
+      "name": "Ultra Film",
+      "url": "https://ultraiz.net/"
     }
   ]
 }
