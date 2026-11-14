@@ -1,6 +1,6 @@
 {
-  "version": 14,
-  "updated": "2026-11-13",
+  "version": 15,
+  "updated": "2026-11-14",
   "sites": [
     {
       "name": "HD Film Cehennemi",
@@ -105,6 +105,10 @@
     {
       "name": "Ultra Film",
       "url": "https://ultraiz.net/"
+    },
+    {
+      "name": "Jetfilmizle",
+      "url": "https://jetfilmizle.app/"
     }
   ]
 }
