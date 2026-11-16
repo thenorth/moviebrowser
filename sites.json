@@ -1,6 +1,6 @@
 {
-  "version": 15,
-  "updated": "2026-11-14",
+  "version": 16,
+  "updated": "2026-11-16",
   "sites": [
     {
       "name": "HD Film Cehennemi",
@@ -107,8 +107,8 @@
       "url": "https://ultraiz.net/"
     },
     {
-      "name": "Jetfilmizle",
-      "url": "https://jetfilmizle.app/"
+      "name": "Seyir",
+      "url": "https://seyir.co/"
     }
   ]
 }
