@@ -1,6 +1,6 @@
 {
-  "version": 16,
-  "updated": "2026-11-16",
+  "version": 17,
+  "updated": "2026-11-19",
   "sites": [
     {
       "name": "HD Film Cehennemi",
@@ -109,6 +109,14 @@
     {
       "name": "Seyir",
       "url": "https://seyir.co/"
+    },
+    {
+      "name": "Film ve Dizi",
+      "url": "https://dizify.co/"
+    },
+    {
+      "name": "Hadifilmizle",
+      "url": "https://hadifilmizle.com/"
     }
   ]
 }
