@@ -1,6 +1,6 @@
 {
-  "version": 20,
-  "updated": "2026-11-25",
+  "version": 21,
+  "updated": "2026-11-26",
   "sites": [
     {
       "name": "HD Film Cehennemi",
@@ -123,8 +123,12 @@
       "url": "https://fullhdfilmsaati.com/"
     },
     {
-      "name": "Jetfilmizle",
-      "url": "https://jetfilmizle.app/"
+      "name": "7dak",
+      "url": "https://7dak.com/"
+    },
+    {
+      "name": "Hdfilmizle",
+      "url": "https://hdfilmizle.net.tr/"
     }
   ]
 }
