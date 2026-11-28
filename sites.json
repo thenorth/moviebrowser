@@ -1,6 +1,6 @@
 {
-  "version": 21,
-  "updated": "2026-11-26",
+  "version": 22,
+  "updated": "2026-11-28",
   "sites": [
     {
       "name": "HD Film Cehennemi",
@@ -129,6 +129,10 @@
     {
       "name": "Hdfilmizle",
       "url": "https://hdfilmizle.net.tr/"
+    },
+    {
+      "name": "JetFilmizle",
+      "url": "https://jetfilmizle.app/"
     }
   ]
 }
